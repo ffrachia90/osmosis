@@ -43,9 +43,13 @@ program
       // 1. Detectar tecnologías legacy
       spinner.text = '🔎 Detectando tecnologías legacy...';
       const detector = new LegacyDetector();
-      const technologies = await detector.detectFromCode(projectDir);
+      const detectionResult = await detector.detectFromCodebase(projectDir);
+      const technologies = detectionResult.technologies.map(t => t.name);
 
-      spinner.succeed(`Tecnologías detectadas: ${technologies.length > 0 ? technologies.join(', ') : 'javascript'}`);
+      spinner.succeed(
+        `Tecnologías detectadas: ${detectionResult.primary?.name || 'Moderno'} ` +
+        `(${technologies.length} tecnologías legacy, Era: ${detectionResult.era})`
+      );
 
       // 2. Construir grafo de dependencias
       spinner.start('📊 Construyendo grafo de dependencias...');

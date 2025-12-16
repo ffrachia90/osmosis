@@ -7,6 +7,7 @@ import { PromptAssembler, PromptContext } from './core/prompt-engine/assembler.j
 import { CodeSafeGuard } from './core/safeguard/validator.js';
 import { DependencyGraph } from './core/analysis/DependencyGraph.js';
 import { LegacyDetector } from './analyzers/legacy-detector.js';
+import { TechDebtAnalyzer } from './core/analysis/TechDebtAnalyzer.js';
 
 const program = new Command();
 
@@ -26,10 +27,10 @@ program
   .option('--output <file>', 'Archivo de salida para el reporte (JSON)', 'analysis-report.json')
   .action(async (options) => {
     const spinner = ora('🔍 Analizando proyecto...').start();
-    
+
     try {
       const projectDir = path.resolve(options.dir);
-      
+
       if (!fs.existsSync(projectDir)) {
         spinner.fail(`Directorio no encontrado: ${projectDir}`);
         process.exit(1);
@@ -39,37 +40,65 @@ program
       spinner.text = '🔎 Detectando tecnologías legacy...';
       const detector = new LegacyDetector();
       const technologies = await detector.detectFromCode(projectDir);
-      
+
       spinner.succeed(`Tecnologías detectadas: ${technologies.length > 0 ? technologies.join(', ') : 'javascript'}`);
 
       // 2. Construir grafo de dependencias
       spinner.start('📊 Construyendo grafo de dependencias...');
       const graph = new DependencyGraph(projectDir);
       await graph.build();
-      
+
       const migrationOrder = graph.getMigrationOrder();
       spinner.succeed(`Grafo construido: ${migrationOrder.length} archivos encontrados`);
 
-      // 3. Generar reporte
+      // 3. Analizar Deuda Técnica
+      spinner.start('💰 Calculando deuda técnica...');
+      const debtAnalyzer = new TechDebtAnalyzer();
+
+      // Cargar contenido de archivos para análisis profundo
+      const filesContent = new Map<string, string>();
+      for (const file of migrationOrder) {
+        if (fs.existsSync(file)) {
+          filesContent.set(file, fs.readFileSync(file, 'utf-8'));
+        }
+      }
+
+      const debtReport = debtAnalyzer.analyzeProject(filesContent);
+      spinner.succeed(`Deuda calculada: Esfuerzo estimado ${debtReport.totalRefactorHours}h de refactorización`);
+
+      // 4. Generar reporte
       spinner.start('📝 Generando reporte...');
       const report = {
         project: projectDir,
         timestamp: new Date().toISOString(),
         technologies,
         totalFiles: migrationOrder.length,
-        migrationOrder: migrationOrder.map((file, index) => ({
-          order: index + 1,
-          file: path.relative(projectDir, file),
-          complexity: graph.getComplexity(file),
-          dependencies: graph.getNode(file)?.dependencies.length || 0,
-          dependents: graph.getNode(file)?.dependents.length || 0
-        })),
+        debtMetrics: {
+          score: debtReport.totalScore,
+          refactorHours: debtReport.totalRefactorHours,
+          recommendations: debtReport.recommendations
+        },
+        migrationOrder: migrationOrder.map((file, index) => {
+          // Obtener métricas específicas de este archivo
+          const content = filesContent.get(file) || '';
+          const metrics = debtAnalyzer.analyzeFile(content, path.basename(file));
+
+          return {
+            order: index + 1,
+            file: path.relative(projectDir, file),
+            complexity: graph.getComplexity(file),
+            debtScore: metrics.score,
+            issues: metrics.issues,
+            dependencies: graph.getNode(file)?.dependencies.length || 0,
+            dependents: graph.getNode(file)?.dependents.length || 0
+          };
+        }),
         estimatedEffort: calculateEffort(migrationOrder, graph)
       };
 
       const outputPath = path.resolve(options.output);
       fs.writeFileSync(outputPath, JSON.stringify(report, null, 2));
-      
+
       spinner.succeed(`Reporte generado: ${outputPath}`);
 
       // Mostrar resumen en consola
@@ -78,19 +107,26 @@ program
       console.log(`📁 Proyecto: ${projectDir}`);
       console.log(`🔧 Tecnologías: ${technologies.length > 0 ? technologies.join(', ') : 'javascript'}`);
       console.log(`📄 Total de archivos: ${migrationOrder.length}`);
-      console.log(`⏱️  Esfuerzo estimado: ${report.estimatedEffort.hours}h (${report.estimatedEffort.sprints} sprints)`);
+
+      console.log('\n⚡  ESFUERZO DE DEUDA TÉCNICA:');
+      console.log(`   Puntaje de Salud: ${100 - debtReport.totalScore}/100`);
+      console.log(`   Horas de Refactor: ${debtReport.totalRefactorHours}h`);
+      console.log(`   Sprints Estimados: ~${Math.ceil(debtReport.totalRefactorHours / 80)} sprints`);
+      console.log(`   Archivos Críticos: ${debtReport.toxicFiles.length}`);
+      console.log(`   Recomendación: ${debtReport.recommendations[0]}`);
+
       console.log('─'.repeat(60));
-      console.log('\n🎯 ORDEN DE MIGRACIÓN ÓPTIMO (Primeros 10):');
-      report.migrationOrder.slice(0, 10).forEach(item => {
-        console.log(`  ${item.order}. ${item.file}`);
-        console.log(`     ├─ Complejidad: ${item.complexity} líneas`);
-        console.log(`     ├─ Dependencias: ${item.dependencies}`);
-        console.log(`     └─ Dependientes: ${item.dependents}`);
+      console.log('\n🎯 TOP 5 ARCHIVOS MÁS COMPLEJOS:');
+
+      const topToxic = report.migrationOrder
+        .sort((a, b) => b.debtScore - a.debtScore)
+        .slice(0, 5);
+
+      topToxic.forEach(item => {
+        console.log(`  🔥 ${item.file}`);
+        console.log(`     ├─ Toxicidad: ${item.debtScore}/100`);
+        console.log(`     └─ Problemas: ${item.issues.slice(0, 2).join(', ')}...`);
       });
-      
-      if (migrationOrder.length > 10) {
-        console.log(`  ... y ${migrationOrder.length - 10} archivos más (ver ${options.output})`);
-      }
 
     } catch (error) {
       spinner.fail('Error durante el análisis');
@@ -115,7 +151,7 @@ program
   .option('--dry-run', 'Simular migración sin escribir archivos', false)
   .action(async (options) => {
     const spinner = ora('🚀 Iniciando migración...').start();
-    
+
     try {
       const sourcePath = path.resolve(options.source);
       const isDirectory = fs.statSync(sourcePath).isDirectory();
@@ -166,10 +202,10 @@ program
           if (!validation.isValid) {
             spinner.warn(`⚠️  SafeGuard detectó problemas en ${relPath}`);
             validation.errors.forEach(err => console.log(`     ❌ ${err}`));
-            
+
             // Auto-reparar
             const repairedCode = await attemptRepair(generatedCode, validation.errors, options.to);
-            
+
             if (repairedCode) {
               spinner.succeed(`✅ Código reparado automáticamente`);
               await writeOutput(filePath, repairedCode, options.output, options.dryRun);
@@ -222,12 +258,12 @@ program
   .option('--analyze-only', 'Solo analizar sin refactorizar', false)
   .action(async (options) => {
     const spinner = ora('🔍 Analizando código...').start();
-    
+
     try {
       // TODO: Implementar ModernCodeAnalyzer
       spinner.succeed('Análisis completado (TODO: implementar)');
       console.log('⚠️  Comando en desarrollo');
-      
+
     } catch (error) {
       spinner.fail('Error durante refactorización');
       console.error(error);
@@ -244,18 +280,18 @@ function calculateEffort(files: string[], graph: DependencyGraph): { hours: numb
   files.forEach(file => {
     totalLines += graph.getComplexity(file);
   });
-  
+
   // Estimación: 50 líneas legacy = 1 hora de migración
   const hours = Math.ceil(totalLines / 50);
   const sprints = Math.ceil(hours / 80); // 2 semanas = 80 horas
-  
+
   return { hours, sprints };
 }
 
 async function simulateLLMCall(prompt: string, targetTech: string): Promise<string> {
   // TODO: Integrar con Claude API real
   // Por ahora retornamos código simulado
-  
+
   if (targetTech === 'react') {
     return `import React from 'react';
 
@@ -267,7 +303,7 @@ export const MigratedComponent: React.FC = () => {
   );
 };`;
   }
-  
+
   return '// TODO: Implementar generación real con LLM';
 }
 
@@ -279,10 +315,10 @@ async function attemptRepair(code: string, errors: string[], targetTech: string)
 
 async function writeOutput(sourcePath: string, content: string, outputDir: string, dryRun: boolean): Promise<void> {
   if (dryRun) return;
-  
+
   const filename = path.basename(sourcePath, path.extname(sourcePath));
   const outputPath = path.join(outputDir, `${filename}.tsx`);
-  
+
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   fs.writeFileSync(outputPath, content);
 }

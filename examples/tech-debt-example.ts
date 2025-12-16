@@ -181,7 +181,6 @@ const toxicMetrics = analyzer.analyzeFile(toxicLegacyCode, 'legacy-banking.js');
 
 console.log(`\n🎯 DEBT SCORE: ${toxicMetrics.score}/100 ${getScoreEmoji(toxicMetrics.score)}`);
 console.log(`⏱️  REFACTOR TIME: ${toxicMetrics.estimatedRefactorHours} hours`);
-console.log(`💰 ESTIMATED COST: $${(toxicMetrics.estimatedRefactorHours * 150).toLocaleString()}`);
 
 console.log('\n📋 ISSUES DETECTED:');
 toxicMetrics.issues.forEach(issue => console.log(`   ${issue}`));
@@ -201,7 +200,6 @@ const cleanMetrics = analyzer.analyzeFile(cleanModernCode, 'modern-banking.ts');
 
 console.log(`\n🎯 DEBT SCORE: ${cleanMetrics.score}/100 ${getScoreEmoji(cleanMetrics.score)}`);
 console.log(`⏱️  REFACTOR TIME: ${cleanMetrics.estimatedRefactorHours} hours`);
-console.log(`💰 ESTIMATED COST: $${(cleanMetrics.estimatedRefactorHours * 150).toLocaleString()}`);
 
 if (cleanMetrics.issues.length > 0) {
   console.log('\n📋 ISSUES DETECTED:');
@@ -233,7 +231,6 @@ console.log(`\n🎯 PROJECT DEBT SCORE: ${projectReport.totalScore}/100 ${getSco
 console.log(`📁 Total Files: ${projectReport.totalFiles}`);
 console.log(`🔴 Toxic Files: ${projectReport.toxicFiles.length}`);
 console.log(`⏱️  Total Refactor Time: ${projectReport.totalRefactorHours} hours`);
-console.log(`💰 TOTAL COST: $${projectReport.totalCost.toLocaleString()}`);
 
 console.log('\n💡 RECOMMENDATIONS:');
 projectReport.recommendations.forEach(rec => console.log(`   ${rec}`));

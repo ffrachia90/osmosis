@@ -24,13 +24,10 @@ export interface ProjectDebtReport {
   totalFiles: number;
   toxicFiles: FileMetrics[];
   totalRefactorHours: number;
-  totalCost: number; // En USD ($150/hora senior dev)
   recommendations: string[];
 }
 
 export class TechDebtAnalyzer {
-  private readonly HOUR_RATE = 150; // USD por hora senior dev
-  
   /**
    * Analiza un archivo y retorna métricas de deuda técnica
    */
@@ -426,7 +423,6 @@ export class TechDebtAnalyzer {
       .sort((a, b) => b.score - a.score);
 
     const avgScore = files.size > 0 ? totalScore / files.size : 0;
-    const totalCost = totalRefactorHours * this.HOUR_RATE;
 
     // Generar recomendaciones
     const recommendations = this.generateRecommendations(avgScore, toxicFiles.length, files.size);
@@ -436,7 +432,6 @@ export class TechDebtAnalyzer {
       totalFiles: files.size,
       toxicFiles,
       totalRefactorHours,
-      totalCost,
       recommendations
     };
   }

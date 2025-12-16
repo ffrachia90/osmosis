@@ -20,6 +20,42 @@ interface LegacyDetectionResult {
 
 export class LegacyDetector {
   /**
+   * Detecta tecnología legacy desde un directorio de código
+   */
+  async detectFromCode(projectDir: string): Promise<string[]> {
+    const fs = await import('fs');
+    const path = await import('path');
+    const technologies: string[] = [];
+
+    // Escanear tipos de archivos
+    const scanDir = (dir: string) => {
+      if (!fs.existsSync(dir)) return;
+      
+      const files = fs.readdirSync(dir);
+      for (const file of files) {
+        const fullPath = path.join(dir, file);
+        const stat = fs.statSync(fullPath);
+        
+        if (stat.isDirectory() && !file.startsWith('.') && file !== 'node_modules') {
+          scanDir(fullPath);
+        } else if (stat.isFile()) {
+          // Detectar por extensión
+          if (file.endsWith('.jsp')) technologies.push('jsp');
+          if (file.endsWith('.php')) technologies.push('php');
+          if (file.endsWith('.aspx') || file.endsWith('.ascx')) technologies.push('asp.net');
+          if (file.endsWith('.cfm') || file.endsWith('.cfc')) technologies.push('coldfusion');
+          if (file.endsWith('.pl')) technologies.push('perl');
+        }
+      }
+    };
+
+    scanDir(projectDir);
+    
+    // Eliminar duplicados
+    return [...new Set(technologies)];
+  }
+
+  /**
    * Detecta tecnología legacy desde análisis visual
    */
   async detect(screenshots: Buffer[]): Promise<LegacyDetectionResult> {

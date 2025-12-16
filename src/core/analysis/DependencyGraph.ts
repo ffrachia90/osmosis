@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import glob from 'glob';
+import { glob } from 'glob';
 
 export interface FileNode {
     id: string; // Absolute path
@@ -15,10 +15,10 @@ export class DependencyGraph {
     constructor(private rootDir: string) { }
 
     public async build(): Promise<void> {
-        const files = glob.sync(`${this.rootDir}/**/*.{js,jsx,ts,tsx,php,jsp}`);
+        const files = await glob(`${this.rootDir}/**/*.{js,jsx,ts,tsx,php,jsp}`);
 
         // 1. Initialize Nodes
-        files.forEach(file => {
+        files.forEach((file: string) => {
             this.nodes.set(path.resolve(file), {
                 id: path.resolve(file),
                 dependencies: [],
@@ -133,5 +133,33 @@ export class DependencyGraph {
         const content = fs.readFileSync(filePath, 'utf-8');
         const lines = content.split('\n').length;
         return lines;
+    }
+
+    public getNode(filePath: string): FileNode | undefined {
+        return this.nodes.get(path.resolve(filePath));
+    }
+
+    public getAllNodes(): FileNode[] {
+        return Array.from(this.nodes.values());
+    }
+
+    public getStats() {
+        return {
+            totalFiles: this.nodes.size,
+            byType: {
+                jsp: this.countByType('jsp'),
+                php: this.countByType('php'),
+                js: this.countByType('js'),
+                unknown: this.countByType('unknown')
+            }
+        };
+    }
+
+    private countByType(type: FileNode['type']): number {
+        let count = 0;
+        this.nodes.forEach(node => {
+            if (node.type === type) count++;
+        });
+        return count;
     }
 }

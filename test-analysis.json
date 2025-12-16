@@ -1,0 +1,152 @@
+{
+  "project": "/Users/ferfrachia/Projects/git/osmosis/src",
+  "timestamp": "2025-12-16T16:28:19.687Z",
+  "technologies": [],
+  "totalFiles": 20,
+  "migrationOrder": [
+    {
+      "order": 1,
+      "file": "cli.ts",
+      "complexity": 295,
+      "dependencies": 0,
+      "dependents": 0
+    },
+    {
+      "order": 2,
+      "file": "parsers/legacy-parser-factory.ts",
+      "complexity": 601,
+      "dependencies": 0,
+      "dependents": 0
+    },
+    {
+      "order": 3,
+      "file": "parsers/jsp-parser.ts",
+      "complexity": 494,
+      "dependencies": 0,
+      "dependents": 1
+    },
+    {
+      "order": 4,
+      "file": "mappers/design-system-scanner.ts",
+      "complexity": 352,
+      "dependencies": 0,
+      "dependents": 1
+    },
+    {
+      "order": 5,
+      "file": "analyzers/video-analyzer.ts",
+      "complexity": 316,
+      "dependencies": 0,
+      "dependents": 2
+    },
+    {
+      "order": 6,
+      "file": "analyzers/behavior-extractor.ts",
+      "complexity": 435,
+      "dependencies": 1,
+      "dependents": 2
+    },
+    {
+      "order": 7,
+      "file": "mappers/component-mapper.ts",
+      "complexity": 300,
+      "dependencies": 2,
+      "dependents": 0
+    },
+    {
+      "order": 8,
+      "file": "knowledge/best-practices-knowledge-base.ts",
+      "complexity": 396,
+      "dependencies": 0,
+      "dependents": 0
+    },
+    {
+      "order": 9,
+      "file": "analyzers/microfrontend-analyzer.ts",
+      "complexity": 412,
+      "dependencies": 0,
+      "dependents": 1
+    },
+    {
+      "order": 10,
+      "file": "generators/microfrontend-generator.ts",
+      "complexity": 662,
+      "dependencies": 1,
+      "dependents": 0
+    },
+    {
+      "order": 11,
+      "file": "generators/framework-generator.ts",
+      "complexity": 701,
+      "dependencies": 1,
+      "dependents": 0
+    },
+    {
+      "order": 12,
+      "file": "generators/e2e-test-generator.ts",
+      "complexity": 457,
+      "dependencies": 2,
+      "dependents": 0
+    },
+    {
+      "order": 13,
+      "file": "analyzers/modern-code-analyzer.ts",
+      "complexity": 388,
+      "dependencies": 0,
+      "dependents": 1
+    },
+    {
+      "order": 14,
+      "file": "generators/best-practices-refactor.ts",
+      "complexity": 358,
+      "dependencies": 1,
+      "dependents": 0
+    },
+    {
+      "order": 15,
+      "file": "analyzers/legacy-detector.ts",
+      "complexity": 279,
+      "dependencies": 0,
+      "dependents": 0
+    },
+    {
+      "order": 16,
+      "file": "core/safeguard/validator.ts",
+      "complexity": 233,
+      "dependencies": 0,
+      "dependents": 0
+    },
+    {
+      "order": 17,
+      "file": "core/prompt-engine/templates.ts",
+      "complexity": 61,
+      "dependencies": 0,
+      "dependents": 0
+    },
+    {
+      "order": 18,
+      "file": "core/prompt-engine/assembler.ts",
+      "complexity": 129,
+      "dependencies": 0,
+      "dependents": 0
+    },
+    {
+      "order": 19,
+      "file": "core/analysis/TechDebtAnalyzer.ts",
+      "complexity": 1,
+      "dependencies": 0,
+      "dependents": 0
+    },
+    {
+      "order": 20,
+      "file": "core/analysis/DependencyGraph.ts",
+      "complexity": 166,
+      "dependencies": 0,
+      "dependents": 0
+    }
+  ],
+  "estimatedEffort": {
+    "hours": 141,
+    "sprints": 2
+  }
+}

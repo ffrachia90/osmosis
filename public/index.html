@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Osmosis - Migración Automática de Legacy Code con IA</title>
+    <meta name="description" content="Transforma tu código legacy (JSP, PHP, .NET) a React/Angular moderno en horas, no meses. IA + Análisis de Dependencias + Validación Automática.">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Alpine.js para interactividad -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        
+        /* Gradientes épicos */
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Glassmorphism */
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Animaciones */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .float-animation {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(102, 126, 234, 0.4); }
+            50% { box-shadow: 0 0 40px rgba(102, 126, 234, 0.8); }
+        }
+        
+        .pulse-glow {
+            animation: pulse-glow 3s ease-in-out infinite;
+        }
+        
+        /* Scroll smooth */
+        html { scroll-behavior: smooth; }
+        
+        /* Hero background pattern */
+        .hero-pattern {
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(118, 75, 162, 0.1) 0%, transparent 50%);
+        }
+        
+        /* Code block styling */
+        .code-block {
+            background: #1e1e1e;
+            border-radius: 12px;
+            padding: 1.5rem;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+        
+        .code-block .keyword { color: #569cd6; }
+        .code-block .string { color: #ce9178; }
+        .code-block .comment { color: #6a9955; }
+        .code-block .function { color: #dcdcaa; }
+    </style>
+</head>
+<body class="antialiased text-gray-900">
+
+    <!-- Header/Nav -->
+    <nav class="fixed w-full top-0 z-50 glass" x-data="{ open: false }">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <!-- Logo -->
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 gradient-bg rounded-lg flex items-center justify-center">
+                        <i class="fas fa-dna text-white text-xl"></i>
+                    </div>
+                    <span class="text-2xl font-bold gradient-text">Osmosis</span>
+                </div>
+                
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex space-x-8">
+                    <a href="#features" class="text-gray-700 hover:text-purple-600 transition">Features</a>
+                    <a href="#how-it-works" class="text-gray-700 hover:text-purple-600 transition">Cómo Funciona</a>
+                    <a href="#tech-debt" class="text-gray-700 hover:text-purple-600 transition">Análisis</a>
+                    <a href="#pricing" class="text-gray-700 hover:text-purple-600 transition">Pricing</a>
+                </div>
+                
+                <!-- CTA Button -->
+                <div class="hidden md:block">
+                    <a href="#demo" class="gradient-bg text-white px-6 py-2.5 rounded-lg font-semibold hover:opacity-90 transition">
+                        Prueba Gratis
+                    </a>
+                </div>
+                
+                <!-- Mobile menu button -->
+                <button @click="open = !open" class="md:hidden text-gray-700">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Mobile Menu -->
+        <div x-show="open" class="md:hidden bg-white border-t">
+            <div class="px-4 py-4 space-y-3">
+                <a href="#features" class="block text-gray-700">Features</a>
+                <a href="#how-it-works" class="block text-gray-700">Cómo Funciona</a>
+                <a href="#tech-debt" class="block text-gray-700">Análisis</a>
+                <a href="#pricing" class="block text-gray-700">Pricing</a>
+                <a href="#demo" class="gradient-bg text-white px-4 py-2 rounded-lg text-center block">Prueba Gratis</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="pt-32 pb-20 hero-pattern">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <!-- Left: Content -->
+                <div class="space-y-8">
+                    <div class="inline-block">
+                        <span class="bg-purple-100 text-purple-700 px-4 py-2 rounded-full text-sm font-semibold">
+                            🚀 Powered by Claude Sonnet 3.5
+                        </span>
+                    </div>
+                    
+                    <h1 class="text-5xl lg:text-6xl font-black leading-tight">
+                        Migra tu código legacy a 
+                        <span class="gradient-text">React moderno</span>
+                        en horas, no meses
+                    </h1>
+                    
+                    <p class="text-xl text-gray-600 leading-relaxed">
+                        IA + Análisis de Dependencias + Validación Automática. 
+                        Transforma JSP, PHP, .NET legacy en React/Angular/Vue con las mejores prácticas 2025.
+                    </p>
+                    
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <a href="#demo" class="gradient-bg text-white px-8 py-4 rounded-xl font-bold text-lg hover:opacity-90 transition pulse-glow text-center">
+                            <i class="fas fa-rocket mr-2"></i> Empezar Ahora
+                        </a>
+                        <a href="#tech-debt" class="border-2 border-purple-600 text-purple-600 px-8 py-4 rounded-xl font-bold text-lg hover:bg-purple-50 transition text-center">
+                            <i class="fas fa-play-circle mr-2"></i> Ver Demo
+                        </a>
+                    </div>
+                    
+                    <!-- Stats -->
+                    <div class="grid grid-cols-3 gap-4 pt-8">
+                        <div class="text-center">
+                            <div class="text-3xl font-black gradient-text">10x</div>
+                            <div class="text-sm text-gray-600">Más Rápido</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-3xl font-black gradient-text">94%</div>
+                            <div class="text-sm text-gray-600">Precisión</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-3xl font-black gradient-text">0</div>
+                            <div class="text-sm text-gray-600">Config Manual</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right: Visual Demo -->
+                <div class="relative float-animation">
+                    <div class="code-block">
+                        <div class="text-gray-400 mb-4">// legacy-banking.jsp (2005)</div>
+                        <div><span class="comment">// 800 líneas de spaghetti code...</span></div>
+                        <div>&lt;% <span class="keyword">if</span> (user != <span class="keyword">null</span>) { %&gt;</div>
+                        <div>&nbsp;&nbsp;&lt;% <span class="keyword">if</span> (user.balance > 0) { %&gt;</div>
+                        <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// 7 niveles de indentación 😱</span></div>
+                        <div>&nbsp;&nbsp;&lt;% } %&gt;</div>
+                        <div>&lt;% } %&gt;</div>
+                        
+                        <div class="my-6 text-center">
+                            <i class="fas fa-arrow-down text-green-400 text-3xl"></i>
+                        </div>
+                        
+                        <div class="text-green-400 mb-4">// modern-banking.tsx (2025) ✨</div>
+                        <div><span class="keyword">export const</span> <span class="function">Banking</span>: React.FC = () => {</div>
+                        <div>&nbsp;&nbsp;<span class="keyword">const</span> { user } = <span class="function">useAuth</span>();</div>
+                        <div>&nbsp;&nbsp;<span class="keyword">if</span> (!user) <span class="keyword">return</span> <span class="keyword">null</span>;</div>
+                        <div>&nbsp;&nbsp;<span class="keyword">return</span> &lt;<span class="function">Balance</span> value={user.balance} /&gt;;</div>
+                        <div>};</div>
+                    </div>
+                    
+                    <!-- Badge flotante -->
+                    <div class="absolute -top-4 -right-4 bg-green-500 text-white px-4 py-2 rounded-full font-bold shadow-lg">
+                        ✅ Auto-migrado
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Logos de tecnologías soportadas -->
+    <section class="py-12 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <p class="text-center text-gray-500 mb-8 font-semibold">Soporta cualquier tecnología legacy</p>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-8 items-center opacity-60">
+                <div class="text-center">
+                    <i class="fab fa-java text-5xl text-orange-600"></i>
+                    <div class="text-xs mt-2">JSP</div>
+                </div>
+                <div class="text-center">
+                    <i class="fab fa-php text-5xl text-indigo-600"></i>
+                    <div class="text-xs mt-2">PHP</div>
+                </div>
+                <div class="text-center">
+                    <i class="fab fa-microsoft text-5xl text-blue-600"></i>
+                    <div class="text-xs mt-2">.NET</div>
+                </div>
+                <div class="text-center">
+                    <i class="fab fa-python text-5xl text-yellow-600"></i>
+                    <div class="text-xs mt-2">Django</div>
+                </div>
+                <div class="text-center">
+                    <i class="fas fa-gem text-5xl text-red-600"></i>
+                    <div class="text-xs mt-2">Rails</div>
+                </div>
+                <div class="text-center">
+                    <i class="fab fa-react text-5xl text-cyan-500"></i>
+                    <div class="text-xs mt-2">→ React</div>
+                </div>
+                <div class="text-center">
+                    <i class="fab fa-angular text-5xl text-red-500"></i>
+                    <div class="text-xs mt-2">→ Angular</div>
+                </div>
+                <div class="text-center">
+                    <i class="fab fa-vuejs text-5xl text-green-500"></i>
+                    <div class="text-xs mt-2">→ Vue</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-black mb-4">¿Por qué Osmosis?</h2>
+                <p class="text-xl text-gray-600">No es solo un transpilador. Es un arquitecto de software con IA.</p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                <div class="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition border border-gray-100">
+                    <div class="w-14 h-14 gradient-bg rounded-xl flex items-center justify-center mb-6">
+                        <i class="fas fa-project-diagram text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Análisis de Dependencias</h3>
+                    <p class="text-gray-600">
+                        Construye un grafo completo de tu codebase. Migra en el orden correcto (utils antes que apps).
+                    </p>
+                </div>
+                
+                <!-- Feature 2 -->
+                <div class="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition border border-gray-100">
+                    <div class="w-14 h-14 gradient-bg rounded-xl flex items-center justify-center mb-6">
+                        <i class="fas fa-shield-alt text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">CodeSafeGuard</h3>
+                    <p class="text-gray-600">
+                        Validación con TypeScript Compiler API. Si el LLM genera basura, lo rechaza y auto-repara.
+                    </p>
+                </div>
+                
+                <!-- Feature 3 -->
+                <div class="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition border border-gray-100">
+                    <div class="w-14 h-14 gradient-bg rounded-xl flex items-center justify-center mb-6">
+                        <i class="fas fa-chart-line text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Tech Debt Analyzer</h3>
+                    <p class="text-gray-600">
+                        Score 0-100 de toxicidad. Detecta spaghetti code, god classes, magic numbers y más.
+                    </p>
+                </div>
+                
+                <!-- Feature 4 -->
+                <div class="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition border border-gray-100">
+                    <div class="w-14 h-14 gradient-bg rounded-xl flex items-center justify-center mb-6">
+                        <i class="fas fa-brain text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">RAG Engine</h3>
+                    <p class="text-gray-600">
+                        Aprende de TU codebase. Genera código consistente con TUS patrones y estilos.
+                    </p>
+                </div>
+                
+                <!-- Feature 5 -->
+                <div class="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition border border-gray-100">
+                    <div class="w-14 h-14 gradient-bg rounded-xl flex items-center justify-center mb-6">
+                        <i class="fas fa-cubes text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Microfrontends</h3>
+                    <p class="text-gray-600">
+                        Convierte monolitos React en arquitectura de microfrontends (Module Federation).
+                    </p>
+                </div>
+                
+                <!-- Feature 6 -->
+                <div class="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition border border-gray-100">
+                    <div class="w-14 h-14 gradient-bg rounded-xl flex items-center justify-center mb-6">
+                        <i class="fas fa-check-double text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Tests Automáticos</h3>
+                    <p class="text-gray-600">
+                        Genera tests E2E (Playwright) para verificar que la migración sea 100% funcional.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How it Works -->
+    <section id="how-it-works" class="py-20 bg-gradient-to-br from-purple-50 to-indigo-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-black mb-4">Cómo Funciona</h2>
+                <p class="text-xl text-gray-600">3 comandos. Eso es todo.</p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Step 1 -->
+                <div class="bg-white p-8 rounded-2xl shadow-lg text-center">
+                    <div class="w-16 h-16 gradient-bg rounded-full flex items-center justify-center mx-auto mb-6 text-white text-2xl font-bold">
+                        1
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Analizar</h3>
+                    <div class="code-block text-left mb-4">
+                        <div class="text-green-400">$ osmosis analyze --dir ./legacy-app</div>
+                    </div>
+                    <p class="text-gray-600">
+                        Detecta tecnologías, construye grafo de dependencias, calcula esfuerzo.
+                    </p>
+                </div>
+                
+                <!-- Step 2 -->
+                <div class="bg-white p-8 rounded-2xl shadow-lg text-center">
+                    <div class="w-16 h-16 gradient-bg rounded-full flex items-center justify-center mx-auto mb-6 text-white text-2xl font-bold">
+                        2
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Migrar</h3>
+                    <div class="code-block text-left mb-4">
+                        <div class="text-green-400">$ osmosis migrate --from jsp --to react</div>
+                    </div>
+                    <p class="text-gray-600">
+                        IA migra tu código en el orden óptimo. CodeSafeGuard valida cada archivo.
+                    </p>
+                </div>
+                
+                <!-- Step 3 -->
+                <div class="bg-white p-8 rounded-2xl shadow-lg text-center">
+                    <div class="w-16 h-16 gradient-bg rounded-full flex items-center justify-center mx-auto mb-6 text-white text-2xl font-bold">
+                        3
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Deploy</h3>
+                    <div class="code-block text-left mb-4">
+                        <div class="text-green-400">$ npm test && npm run build</div>
+                    </div>
+                    <p class="text-gray-600">
+                        Tests generados automáticamente. Deploy con confianza.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tech Debt Analyzer Demo -->
+    <section id="tech-debt" class="py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-black mb-4">Análisis de Deuda Técnica</h2>
+                <p class="text-xl text-gray-600">Métricas reales de tu código legacy</p>
+            </div>
+            
+            <div class="grid lg:grid-cols-2 gap-12">
+                <!-- Before -->
+                <div>
+                    <div class="bg-red-50 border-2 border-red-200 rounded-2xl p-8">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-2xl font-bold text-red-700">Código Legacy (2005)</h3>
+                            <span class="bg-red-500 text-white px-4 py-2 rounded-full font-bold">72/100</span>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-center space-x-3">
+                                <i class="fas fa-exclamation-triangle text-red-500"></i>
+                                <span class="text-gray-700">Spaghetti Infernal (24 niveles)</span>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <i class="fas fa-exclamation-triangle text-red-500"></i>
+                                <span class="text-gray-700">10 TODOs/FIXMEs pendientes</span>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <i class="fas fa-exclamation-triangle text-red-500"></i>
+                                <span class="text-gray-700">12 Magic Numbers</span>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <i class="fas fa-skull-crossbones text-red-700"></i>
+                                <span class="text-gray-700 font-bold">eval() - RIESGO CRÍTICO</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 pt-6 border-t border-red-200">
+                            <div class="text-2xl font-bold text-red-700">51 horas de refactor</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- After -->
+                <div>
+                    <div class="bg-green-50 border-2 border-green-200 rounded-2xl p-8">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-2xl font-bold text-green-700">Código Moderno (2025)</h3>
+                            <span class="bg-green-500 text-white px-4 py-2 rounded-full font-bold">0/100</span>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-center space-x-3">
+                                <i class="fas fa-check-circle text-green-500"></i>
+                                <span class="text-gray-700">Indentación limpia (3 niveles)</span>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <i class="fas fa-check-circle text-green-500"></i>
+                                <span class="text-gray-700">Sin TODOs/FIXMEs</span>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <i class="fas fa-check-circle text-green-500"></i>
+                                <span class="text-gray-700">TypeScript strict mode</span>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <i class="fas fa-shield-alt text-green-500"></i>
+                                <span class="text-gray-700 font-bold">100% seguro</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 pt-6 border-t border-green-200">
+                            <div class="text-2xl font-bold text-green-700">✅ Listo para producción</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing -->
+    <section id="pricing" class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-black mb-4">Pricing</h2>
+                <p class="text-xl text-gray-600">Elige el plan que se ajuste a tu proyecto</p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Starter -->
+                <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-200">
+                    <h3 class="text-2xl font-bold mb-2">Starter</h3>
+                    <p class="text-gray-600 mb-6">Para proyectos pequeños</p>
+                    <div class="text-4xl font-black mb-6">Gratis</div>
+                    <ul class="space-y-4 mb-8">
+                        <li class="flex items-start space-x-3">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <span>Hasta 10 archivos</span>
+                        </li>
+                        <li class="flex items-start space-x-3">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <span>Análisis de dependencias</span>
+                        </li>
+                        <li class="flex items-start space-x-3">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <span>Tech Debt Report</span>
+                        </li>
+                    </ul>
+                    <a href="#demo" class="block w-full text-center border-2 border-purple-600 text-purple-600 px-6 py-3 rounded-lg font-bold hover:bg-purple-50 transition">
+                        Empezar Gratis
+                    </a>
+                </div>
+                
+                <!-- Professional (Featured) -->
+                <div class="bg-white p-8 rounded-2xl shadow-2xl border-4 border-purple-600 relative">
+                    <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-purple-600 text-white px-4 py-1 rounded-full text-sm font-bold">
+                        MÁS POPULAR
+                    </div>
+                    <h3 class="text-2xl font-bold mb-2">Professional</h3>
+                    <p class="text-gray-600 mb-6">Para equipos enterprise</p>
+                    <div class="text-4xl font-black mb-6">
+                        Contactar
+                    </div>
+                    <ul class="space-y-4 mb-8">
+                        <li class="flex items-start space-x-3">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <span>Archivos ilimitados</span>
+                        </li>
+                        <li class="flex items-start space-x-3">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <span>Claude API con tu proxy</span>
+                        </li>
+                        <li class="flex items-start space-x-3">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <span>RAG con tu codebase</span>
+                        </li>
+                        <li class="flex items-start space-x-3">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <span>Tests E2E automáticos</span>
+                        </li>
+                        <li class="flex items-start space-x-3">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <span>Soporte prioritario</span>
+                        </li>
+                    </ul>
+                    <a href="#demo" class="block w-full text-center gradient-bg text-white px-6 py-3 rounded-lg font-bold hover:opacity-90 transition">
+                        Solicitar Demo
+                    </a>
+                </div>
+                
+                <!-- Enterprise -->
+                <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-200">
+                    <h3 class="text-2xl font-bold mb-2">Enterprise</h3>
+                    <p class="text-gray-600 mb-6">Para corporaciones</p>
+                    <div class="text-4xl font-black mb-6">Custom</div>
+                    <ul class="space-y-4 mb-8">
+                        <li class="flex items-start space-x-3">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <span>Todo de Professional</span>
+                        </li>
+                        <li class="flex items-start space-x-3">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <span>On-premise deployment</span>
+                        </li>
+                        <li class="flex items-start space-x-3">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <span>SLA garantizado</span>
+                        </li>
+                        <li class="flex items-start space-x-3">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <span>Soporte 24/7</span>
+                        </li>
+                        <li class="flex items-start space-x-3">
+                            <i class="fas fa-check text-green-500 mt-1"></i>
+                            <span>Training incluido</span>
+                        </li>
+                    </ul>
+                    <a href="#demo" class="block w-full text-center border-2 border-purple-600 text-purple-600 px-6 py-3 rounded-lg font-bold hover:bg-purple-50 transition">
+                        Contactar Ventas
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Final -->
+    <section id="demo" class="py-20 gradient-bg">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
+            <h2 class="text-4xl lg:text-5xl font-black mb-6">
+                ¿Listo para modernizar tu código?
+            </h2>
+            <p class="text-xl mb-10 opacity-90">
+                Únete a las empresas que ya están usando Osmosis para transformar su legacy code.
+            </p>
+            
+            <form class="max-w-md mx-auto" action="#" method="POST">
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <input 
+                        type="email" 
+                        placeholder="tu@empresa.com" 
+                        class="flex-1 px-6 py-4 rounded-lg text-gray-900 font-semibold focus:outline-none focus:ring-4 focus:ring-white focus:ring-opacity-50"
+                        required
+                    >
+                    <button 
+                        type="submit" 
+                        class="bg-white text-purple-600 px-8 py-4 rounded-lg font-bold hover:bg-gray-100 transition">
+                        Solicitar Demo
+                    </button>
+                </div>
+                <p class="text-sm mt-4 opacity-75">✅ Sin tarjeta de crédito. Demo en 15 minutos.</p>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-8">
+                <!-- Brand -->
+                <div>
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-10 h-10 gradient-bg rounded-lg flex items-center justify-center">
+                            <i class="fas fa-dna text-white"></i>
+                        </div>
+                        <span class="text-xl font-bold">Osmosis</span>
+                    </div>
+                    <p class="text-gray-400 text-sm">
+                        Migración automática de legacy code con IA.
+                    </p>
+                </div>
+                
+                <!-- Product -->
+                <div>
+                    <h4 class="font-bold mb-4">Producto</h4>
+                    <ul class="space-y-2 text-gray-400 text-sm">
+                        <li><a href="#features" class="hover:text-white transition">Features</a></li>
+                        <li><a href="#pricing" class="hover:text-white transition">Pricing</a></li>
+                        <li><a href="#" class="hover:text-white transition">Documentación</a></li>
+                        <li><a href="#" class="hover:text-white transition">API</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Company -->
+                <div>
+                    <h4 class="font-bold mb-4">Empresa</h4>
+                    <ul class="space-y-2 text-gray-400 text-sm">
+                        <li><a href="#" class="hover:text-white transition">Sobre Nosotros</a></li>
+                        <li><a href="#" class="hover:text-white transition">Blog</a></li>
+                        <li><a href="#" class="hover:text-white transition">Casos de Éxito</a></li>
+                        <li><a href="#" class="hover:text-white transition">Contacto</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Legal -->
+                <div>
+                    <h4 class="font-bold mb-4">Legal</h4>
+                    <ul class="space-y-2 text-gray-400 text-sm">
+                        <li><a href="#" class="hover:text-white transition">Privacidad</a></li>
+                        <li><a href="#" class="hover:text-white transition">Términos</a></li>
+                        <li><a href="#" class="hover:text-white transition">Seguridad</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-400 text-sm">© 2025 Osmosis. Todos los derechos reservados.</p>
+                <div class="flex space-x-6 mt-4 md:mt-0">
+                    <a href="#" class="text-gray-400 hover:text-white transition"><i class="fab fa-twitter text-xl"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-white transition"><i class="fab fa-github text-xl"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-white transition"><i class="fab fa-linkedin text-xl"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scroll to top button -->
+    <button 
+        onclick="window.scrollTo({top: 0, behavior: 'smooth'})" 
+        class="fixed bottom-8 right-8 gradient-bg text-white w-12 h-12 rounded-full shadow-lg hover:opacity-90 transition z-50">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+</body>
+</html>
+

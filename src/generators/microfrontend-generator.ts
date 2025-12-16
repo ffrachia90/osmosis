@@ -70,7 +70,7 @@ export class MicroFrontendGenerator {
     files.push({
       path: 'src/App.tsx',
       type: 'component',
-      content: this.generateShellApp(architecture)
+      content: this.generateShellAppComponent(architecture)
     });
     
     // Router
@@ -307,7 +307,7 @@ module.exports = {
 };`;
   }
 
-  private generateShellApp(architecture: MicroFrontendArchitecture): string {
+  private generateShellAppComponent(architecture: MicroFrontendArchitecture): string {
     return `import React, { Suspense } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import Router from './Router';

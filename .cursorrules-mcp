@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "osmosis": {
+      "command": "node",
+      "args": [
+        "/path/to/osmosis/dist/mcp/server.js"
+      ],
+      "env": {
+        "ANTHROPIC_API_KEY": "sk-ant-...",
+        "OPENAI_API_KEY": "sk-..."
+      }
+    }
+  }
+}
+

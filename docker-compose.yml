@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  osmosis:
+    build: .
+    image: osmosis:latest
+    container_name: osmosis
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - ANTHROPIC_BASE_URL=${ANTHROPIC_BASE_URL:-https://api.anthropic.com}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    volumes:
+      - ./workspace:/workspace
+      - ./.osmosis:/app/.osmosis
+    working_dir: /workspace
+    command: ["--help"]
+    
+  # MCP Server for Cursor integration
+  osmosis-mcp:
+    build: .
+    image: osmosis:latest
+    container_name: osmosis-mcp
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - ANTHROPIC_BASE_URL=${ANTHROPIC_BASE_URL:-https://api.anthropic.com}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./workspace:/workspace
+      - ./.osmosis:/app/.osmosis
+    command: ["node", "dist/mcp/server.js"]
+    restart: unless-stopped
+

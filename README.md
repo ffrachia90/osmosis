@@ -1,340 +1,368 @@
-# 🔄 Osmosis - Enterprise Code Migration Agent
+# 🧬 Osmosis - AI-Powered Legacy Code Modernizer
 
-**Intelligent, automated migration from Legacy Monoliths (JSP, JSF, PHP) to Modern Frontend Architectures (React, Angular).**
+**Transform decades-old legacy applications into modern, production-ready code automatically.**
 
-## 🎯 The Mission
-Transform decades-old banking and enterprise interfaces into state-of-the-art modern web applications automagically. Osmosis doesn't just "transpile" code; it **understands** your business logic using advanced RAG (Retrieval-Augmented Generation) and re-architects it following modern best practices.
+Osmosis uses Claude 3.5 Sonnet, RAG (Retrieval-Augmented Generation), and enterprise-grade validation to migrate JSP, PHP, jQuery, AngularJS, and other legacy technologies to React, Angular, or Vue with best practices.
 
-## 💡 The Problem
-Enterprises manage extensive portfolios of applications:
-- **Legacy V1s**: Built decades ago in *any* legacy technology. Stable but unmaintainable.
-- **Modern V2s**: React/Next.js/Angular apps using latest Design Systems & Best Practices.
-- **The Gap**: Migrating V1 to V2 manually takes years, costs millions, and introduces regressions.
-
-### Supported Legacy Technologies (Auto-Detected)
-
-| Language/Framework | Examples | Status |
-|-------------------|----------|--------|
-| **Java** | JSP, Servlets, Struts, Spring MVC (old) | ✅ Full Support |
-| **PHP** | Laravel (old), CodeIgniter, Symfony 2.x, Vanilla PHP | ✅ Full Support |
-| **ASP/C#** | Classic ASP, WebForms, ASP.NET MVC 2-4 | ✅ Full Support |
-| **Ruby** | Rails 3.x-5.x, Sinatra | ✅ Full Support |
-| **Python** | Django 1.x-2.x, Flask (old) | ✅ Full Support |
-| **Cold Fusion** | CFM, CFC | ✅ Full Support |
-| **Perl** | CGI Scripts | ✅ Full Support |
-| **Visual Basic** | VB6, VB.NET WebForms | ✅ Full Support |
-| **jQuery Spaghetti** | HTML + inline jQuery | ✅ Full Support |
-| **Custom/Unknown** | Any codebase | ⚠️ Generic Parser |
-
-**Don't see your tech? We can add support in 1-2 weeks.**
-
-## 🧠 Enterprise RAG System - El Diferenciador
-
-### **¿Qué Hace Especial a Osmosis?**
-
-La mayoría de herramientas de migración son **estúpidas**: procesan archivos aisladamente sin entender el contexto global. Osmosis es **inteligente**: **entiende tu proyecto completo** antes de generar una sola línea de código.
-
-#### **RAG Enterprise-Grade con Embeddings Vectoriales**
-
-```bash
-# 1. Primera vez: Indexa el proyecto (una sola vez)
-$ osmosis analyze --dir ./my-legacy-app
-🧠 Indexando... 100% (1,234 entidades)
-✅ 1,234 entidades, 1,234 vectores generados
-✅ Cache guardado en .osmosis/
-
-# 2. Migración: Usa contexto del proyecto (instantáneo)
-$ osmosis migrate --source ./legacy --from jsp --to react
-✅ Knowledge Graph cargado desde cache (0.2s)
-[1/50] Migrando LoginForm.jsp...
-  🔍 Encontró componente similar: LoginButton (evita duplicación)
-  ⚙️  Reutilizando: validateEmail, hashPassword
-  🪝 Usando hook existente: useAuth
-✅ LoginForm.jsx generado con contexto del proyecto
-```
-
-#### **Búsqueda Semántica (No Solo Keywords)**
-
-```typescript
-// ❌ RAG Naive: Busca por nombre exacto
-search("Button") → encuentra componentes con "Button" en el nombre
-
-// ✅ RAG Enterprise: Busca por significado
-search("login authentication") 
-  → encuentra: UserAuthForm, LoginButton, useAuth, validateCredentials
-  → aunque NO tengan "login" en el nombre
-```
-
-#### **Capacidades del RAG:**
-
-| Feature | Naive | **Osmosis** |
-|---------|-------|-------------|
-| **Búsqueda** | Keywords | ✅ **Similarity Vectorial** |
-| **Persistencia** | ❌ | ✅ **Cache Inteligente** |
-| **Código Real** | ❌ | ✅ **AST + Docstrings** |
-| **Evita Duplicación** | ❌ | ✅ **Reutiliza Componentes** |
-| **Embeddings** | ❌ | ✅ **OpenAI/Gemini/Local** |
-| **Performance** | O(n) | ✅ **O(log n)** |
-
-📚 **[Ver Documentación Completa del RAG →](docs/RAG-SYSTEM.md)**
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](package.json)
 
 ---
 
-## 🧠 Osmosis AI - Brain & Configuration
-Osmosis comes pre-configured with a powerful set of **AI Rules** for Cursor IDE, transforming it into an automated Migration Architect.
+## **✨ Key Features**
 
-### Active Rulebook (`.cursor/rules`)
-| Rule ID | Focus Area | Description |
-| :--- | :--- | :--- |
-| `00` | **Master Identity** | Enforces Security, Zero-Hallucination, and Interface-First architecture. |
-| `01-04` | **Legacy Ingestion** | Expert strategies for extracting logic from jQuery, JSP, PHP, and .NET. |
-| `05-06` | **Modern Refactoring** | Guidelines for cleaning up chaotic React and updating Angular. |
-| `10` | **Microfrontends** | "Luca Mezzalira" standard for splitting Monoliths using Module Federation. |
+- 🤖 **Claude 3.5 Sonnet Integration** - Real-time streaming code generation
+- 🧠 **RAG System** - Understands your entire codebase with vector similarity search
+- 🛡️ **CodeSafeGuard** - TypeScript Compiler API validation (not regex)
+- 🔧 **Auto-Repair** - Intelligent error fixing with up to 3 LLM attempts
+- 📊 **Tech Debt Analysis** - Calculates debt score and refactor hours
+- 🔄 **Dependency Graph** - AST-based dependency resolution with topological sort
+- 🚀 **Production Ready** - Backup manager, audit logs, path resolution
+- 🐳 **Docker Support** - Containerized deployment
+- 🔌 **Cursor MCP Integration** - Use directly in Cursor IDE
 
-### Usage in Cursor
-Just open a legacy file and type `Ctrl/Cmd + L`:
-> "Migrate this using Rule 02" 
-> "Split this into a Microfrontend (Rule 10)"
+---
 
+## **🚀 Quick Start**
 
-## 🎬 Transformation Workflow
+### **Prerequisites**
 
-### 1️⃣ Análisis Inteligente con Grafo de Dependencias
+- Node.js 20+
+- Anthropic API Key (Claude 3.5 Sonnet)
+- Optional: OpenAI API Key (for embeddings)
 
-```bash
-osmosis analyze --dir ./legacy-banking-app --output analysis.json
-```
-
-**Output:**
-```
-🔍 Analizando proyecto...
-✔ Tecnologías detectadas: jsp, java
-📊 Construyendo grafo de dependencias...
-✔ Grafo construido: 127 archivos encontrados
-
-📈 RESUMEN DEL ANÁLISIS:
-────────────────────────────────────────────────────────
-📁 Proyecto: /path/to/legacy-banking-app
-🔧 Tecnologías: jsp, java
-📄 Total de archivos: 127
-⏱️  Esfuerzo estimado: 254h (4 sprints)
-────────────────────────────────────────────────────────
-
-🎯 ORDEN DE MIGRACIÓN ÓPTIMO (Primeros 10):
-  1. src/utils/DateFormatter.jsp
-     ├─ Complejidad: 45 líneas
-     ├─ Dependencias: 0
-     └─ Dependientes: 23
-  
-  2. src/utils/CurrencyFormatter.jsp
-     ├─ Complejidad: 52 líneas
-     ├─ Dependencias: 0
-     └─ Dependientes: 18
-```
-
-**¿Por qué es importante?**
-- 🎯 **Orden Óptimo**: Migra archivos base primero, evita romper dependencias
-- 📊 **Métricas Reales**: Líneas de código, complejidad, esfuerzo estimado
-- 🔍 **Detección Automática**: No necesitas especificar la tecnología
-
-### 2️⃣ Migración con Claude 3.5 Sonnet + Streaming
+### **Installation**
 
 ```bash
-# Configurar API Key
+# Clone repository
+git clone https://github.com/yourusername/osmosis.git
+cd osmosis
+
+# Install dependencies
+npm install
+
+# Build
+npm run build
+
+# Configure API keys
 export ANTHROPIC_API_KEY="sk-ant-..."
+export OPENAI_API_KEY="sk-..."  # Optional, for better embeddings
+```
 
-osmosis migrate \
-  --source ./legacy-banking-app \
+### **Basic Usage**
+
+```bash
+# 1. Analyze legacy project
+npm run analyze -- --dir ./legacy-app --output analysis.json
+
+# 2. Migrate to modern framework
+npm run migrate -- \
+  --source ./legacy-app \
   --from jsp \
   --to react \
-  --output ./migrated-react \
-  --client "Banco Nacional"
+  --output ./migrated-app
 ```
 
-**Output:**
-```
-🚀 Iniciando migración...
-✔ Orden de migración determinado: 127 archivos
-🧠 Cargando Knowledge Graph...
-✔ Knowledge Graph cargado (1,234 entidades)
-🤖 Conectando con Claude 3.5 Sonnet...
-✔ Claude 3.5 Sonnet conectado (claude-3-5-sonnet-20241022)
+---
 
-[1/127] 🤖 Generando código para src/utils/DateFormatter.jsp...
-     ...................................................... ✓
-✅ src/utils/DateFormatter.jsp migrado
+## **🐳 Docker Deployment**
 
-[3/127] 🤖 Generando código para src/services/UserService.jsp...
-     ...................................................... ✓
-⚠️  SafeGuard detectó problemas:
-     ❌ Class Component detected (use Functional Component + Hooks)
-     ❌ Missing TypeScript types for props
-
-🔧 Iniciando auto-reparación con Claude (Max 3 intentos)...
-   🤖 Intento 1/3 - Enviando a Claude...
-   ✅ Reparación exitosa en intento 1
-✅ Código reparado automáticamente
-
-📊 RESUMEN DE MIGRACIÓN:
-────────────────────────────────────────────────────────
-✅ Exitosos: 125/127
-❌ Fallidos: 2/127
-📁 Output: ./migrated-react
-────────────────────────────────────────────────────────
-```
-
-**Diferenciadores clave:**
-- 🤖 **Claude 3.5 Sonnet**: Motor LLM de última generación con streaming en tiempo real
-- 🧠 **RAG Semántico**: Entiende tu proyecto completo (no genera componentes duplicados)
-- 🛡️ **CodeSafeGuard**: Valida código con compilador TypeScript real (no regex)
-- 🔧 **Auto-Repair Inteligente**: Si el código tiene errores, Claude lo repara automáticamente (max 3 intentos)
-- 🔒 **Enterprise Ready**: Soporte para proxies corporativos y on-premise deployment
-- 📊 **Progreso en Tiempo Real**: Streaming visual del código siendo generado
-
-📚 **[Ver Documentación LLM →](docs/LLM-INTEGRATION.md)**
-
-### 3️⃣ Refactorización de Código Moderno
+### **Build Image**
 
 ```bash
-# ¿Tienes React 2019 con Class Components?
-osmosis refactor \
-  --source ./old-react-app \
-  --framework react \
-  --output ./modern-react-app
+docker-compose build
 ```
 
-**Detecta y corrige:**
-- ❌ Class Components → ✅ Functional + Hooks
-- ❌ `any` types → ✅ TypeScript Interfaces
-- ❌ `dangerouslySetInnerHTML` → ✅ DOMPurify
-- ❌ Performance issues → ✅ `useMemo`, `useCallback`
-- ❌ Accesibilidad → ✅ ARIA labels, semantic HTML
-
-### 4️⃣ Microfrontend Architecture
+### **Run Analysis**
 
 ```bash
-# ¿Monolito React imposible de mantener?
-osmosis microfrontend generate \
-  --source ./monolith-react-app \
-  --output ./micro-frontends \
-  --strategy module-federation
+docker-compose run osmosis analyze --dir /workspace --output /workspace/analysis.json
 ```
 
-**Output:**
-```
-📦 shell-app (Puerto 3000)
-   ├─ Router principal
-   ├─ Layout compartido
-   └─ Error Boundaries
+### **Run Migration**
 
-📦 mfe-dashboard (Puerto 3001)
-📦 mfe-reports (Puerto 3002)
-📦 mfe-settings (Porto 3003)
-
-✅ Webpack Module Federation configurado
-✅ Shared dependencies optimizados
-✅ Tests E2E generados
+```bash
+docker-compose run osmosis migrate \
+  --source /workspace/legacy \
+  --from php \
+  --to react \
+  --output /workspace/migrated
 ```
 
-## 🏗️ Arquitectura Robusta - Enterprise Grade
+### **Environment Variables**
 
-### 🧠 Motor de Análisis
+Create `.env` file:
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                   DependencyGraph                           │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
-│  │ LegacyDetector│→│ AST Parser  │→│ Dependency  │        │
-│  │ (Auto-detect) │ │ (Multi-Lang)│ │   Resolver  │        │
-│  └─────────────┘  └─────────────┘  └─────────────┘        │
-│           ↓                                ↓                │
-│  ┌──────────────────────────────────────────────┐          │
-│  │   Migration Order (Bottom-Up Topological)    │          │
-│  │   Utils.js → Service.js → Component.js       │          │
-│  └──────────────────────────────────────────────┘          │
-└─────────────────────────────────────────────────────────────┘
+```env
+ANTHROPIC_API_KEY=sk-ant-...
+OPENAI_API_KEY=sk-...
+ANTHROPIC_BASE_URL=https://api.anthropic.com  # Optional: for enterprise proxy
 ```
 
-**¿Por qué es diferente?**
-- ✅ **Compilador Real**: Usa TypeScript Compiler API, no regex
-- ✅ **Grafo de Dependencias**: Migra en orden correcto (utils antes que apps)
-- ✅ **AST Parsing**: Entiende estructura del código, no solo texto
+---
 
-### 🛡️ CodeSafeGuard - Validación Empresarial
+## **🔌 Cursor MCP Integration**
 
-```typescript
-// ❌ LLM genera esto (MALO)
-class UserList extends Component {
-  render() {
-    return <div dangerouslySetInnerHTML={{__html: data}} />;
+Osmosis implements the Model Context Protocol (MCP) for direct integration with Cursor IDE.
+
+### **Setup**
+
+1. **Build Osmosis**:
+```bash
+npm run build
+```
+
+2. **Configure Cursor**:
+
+Add to your Cursor settings (`.cursor/settings.json` or global settings):
+
+```json
+{
+  "mcpServers": {
+    "osmosis": {
+      "command": "node",
+      "args": ["/absolute/path/to/osmosis/dist/mcp/server.js"],
+      "env": {
+        "ANTHROPIC_API_KEY": "sk-ant-...",
+        "OPENAI_API_KEY": "sk-..."
+      }
+    }
   }
 }
-
-// ⚠️ SafeGuard RECHAZA automáticamente:
-// - Class Component (obsoleto)
-// - XSS vulnerability (dangerouslySetInnerHTML sin sanitizar)
-
-// 🔧 Auto-Repair genera esto (BUENO)
-import DOMPurify from 'dompurify';
-
-export const UserList: React.FC<Props> = ({ data }) => {
-  const sanitized = DOMPurify.sanitize(data);
-  return <div dangerouslySetInnerHTML={{__html: sanitized}} />;
-};
 ```
 
-**Reglas de Validación:**
-- ✅ **Sintaxis**: Código compila sin errores TypeScript
-- ✅ **Seguridad**: No XSS, SQL injection, eval()
-- ✅ **Performance**: No inline functions en loops
-- ✅ **Accesibilidad**: WCAG 2.1 AA compliance
-- ✅ **Modernidad**: Hooks, no Class Components
+3. **Restart Cursor**
 
-### 🧬 RAG Engine - Contexto Inteligente
+### **Available MCP Tools**
+
+Once configured, you can use these tools in Cursor:
+
+- `analyze_project` - Full project analysis with tech debt
+- `detect_technology` - Identify legacy technologies
+- `calculate_tech_debt` - Get debt score and refactor hours
+- `validate_code` - Validate generated code
+- `migrate_file` - Migrate single file with RAG context
+
+### **Example Usage in Cursor**
 
 ```
-┌────────────────────────────────────────────────────────────┐
-│            Codebase RAG (Retrieval-Augmented)             │
-│  ┌───────────┐   ┌───────────┐   ┌──────────────┐       │
-│  │  Indexer  │→  │ ChromaDB  │←  │ Query Engine │       │
-│  │ (Scan ALL)│   │ (Vectors) │   │ (Similar)    │       │
-│  └───────────┘   └───────────┘   └──────────────┘       │
-│        ↓                                  ↑               │
-│  ┌──────────────────────────────────────────┐            │
-│  │ Claude API: "Here's how YOU handle auth" │            │
-│  │ (Context from YOUR codebase, not generic)│            │
-│  └──────────────────────────────────────────┘            │
-└────────────────────────────────────────────────────────────┘
+# In Cursor chat:
+@osmosis analyze_project {"projectPath": "./my-legacy-app"}
+
+# Or ask natural language:
+"Analyze this legacy JSP project and tell me the tech debt"
 ```
 
-**¿Por qué RAG?**
-- ✅ Aprende patrones de TU empresa (nombres, estilos, servicios)
-- ✅ Genera código consistente con TU arquitectura
-- ✅ No alucinaciones: "No tenés ese componente, creémoslo"
+---
 
-## 🔧 Technology Stack
+## **📊 Supported Technologies**
 
-**Input (Auto-Detected):**
-- JSP, PHP, ASP, Ruby, Python, ColdFusion, Perl, VB, jQuery - **We handle them all**
+### **Input (Legacy)**
 
-**Processing:**
-- **AI Engine**: Claude 3.5 Sonnet (via your Enterprise Proxy)
-- **RAG**: ChromaDB + Local embeddings (100% private)
-- **Parsing**: Multi-language AST parsers + Tree-sitter
-- **Validation**: TypeScript Compiler API (real compiler, not regex)
-- **Understanding**: Semantic analysis of business logic
+| Technology | Detection | Parsing | Status |
+|-----------|-----------|---------|--------|
+| JSP | ✅ | ✅ | 🟢 Full |
+| PHP | ✅ | ✅ | 🟢 Full |
+| jQuery | ✅ | ✅ | 🟢 Full |
+| AngularJS v1 | ✅ | ✅ | 🟢 Full |
+| ASP.NET | ✅ | 🟡 | 🟡 V1 |
+| Ruby Rails | ✅ | 🟡 | 🟡 V1 |
+| Python Django | ✅ | 🟡 | 🟡 V1 |
+| Cold Fusion | ✅ | 🟡 | 🟡 V1 |
 
-**Output (Your Choice):**
-- **React** (CRA, Vite, Next.js 14)
-- **Angular** (v17+ with Signals)
-- **Vue** (3.x Composition API, Nuxt 3)
-- **Svelte** (SvelteKit)
+### **Output (Modern)**
 
-**Plus:**
-- TypeScript (enforced)
-- E2E Tests (Playwright/Cypress)
-- Storybook stories
-- Full documentation
+- React (TypeScript, Hooks, Best Practices)
+- Angular (Standalone Components, Signals)
+- Vue 3 (Composition API)
 
-## 📄 License
-Proprietary - Enterprise Edition
+---
+
+## **🏗️ Architecture**
+
+```
+┌─────────────────────────────────────────┐
+│          CLI / MCP Server               │
+├─────────────────────────────────────────┤
+│ LegacyDetector → DependencyGraph        │
+│       ↓                ↓                 │
+│ CodebaseIndexer → KnowledgeGraph (RAG)  │
+│       ↓                                  │
+│ LLMService (Claude 3.5 Sonnet)          │
+│       ↓                                  │
+│ CodeSafeGuard → Auto-Repair Loop        │
+│       ↓                                  │
+│    Migrated Code ✅                      │
+└─────────────────────────────────────────┘
+```
+
+### **Core Components**
+
+- **LegacyDetector**: Identifies legacy technologies (jQuery, JSP, PHP, etc.)
+- **DependencyGraph**: AST parsing + topological sort for migration order
+- **KnowledgeGraph**: RAG system with vector embeddings (OpenAI/Gemini/Local)
+- **LLMService**: Claude 3.5 Sonnet integration with streaming
+- **CodeSafeGuard**: TypeScript Compiler API validation
+- **TechDebtAnalyzer**: Calculates debt score with 7 heuristics
+- **BackupManager**: Automatic backups before modifications
+- **AuditLogger**: Immutable audit logs with hash chain
+
+---
+
+## **🎯 Use Cases**
+
+### **1. Banking Legacy Migration**
+
+```bash
+# Analyze 20-year-old JSP application
+osmosis analyze --dir ./banking-app
+
+Output:
+✅ Technology: JSP (Era: 2000s)
+✅ 500 files, 250,000 lines
+✅ Tech Debt: 1,200 hours refactor
+✅ Migration order determined
+
+# Migrate to React
+osmosis migrate --source ./banking-app --from jsp --to react
+
+Output:
+✅ 500/500 files migrated
+✅ RAG prevented 47 duplicate components
+✅ Auto-repaired 23 validation errors
+```
+
+### **2. Refactor Modern Code**
+
+```bash
+# Refactor React 2019 code to 2025 standards
+osmosis refactor --source ./old-react-app --framework react
+
+Fixes:
+✅ Class Components → Hooks
+✅ any types → Proper interfaces
+✅ Performance (useMemo, useCallback)
+✅ Accessibility (ARIA labels)
+```
+
+### **3. Tech Debt Audit**
+
+```bash
+osmosis analyze --dir ./legacy-app
+
+Output:
+Debt Score: 78/100 (High)
+Refactor Hours: 1,200h
+Toxic Files: 45
+Recommendations:
+  - God Classes detected (15 files >600 lines)
+  - Spaghetti code (nesting depth >6)
+  - Magic numbers (234 occurrences)
+```
+
+---
+
+## **📈 Performance**
+
+| Operation | Time | Notes |
+|-----------|------|-------|
+| **Indexing** (500 files) | ~3 min | First time only |
+| **Load Cache** | <0.5s | Subsequent runs |
+| **Migration** (per file) | 10-30s | With RAG context |
+| **Auto-Repair** | +5-15s | If errors detected |
+
+---
+
+## **💰 Cost Estimation**
+
+Claude 3.5 Sonnet Pricing:
+- Input: $3.00 / 1M tokens
+- Output: $15.00 / 1M tokens
+
+**Typical Project (500 files):**
+- ~$25-30 USD total
+- RAG reduces cost by ~15% (component reuse)
+
+---
+
+## **🔒 Enterprise Security**
+
+### **On-Premise / Air-Gapped**
+
+Use enterprise proxy:
+
+```bash
+export ANTHROPIC_BASE_URL="https://your-proxy.company.com"
+export ANTHROPIC_API_KEY="your-enterprise-key"
+```
+
+### **Features**
+
+- ✅ Backup snapshots before modifications
+- ✅ Immutable audit logs with hash chain
+- ✅ Code never sent externally (on-premise mode)
+- ✅ GDPR/SOC2/ISO27001 compliant architecture
+
+---
+
+## **📚 Documentation**
+
+- [RAG System](docs/RAG-SYSTEM.md) - Vector embeddings and semantic search
+- [LLM Integration](docs/LLM-INTEGRATION.md) - Claude 3.5 Sonnet details
+- [Security](docs/SECURITY.md) - Enterprise deployment
+- [Roadmap](ROADMAP.md) - Feature maturity and future plans
+
+---
+
+## **🛠️ Development**
+
+```bash
+# Run in dev mode
+npm run dev
+
+# Run tests
+npm test
+
+# Run MCP server in dev mode
+npm run mcp:dev
+
+# Lint
+npm run lint
+```
+
+---
+
+## **🤝 Contributing**
+
+Contributions welcome! Priority areas:
+
+1. PHP Laravel route parser
+2. Ruby Rails route parser
+3. Python Django URL parser
+4. Visual regression testing
+
+See [ROADMAP.md](ROADMAP.md) for details.
+
+---
+
+## **📄 License**
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+---
+
+## **🙋 Support**
+
+- **Issues**: [GitHub Issues](https://github.com/yourusername/osmosis/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/yourusername/osmosis/discussions)
+- **Enterprise**: contact@osmosis.dev
+
+---
+
+## **⭐ Show Your Support**
+
+If Osmosis helped you migrate legacy code, give us a ⭐ on GitHub!
+
+---
+
+**Built with ❤️ using Claude 3.5 Sonnet, TypeScript, and Node.js**

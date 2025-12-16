@@ -9,6 +9,8 @@
     "start": "node dist/cli.js",
     "analyze": "tsx src/cli.ts analyze",
     "migrate": "tsx src/cli.ts migrate",
+    "mcp": "node dist/mcp/server.js",
+    "mcp:dev": "tsx watch src/mcp/server.ts",
     "test": "vitest",
     "test:e2e": "playwright test",
     "docker:build": "docker-compose build",

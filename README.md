@@ -137,9 +137,12 @@ osmosis analyze --dir ./legacy-banking-app --output analysis.json
 - 📊 **Métricas Reales**: Líneas de código, complejidad, esfuerzo estimado
 - 🔍 **Detección Automática**: No necesitas especificar la tecnología
 
-### 2️⃣ Migración con Validación en Tiempo Real
+### 2️⃣ Migración con Claude 3.5 Sonnet + Streaming
 
 ```bash
+# Configurar API Key
+export ANTHROPIC_API_KEY="sk-ant-..."
+
 osmosis migrate \
   --source ./legacy-banking-app \
   --from jsp \
@@ -152,15 +155,24 @@ osmosis migrate \
 ```
 🚀 Iniciando migración...
 ✔ Orden de migración determinado: 127 archivos
+🧠 Cargando Knowledge Graph...
+✔ Knowledge Graph cargado (1,234 entidades)
+🤖 Conectando con Claude 3.5 Sonnet...
+✔ Claude 3.5 Sonnet conectado (claude-3-5-sonnet-20241022)
 
-[1/127] Migrando src/utils/DateFormatter.jsp...
+[1/127] 🤖 Generando código para src/utils/DateFormatter.jsp...
+     ...................................................... ✓
 ✅ src/utils/DateFormatter.jsp migrado
 
-[3/127] Migrando src/services/UserService.jsp...
+[3/127] 🤖 Generando código para src/services/UserService.jsp...
+     ...................................................... ✓
 ⚠️  SafeGuard detectó problemas:
      ❌ Class Component detected (use Functional Component + Hooks)
      ❌ Missing TypeScript types for props
-🔧 Intentando reparación automática...
+
+🔧 Iniciando auto-reparación con Claude (Max 3 intentos)...
+   🤖 Intento 1/3 - Enviando a Claude...
+   ✅ Reparación exitosa en intento 1
 ✅ Código reparado automáticamente
 
 📊 RESUMEN DE MIGRACIÓN:
@@ -172,9 +184,14 @@ osmosis migrate \
 ```
 
 **Diferenciadores clave:**
+- 🤖 **Claude 3.5 Sonnet**: Motor LLM de última generación con streaming en tiempo real
+- 🧠 **RAG Semántico**: Entiende tu proyecto completo (no genera componentes duplicados)
 - 🛡️ **CodeSafeGuard**: Valida código con compilador TypeScript real (no regex)
-- 🔧 **Auto-Repair**: Si el LLM genera código malo, lo repara automáticamente
-- 📊 **Progreso en Tiempo Real**: Sabes exactamente qué está pasando
+- 🔧 **Auto-Repair Inteligente**: Si el código tiene errores, Claude lo repara automáticamente (max 3 intentos)
+- 🔒 **Enterprise Ready**: Soporte para proxies corporativos y on-premise deployment
+- 📊 **Progreso en Tiempo Real**: Streaming visual del código siendo generado
+
+📚 **[Ver Documentación LLM →](docs/LLM-INTEGRATION.md)**
 
 ### 3️⃣ Refactorización de Código Moderno
 

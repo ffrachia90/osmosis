@@ -11,6 +11,7 @@ import { CodebaseIndexer } from './core/rag/CodebaseIndexer.js';
 import { ContextInjector } from './core/rag/ContextInjector.js';
 import { KnowledgeGraph } from './core/rag/KnowledgeGraph.js';
 import { TechDebtAnalyzer } from './core/analysis/TechDebtAnalyzer.js';
+import { LLMService } from './core/llm/LLMService.js';
 
 const program = new Command();
 
@@ -237,6 +238,32 @@ program
       const contextInjector = new ContextInjector(knowledgeGraph);
       spinner.succeed('Knowledge Graph cargado');
       
+      // Inicializar LLM Service
+      spinner.start('🤖 Conectando con Claude 3.5 Sonnet...');
+      let llmService: LLMService;
+      
+      try {
+        llmService = new LLMService({
+          apiKey: process.env.ANTHROPIC_API_KEY,
+          baseURL: process.env.ANTHROPIC_BASE_URL
+        });
+        
+        // Health check
+        const isHealthy = await llmService.healthCheck();
+        if (!isHealthy) {
+          throw new Error('LLM service health check failed');
+        }
+        
+        spinner.succeed(`Claude 3.5 Sonnet conectado (${llmService.getModelInfo()})`);
+      } catch (error) {
+        spinner.fail('❌ Error conectando con Claude');
+        console.error('\n💡 Tip: Configura ANTHROPIC_API_KEY:');
+        console.error('   export ANTHROPIC_API_KEY="sk-ant-..."');
+        console.error('   \n   O si usas proxy empresarial:');
+        console.error('   export ANTHROPIC_BASE_URL="https://your-proxy.com"');
+        process.exit(1);
+      }
+      
       // Migrar cada archivo en orden
       let migratedCount = 0;
       let failedCount = 0;
@@ -268,9 +295,30 @@ program
             targetFramework: options.to
           });
 
-          // TODO: Aquí se llamaría a Claude API
-          // Por ahora simulamos respuesta
-          const generatedCode = await simulateLLMCall(prompt, options.to);
+          // Generar código con Claude 3.5 Sonnet + Streaming
+          spinner.text = `[${index + 1}/${filesToMigrate.length}] 🤖 Generando código para ${relPath}...`;
+          
+          let generatedCode = '';
+          let tokenCount = 0;
+          
+          generatedCode = await llmService.generateWithStreaming(prompt, {
+            onStart: () => {
+              process.stdout.write('\n     ');
+            },
+            onToken: (token) => {
+              // Mostrar puntos de progreso cada 50 tokens
+              tokenCount++;
+              if (tokenCount % 50 === 0) {
+                process.stdout.write('.');
+              }
+            },
+            onComplete: () => {
+              process.stdout.write(' ✓\n');
+            },
+            onError: (error) => {
+              spinner.fail(`❌ Error LLM: ${error.message}`);
+            }
+          });
 
           // Validar con SafeGuard
           const validation = CodeSafeGuard.validate(generatedCode, options.to as any);
@@ -279,8 +327,13 @@ program
             spinner.warn(`⚠️  SafeGuard detectó problemas en ${relPath}`);
             validation.errors.forEach(err => console.log(`     ❌ ${err}`));
 
-            // Auto-reparar
-            const repairedCode = await attemptRepair(generatedCode, validation.errors, options.to);
+            // Auto-reparar con LLM
+            const repairedCode = await attemptRepair(
+              llmService,
+              generatedCode,
+              validation.errors,
+              options.to
+            );
 
             if (repairedCode) {
               spinner.succeed(`✅ Código reparado automáticamente`);
@@ -364,40 +417,54 @@ function calculateEffort(files: string[], graph: DependencyGraph): { hours: numb
   return { hours, sprints };
 }
 
-async function simulateLLMCall(prompt: string, targetTech: string): Promise<string> {
-  // TODO: Integrar con Claude API real
-  // Por ahora retornamos código simulado
-
-  if (targetTech === 'react') {
-    return `import React from 'react';
-
-export const MigratedComponent: React.FC = () => {
-  return (
-    <div>
-      <h1>Componente Migrado</h1>
-    </div>
-  );
-};`;
-  }
-
-  return '// TODO: Implementar generación real con LLM';
-}
-
 /**
- * Loop de Reparación con Reintentos (Max 3)
+ * Loop de Reparación Real con LLM (Max 3 intentos)
  */
-async function attemptRepair(code: string, errors: string[], targetTech: string, maxRetries = 3): Promise<string | null> {
-  console.log(`\n🔧 Iniciando auto-reparación (Max ${maxRetries} intentos)...`);
+async function attemptRepair(
+  llmService: LLMService,
+  code: string,
+  errors: string[],
+  targetTech: string,
+  maxRetries = 3
+): Promise<string | null> {
+  console.log(`\n🔧 Iniciando auto-reparación con Claude (Max ${maxRetries} intentos)...`);
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    console.log(`\n   Intento ${attempt}/${maxRetries}...`);
+    console.log(`\n   🤖 Intento ${attempt}/${maxRetries} - Enviando a Claude...`);
     
     try {
-      // Generar prompt de reparación
-      const repairPrompt = CodeSafeGuard.generateRepairPrompt(code, errors);
+      // Llamar al LLM para reparar el código
+      const repairedCode = await llmService.repair(
+        code,
+        errors,
+        targetTech,
+        attempt
+      );
       
-      // TODO: Aquí llamaríamos al LLM real
-      // Por ahora simulamos con fixes conocidos
+      // Validar código reparado
+      const validation = CodeSafeGuard.validate(repairedCode, targetTech as any);
+      
+      if (validation.isValid) {
+        console.log(`   ✅ Reparación exitosa en intento ${attempt}`);
+        return repairedCode;
+      } else {
+        console.log(`   ⚠️  Intento ${attempt} - Aún hay errores:`);
+        validation.errors.forEach(err => console.log(`      - ${err}`));
+        
+        // Actualizar para siguiente intento
+        errors = validation.errors;
+        code = repairedCode; // Usar versión parcialmente reparada como base
+        
+        if (attempt < maxRetries) {
+          console.log(`   🔄 Reintentando con errores actualizados...`);
+        }
+      }
+      
+    } catch (error) {
+      console.error(`   ❌ Error en intento ${attempt}: ${error}`);
+      
+      // Si falla la conexión al LLM, intentar fallback con fixes conocidos
+      console.log(`   🔧 Intentando fixes automáticos conocidos...`);
       let repairedCode = code;
       
       // Fix 1: Class Component → Functional
@@ -422,30 +489,21 @@ async function attemptRepair(code: string, errors: string[], targetTech: string,
       // Fix 3: eval() removal
       if (errors.some(e => e.includes('eval()'))) {
         repairedCode = repairedCode.replace(/eval\(/g, '// REMOVED: eval(');
-        console.log('   ⚠️  eval() removido - requiere revisión manual');
       }
       
-      // Validar código reparado
+      // Validar fallback
       const validation = CodeSafeGuard.validate(repairedCode, targetTech as any);
-      
       if (validation.isValid) {
-        console.log(`   ✅ Reparación exitosa en intento ${attempt}`);
+        console.log(`   ✅ Reparación exitosa con fixes automáticos`);
         return repairedCode;
-      } else {
-        console.log(`   ❌ Intento ${attempt} falló. Errores restantes:`);
-        validation.errors.forEach(err => console.log(`      - ${err}`));
-        
-        // Actualizar errors para siguiente intento
-        errors = validation.errors;
-        code = repairedCode; // Usar versión parcialmente reparada
       }
       
-    } catch (error) {
-      console.error(`   ❌ Error en intento ${attempt}: ${error}`);
+      code = repairedCode;
     }
   }
   
   console.log(`\n❌ Auto-reparación falló después de ${maxRetries} intentos`);
+  console.log(`   💡 Considera revisar manualmente el archivo`);
   return null;
 }
 

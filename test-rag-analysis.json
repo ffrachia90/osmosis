@@ -1,0 +1,352 @@
+{
+  "project": "/Users/ferfrachia/Projects/git/osmosis/src",
+  "timestamp": "2025-12-16T17:19:19.954Z",
+  "technologies": [],
+  "totalFiles": 26,
+  "debtMetrics": {
+    "score": 27,
+    "refactorHours": 419,
+    "recommendations": [
+      "✅ BAJO: Código relativamente limpio",
+      "💡 Mantén las prácticas actuales",
+      "🔧 Usa Osmosis para automatizar la migración a código moderno"
+    ]
+  },
+  "knowledgeGraph": {
+    "totalEntities": 629,
+    "components": 0,
+    "patterns": 0,
+    "themeTokens": 0
+  },
+  "migrationOrder": [
+    {
+      "order": 1,
+      "file": "cli.ts",
+      "complexity": 415,
+      "debtScore": 48,
+      "issues": [
+        "🟠 High Nesting (Depth 7)",
+        "🟡 Growing File (415 lines)",
+        "🟡 5 TODO(s) found",
+        "🟡 1 Long Method(s)",
+        "🔴 eval() detected - CRITICAL SECURITY RISK"
+      ],
+      "dependencies": 0,
+      "dependents": 0
+    },
+    {
+      "order": 2,
+      "file": "parsers/legacy-parser-factory.ts",
+      "complexity": 601,
+      "debtScore": 45,
+      "issues": [
+        "🟡 Moderate Nesting (Depth 5)",
+        "🟠 Large File (601 lines) - Consider splitting",
+        "🟠 Multiple TODOs (7 pending tasks)",
+        "🔴 High Code Duplication"
+      ],
+      "dependencies": 0,
+      "dependents": 0
+    },
+    {
+      "order": 3,
+      "file": "parsers/jsp-parser.ts",
+      "complexity": 494,
+      "debtScore": 28,
+      "issues": [
+        "🟠 High Nesting (Depth 7)",
+        "🟡 Growing File (494 lines)",
+        "🟡 3 TODO(s) found"
+      ],
+      "dependencies": 0,
+      "dependents": 1
+    },
+    {
+      "order": 4,
+      "file": "mappers/design-system-scanner.ts",
+      "complexity": 352,
+      "debtScore": 20,
+      "issues": [
+        "🟠 High Nesting (Depth 6)",
+        "🟡 1 TODO(s) found"
+      ],
+      "dependencies": 0,
+      "dependents": 1
+    },
+    {
+      "order": 5,
+      "file": "analyzers/video-analyzer.ts",
+      "complexity": 316,
+      "debtScore": 15,
+      "issues": [
+        "🟠 High Nesting (Depth 7)"
+      ],
+      "dependencies": 0,
+      "dependents": 2
+    },
+    {
+      "order": 6,
+      "file": "analyzers/behavior-extractor.ts",
+      "complexity": 435,
+      "debtScore": 43,
+      "issues": [
+        "🟠 High Nesting (Depth 6)",
+        "🟡 Growing File (435 lines)",
+        "🟡 4 TODO(s) found",
+        "🟡 1 Long Method(s)",
+        "🔴 High Code Duplication"
+      ],
+      "dependencies": 1,
+      "dependents": 2
+    },
+    {
+      "order": 7,
+      "file": "mappers/component-mapper.ts",
+      "complexity": 300,
+      "debtScore": 25,
+      "issues": [
+        "🟠 High Nesting (Depth 6)",
+        "🔴 High Code Duplication"
+      ],
+      "dependencies": 2,
+      "dependents": 0
+    },
+    {
+      "order": 8,
+      "file": "knowledge/best-practices-knowledge-base.ts",
+      "complexity": 396,
+      "debtScore": 28,
+      "issues": [
+        "🟡 Moderate Nesting (Depth 5)",
+        "🟠 Some Code Duplication",
+        "🔴 eval() detected - CRITICAL SECURITY RISK"
+      ],
+      "dependencies": 0,
+      "dependents": 0
+    },
+    {
+      "order": 9,
+      "file": "analyzers/microfrontend-analyzer.ts",
+      "complexity": 412,
+      "debtScore": 16,
+      "issues": [
+        "🟡 Moderate Nesting (Depth 5)",
+        "🟡 Growing File (412 lines)"
+      ],
+      "dependencies": 0,
+      "dependents": 1
+    },
+    {
+      "order": 10,
+      "file": "generators/microfrontend-generator.ts",
+      "complexity": 662,
+      "debtScore": 40,
+      "issues": [
+        "🟠 High Nesting (Depth 6)",
+        "🟠 Large File (662 lines) - Consider splitting",
+        "🔴 High Code Duplication"
+      ],
+      "dependencies": 1,
+      "dependents": 0
+    },
+    {
+      "order": 11,
+      "file": "generators/framework-generator.ts",
+      "complexity": 701,
+      "debtScore": 45,
+      "issues": [
+        "🟠 High Nesting (Depth 6)",
+        "🟠 Large File (701 lines) - Consider splitting",
+        "🟡 1 TODO(s) found",
+        "🔴 High Code Duplication"
+      ],
+      "dependencies": 1,
+      "dependents": 0
+    },
+    {
+      "order": 12,
+      "file": "generators/e2e-test-generator.ts",
+      "complexity": 457,
+      "debtScore": 28,
+      "issues": [
+        "🟡 Growing File (457 lines)",
+        "🔴 High Code Duplication",
+        "🔴 No Error Handling for async operations"
+      ],
+      "dependencies": 2,
+      "dependents": 0
+    },
+    {
+      "order": 13,
+      "file": "analyzers/modern-code-analyzer.ts",
+      "complexity": 388,
+      "debtScore": 33,
+      "issues": [
+        "🟡 Moderate Nesting (Depth 5)",
+        "🔴 High Code Duplication",
+        "🔴 eval() detected - CRITICAL SECURITY RISK"
+      ],
+      "dependencies": 0,
+      "dependents": 1
+    },
+    {
+      "order": 14,
+      "file": "generators/best-practices-refactor.ts",
+      "complexity": 358,
+      "debtScore": 50,
+      "issues": [
+        "🟠 High Nesting (Depth 7)",
+        "🟡 3 TODO(s) found",
+        "🟡 1 Long Method(s)",
+        "🔴 High Code Duplication",
+        "🔴 eval() detected - CRITICAL SECURITY RISK"
+      ],
+      "dependencies": 1,
+      "dependents": 0
+    },
+    {
+      "order": 15,
+      "file": "analyzers/legacy-detector.ts",
+      "complexity": 279,
+      "debtScore": 13,
+      "issues": [
+        "🟡 Moderate Nesting (Depth 5)",
+        "🟡 5 TODO(s) found"
+      ],
+      "dependencies": 0,
+      "dependents": 0
+    },
+    {
+      "order": 16,
+      "file": "core/security/BackupManager.ts",
+      "complexity": 259,
+      "debtScore": 8,
+      "issues": [
+        "🟡 Moderate Nesting (Depth 5)"
+      ],
+      "dependencies": 0,
+      "dependents": 0
+    },
+    {
+      "order": 17,
+      "file": "core/security/AuditLogger.ts",
+      "complexity": 279,
+      "debtScore": 8,
+      "issues": [
+        "🟡 Moderate Nesting (Depth 5)"
+      ],
+      "dependencies": 0,
+      "dependents": 0
+    },
+    {
+      "order": 18,
+      "file": "core/safeguard/validator.ts",
+      "complexity": 233,
+      "debtScore": 28,
+      "issues": [
+        "🟡 Moderate Nesting (Depth 5)",
+        "🟠 Some Code Duplication",
+        "🔴 eval() detected - CRITICAL SECURITY RISK"
+      ],
+      "dependencies": 0,
+      "dependents": 0
+    },
+    {
+      "order": 19,
+      "file": "core/resolution/PathResolver.ts",
+      "complexity": 176,
+      "debtScore": 8,
+      "issues": [
+        "🟡 Moderate Nesting (Depth 5)"
+      ],
+      "dependencies": 0,
+      "dependents": 0
+    },
+    {
+      "order": 20,
+      "file": "core/rag/KnowledgeGraph.ts",
+      "complexity": 325,
+      "debtScore": 25,
+      "issues": [
+        "🔴 Spaghetti Infernal (Depth 13)"
+      ],
+      "dependencies": 0,
+      "dependents": 0
+    },
+    {
+      "order": 21,
+      "file": "core/rag/ContextInjector.ts",
+      "complexity": 206,
+      "debtScore": 30,
+      "issues": [
+        "🟠 High Nesting (Depth 6)",
+        "🔴 eval() detected - CRITICAL SECURITY RISK"
+      ],
+      "dependencies": 0,
+      "dependents": 0
+    },
+    {
+      "order": 22,
+      "file": "core/rag/CodebaseIndexer.ts",
+      "complexity": 339,
+      "debtScore": 30,
+      "issues": [
+        "🟠 High Nesting (Depth 7)",
+        "🟡 1 TODO(s) found",
+        "🔴 High Code Duplication"
+      ],
+      "dependencies": 0,
+      "dependents": 0
+    },
+    {
+      "order": 23,
+      "file": "core/prompt-engine/templates.ts",
+      "complexity": 61,
+      "debtScore": 5,
+      "issues": [
+        "🟠 jQuery Chaining Hell detected"
+      ],
+      "dependencies": 0,
+      "dependents": 0
+    },
+    {
+      "order": 24,
+      "file": "core/prompt-engine/assembler.ts",
+      "complexity": 129,
+      "debtScore": 0,
+      "issues": [],
+      "dependencies": 0,
+      "dependents": 0
+    },
+    {
+      "order": 25,
+      "file": "core/analysis/TechDebtAnalyzer.ts",
+      "complexity": 473,
+      "debtScore": 53,
+      "issues": [
+        "🟠 High Nesting (Depth 7)",
+        "🟡 Growing File (473 lines)",
+        "🔴 Magic Number Hell (36 hardcoded values)",
+        "🔴 eval() detected - CRITICAL SECURITY RISK"
+      ],
+      "dependencies": 0,
+      "dependents": 0
+    },
+    {
+      "order": 26,
+      "file": "core/analysis/DependencyGraph.ts",
+      "complexity": 306,
+      "debtScore": 35,
+      "issues": [
+        "🔴 Spaghetti Infernal (Depth 16)",
+        "🔴 High Code Duplication"
+      ],
+      "dependencies": 0,
+      "dependents": 0
+    }
+  ],
+  "estimatedEffort": {
+    "hours": 188,
+    "sprints": 3
+  }
+}

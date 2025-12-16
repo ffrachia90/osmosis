@@ -7,6 +7,9 @@ import { PromptAssembler, PromptContext } from './core/prompt-engine/assembler.j
 import { CodeSafeGuard } from './core/safeguard/validator.js';
 import { DependencyGraph } from './core/analysis/DependencyGraph.js';
 import { LegacyDetector } from './analyzers/legacy-detector.js';
+import { CodebaseIndexer } from './core/rag/CodebaseIndexer.js';
+import { ContextInjector } from './core/rag/ContextInjector.js';
+import { KnowledgeGraph } from './core/rag/KnowledgeGraph.js';
 import { TechDebtAnalyzer } from './core/analysis/TechDebtAnalyzer.js';
 
 const program = new Command();
@@ -47,9 +50,20 @@ program
       spinner.start('📊 Construyendo grafo de dependencias...');
       const graph = new DependencyGraph(projectDir);
       await graph.build();
-
+      
       const migrationOrder = graph.getMigrationOrder();
       spinner.succeed(`Grafo construido: ${migrationOrder.length} archivos encontrados`);
+      
+      // 3. Construir Knowledge Graph (RAG)
+      spinner.start('🧠 Indexando codebase para RAG...');
+      const indexer = new CodebaseIndexer(projectDir);
+      const knowledgeGraph = await indexer.index(graph);
+      const kgStats = knowledgeGraph.getStats();
+      spinner.succeed(
+        `Knowledge Graph: ${kgStats.totalEntities} entidades, ` +
+        `${kgStats.designSystem.components} componentes, ` +
+        `${kgStats.designSystem.patterns} patrones`
+      );
 
       // 3. Analizar Deuda Técnica
       spinner.start('💰 Calculando deuda técnica...');
@@ -78,6 +92,12 @@ program
           refactorHours: debtReport.totalRefactorHours,
           recommendations: debtReport.recommendations
         },
+        knowledgeGraph: {
+          totalEntities: kgStats.totalEntities,
+          components: kgStats.designSystem.components,
+          patterns: kgStats.designSystem.patterns,
+          themeTokens: kgStats.designSystem.themeTokens
+        },
         migrationOrder: migrationOrder.map((file, index) => {
           // Obtener métricas específicas de este archivo
           const content = filesContent.get(file) || '';
@@ -98,7 +118,11 @@ program
 
       const outputPath = path.resolve(options.output);
       fs.writeFileSync(outputPath, JSON.stringify(report, null, 2));
-
+      
+      // Guardar Knowledge Graph para uso posterior
+      const kgPath = path.join(projectDir, '.osmosis-knowledge-graph.json');
+      fs.writeFileSync(kgPath, knowledgeGraph.toJSON());
+      
       spinner.succeed(`Reporte generado: ${outputPath}`);
 
       // Mostrar resumen en consola

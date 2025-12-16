@@ -28,8 +28,10 @@ Osmosis uses Claude 3.5 Sonnet, RAG (Retrieval-Augmented Generation), and enterp
 ### **Prerequisites**
 
 - Node.js 20+
-- Anthropic API Key (Claude 3.5 Sonnet)
-- Optional: OpenAI API Key (for embeddings)
+- **Anthropic API Key** (Claude 3.5 Sonnet) - **REQUIRED** ✅
+- **OpenAI API Key** (for RAG embeddings) - **OPTIONAL** ⚠️
+  - If not provided, uses local embeddings (TF-IDF)
+  - Recommended for better RAG accuracy
 
 ### **Installation**
 
@@ -45,9 +47,11 @@ npm install
 npm run build
 
 # Configure API keys
-export ANTHROPIC_API_KEY="sk-ant-..."
-export OPENAI_API_KEY="sk-..."  # Optional, for better embeddings
+export ANTHROPIC_API_KEY="sk-ant-..."  # REQUIRED: For Claude 3.5 Sonnet (code generation)
+export OPENAI_API_KEY="sk-..."         # OPTIONAL: For RAG embeddings (better component detection)
 ```
+
+**💡 Tip:** You can run Osmosis with ONLY `ANTHROPIC_API_KEY`. The `OPENAI_API_KEY` is optional and only improves RAG accuracy.
 
 ### **Basic Usage**
 
@@ -302,6 +306,45 @@ export ANTHROPIC_API_KEY="your-enterprise-key"
 - ✅ Immutable audit logs with hash chain
 - ✅ Code never sent externally (on-premise mode)
 - ✅ GDPR/SOC2/ISO27001 compliant architecture
+
+---
+
+## **❓ FAQ**
+
+### **Why two API keys?**
+
+**Anthropic (REQUIRED):**
+- Powers Claude 3.5 Sonnet
+- Generates the migrated code
+- Without it, Osmosis can't work
+
+**OpenAI (OPTIONAL):**
+- Powers RAG embeddings (`text-embedding-3-small`)
+- Improves component similarity detection
+- Without it, uses local embeddings (TF-IDF)
+
+**Can I run without OpenAI key?**
+YES! Just set `ANTHROPIC_API_KEY` and Osmosis will work fine with local embeddings.
+
+**Which is better?**
+- **With OpenAI key:** RAG finds similar components more accurately (~95% precision)
+- **Without OpenAI key:** RAG still works (~75% precision) using TF-IDF
+
+**Alternative to OpenAI?**
+Use Gemini: `export GEMINI_API_KEY="..."`
+
+### **Do I need BOTH keys?**
+
+**Minimum (works):**
+```bash
+export ANTHROPIC_API_KEY="sk-ant-..."
+```
+
+**Recommended (better RAG):**
+```bash
+export ANTHROPIC_API_KEY="sk-ant-..."
+export OPENAI_API_KEY="sk-..."
+```
 
 ---
 

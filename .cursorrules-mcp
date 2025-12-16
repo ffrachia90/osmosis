@@ -3,7 +3,7 @@
     "osmosis": {
       "command": "node",
       "args": [
-        "/path/to/osmosis/dist/mcp/server.js"
+        "/absolute/path/to/osmosis/dist/mcp/server.js"
       ],
       "env": {
         "ANTHROPIC_API_KEY": "sk-ant-...",
@@ -12,4 +12,10 @@
     }
   }
 }
+
+// Notes:
+// - ANTHROPIC_API_KEY: REQUIRED (for Claude 3.5 Sonnet - code generation)
+// - OPENAI_API_KEY: OPTIONAL (for RAG embeddings - better component detection)
+//   If not provided, uses local embeddings (TF-IDF)
+// - Replace "/absolute/path/to/osmosis" with your actual path
 

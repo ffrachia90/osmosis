@@ -1,0 +1,21 @@
+---
+description: TECH: JSP / Java Migration Rules
+globs: *.jsp, *.java
+---
+# MIGRATION STRATEGY: JSP / JAVA
+
+When encountering JSP, Scriptlets, or JSTL Tags:
+
+### 1. Server-Side Extraction
+- **Concept:** JSP renders on the server. React renders on the client.
+- **Rule:** Identify Scriptlets (`<% %>`). Do NOT port them logic-for-logic.
+- **Action:** Define a `interface PageData` that represents the *output* of that Java logic. Assume this data comes from an API.
+
+### 2. JSTL Mapping
+- `<c:forEach items="${users}" var="u">` -> `{users.map(u => ...)}`
+- `<c:if test="${isAdmin}">` -> `{isAdmin && ...}`
+- `<c:choose>` -> Use a switch statement or ternary operators inside the render logic.
+
+### 3. Forms
+- Legacy JSPs often post directly to a servlet URL.
+- **Fix:** Convert to `onSubmit` handler calling an async API function. preventDefault().

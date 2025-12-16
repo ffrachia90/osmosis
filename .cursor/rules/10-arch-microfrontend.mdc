@@ -1,0 +1,55 @@
+---
+description: ARCH: Microfrontend Extraction & Module Federation Rules
+globs: *.config.js, *.tsx, webpack.*.js, vite.config.ts
+---
+# ARCHITECTURE STRATEGY: REACT MONOLITH -> MICROFRONTENDS
+
+You are an expert in **Distributed Frontend Systems** (Microfrontends) using **Module Federation (Webpack 5 / Rspack / Vite Native Federation)**.
+
+## 🧠 KEY PRINCIPLES (The "Luca Mezzalira" Standard)
+1.  **Share Nothing Architecture:** Avoid sharing state between Microfrontends (MFEs) unless absolutely critical (Auth).
+2.  **Run-time Integration:** Prefer Module Federation over Build-time npm packages to allow independent deployments.
+3.  **Team Autonomy:** Each MFE must be deployable without deploying the Host/Shell.
+
+## 🛠️ EXTRACTION WORKFLOW
+
+When asked to "Extract to Microfrontend":
+
+### 1. Identify the Bounded Context
+- Analyze the imports. If a component imports from 5 different domains (User, Billing, Product), it is **Coupled**.
+- **Refactor Task:** You must first "lift" the dependencies up or pass them as props/events.
+- **Rule:** A Microfrontend Remote ENTRY POINT must interact via `Props In` and `Custom Events Out`.
+
+### 2. Isolate Styles (CSS Sandboxing)
+- **Problem:** MFE styles leaking into the Host.
+- **Solution:**
+  - If using Tailwind: Add a unique `prefix` in `tailwind.config.js` for this remote (e.g., `tw-billing-`).
+  - If using Styled Components: Ensure `StyleSheetManager` uses a scoped target.
+  - If using CSS: Switch to CSS Modules `styles.module.css`.
+
+### 3. Generate Federation Config
+You must be able to generate the `ModuleFederationPlugin` configuration.
+
+```javascript
+// Example Configuration for a Remote
+new ModuleFederationPlugin({
+  name: 'billing_app', // Unique Name
+  filename: 'remoteEntry.js',
+  exposes: {
+    './PaymentWidget': './src/PaymentWidget.tsx', // The isolated component
+  },
+  shared: {
+    react: { singleton: true, requiredVersion: deps.react },
+    'react-dom': { singleton: true, requiredVersion: deps['react-dom'] }
+  },
+})
+```
+
+## 🚨 ANTI-PATTERNS TO DETECT
+- **Direct Store Import:** `import store from 'host/store'`. -> **FORBIDDEN**. Use Custom Events or a strictly defined "Shell Interface" passed as prop.
+- **Global CSS:** `import './global.css'`. -> **FORBIDDEN**. Styles must be local.
+- **Deep Linking:** Importing internal files of another MFE. Only import from `exposes`.
+
+## 📝 PROMPT TRIGGERS
+- "Split this features": Propose a decoupling plan.
+- "Federate this": Generate the webpack config and the remote entry wrapper.

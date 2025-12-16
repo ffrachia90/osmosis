@@ -50,6 +50,80 @@
 
 ---
 
+## 🆕 NEW: Modern Code Capabilities
+
+### ⚡ Modern Code Refactoring
+**¿Tu código React/Angular/Vue funciona pero está mal hecho?**
+
+Osmosis no solo migra legacy, también **mejora código moderno** con:
+- ✅ **Anti-Pattern Detection**: Detecta malas prácticas automáticamente
+- ✅ **Obsolete Code Modernization**: Class components → Functional + Hooks
+- ✅ **Performance Optimization**: Inline functions → useCallback, memo
+- ✅ **Security Hardening**: XSS, eval(), dangerouslySetInnerHTML fixes
+- ✅ **Accessibility Upgrades**: WCAG AA/AAA compliance
+- ✅ **TypeScript Strict Mode**: any → proper types
+- ✅ **Best Practices Enforcement**: Airbnb, Google, Microsoft standards
+
+**Example Input:**
+```jsx
+class UserList extends Component {  // ❌ Obsoleto
+  componentDidMount() {
+    fetch('/api/users').then(r => this.setState({users: r}));
+  }
+}
+```
+
+**Osmosis Output:**
+```tsx
+export const UserList: React.FC = () => {  // ✅ Moderno
+  const [users, setUsers] = useState<User[]>([]);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch('/api/users', { signal: controller.signal })
+      .then(r => r.json())
+      .then(setUsers);
+    return () => controller.abort();
+  }, []);
+};
+```
+
+### 🏗️ Monolith → Micro Frontends
+**¿Aplicación React monolítica que necesita escalabilidad?**
+
+Osmosis analiza tu app y la convierte en **arquitectura de Micro Frontends**:
+- ✅ **Automatic Boundary Detection**: Identifica dominios separables
+- ✅ **Module Federation**: Webpack 5 configuración completa
+- ✅ **Single-SPA Support**: Para casos complejos multi-framework
+- ✅ **Shell App Generation**: Orquestador central con routing
+- ✅ **Independent Deployment**: CI/CD para cada micro frontend
+- ✅ **Shared Libraries**: Dependencias comunes optimizadas
+- ✅ **Communication Strategies**: Event bus, custom events, shared state
+- ✅ **Contract Testing**: Tests entre micro frontends
+
+**Arquitectura generada:**
+```
+your-app/
+├── shell-app/           # Orquestador (puerto 3000)
+│   ├── webpack.config.js (Module Federation host)
+│   └── src/
+│       ├── Layout.tsx
+│       ├── Router.tsx
+│       └── ErrorBoundary.tsx
+├── mfe-auth/           # Micro Frontend Auth (puerto 3001)
+│   └── webpack.config.js (exposes: './App')
+├── mfe-dashboard/      # Micro Frontend Dashboard (puerto 3002)
+├── mfe-reports/        # Micro Frontend Reports (puerto 3003)
+└── shared/             # Librerías compartidas
+```
+
+**Estrategias soportadas:**
+- **Module Federation** (Webpack 5) - ⭐ Recomendado
+- **Single-SPA** - Multi-framework
+- **Web Components** - Framework-agnostic
+- **iFrame** - Legacy compatibility
+
+---
+
 ## Capabilities Matrix
 
 ### 1. Code Understanding (RAG)
@@ -128,6 +202,25 @@
   - Image optimization
   - Bundle analysis
 
+### 11. Modern Code Analysis
+- ✅ **Bad Practices Detection**: 50+ rules por framework
+- ✅ **Obsolete Pattern Detection**: Class components, lifecycle methods
+- ✅ **Security Scanning**: XSS, eval(), unsafe practices
+- ✅ **Performance Issues**: Inline functions, unnecessary re-renders
+- ✅ **Accessibility Audit**: WCAG compliance checking
+- ✅ **TypeScript 'any' Detection**: Type safety enforcement
+- ✅ **Code Score**: 0-100 rating with recommendations
+
+### 12. Micro Frontend Capabilities
+- ✅ **Domain Detection**: Automatic boundary identification
+- ✅ **Dependency Analysis**: Internal/external mapping
+- ✅ **Independence Scoring**: 0-100 per micro frontend
+- ✅ **Module Federation Config**: Webpack 5 setup completo
+- ✅ **Shell App Generation**: Layout, routing, error handling
+- ✅ **Communication Strategy**: Event bus, props, custom events
+- ✅ **Deployment Pipelines**: CI/CD independiente por MFE
+- ✅ **Contract Testing**: Integration tests entre MFEs
+
 ### 10. DevOps Integration
 - ✅ **CI/CD Pipelines** (GitHub Actions, GitLab CI)
 - ✅ **Docker** containerization
@@ -178,6 +271,8 @@
 - Advanced state management
 - Comprehensive test coverage (90%+)
 - Storybook + visual tests
+- **Modern Code Refactoring** ⚡
+- **Micro Frontend Migration** 🏗️
 - Priority support
 
 ### Enterprise Tier Adds

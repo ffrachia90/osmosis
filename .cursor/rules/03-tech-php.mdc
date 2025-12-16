@@ -1,0 +1,20 @@
+---
+description: TECH: Legacy PHP Migration Rules
+globs: *.php
+---
+# MIGRATION STRATEGY: LEGACY PHP
+
+When encountering PHP (especially mixed with HTML):
+
+### 1. Server vs Client Separation
+- **Concept:** PHP `echo` happens on the server. React happens in the browser.
+- **Rule:** Identify `<?php echo $var; ?>`. Map this to a mock data prop in the React component `props.var`.
+- **Logic:** `if ($_POST)` blocks are Backend API logic. Do not transcribe them to frontend code. Create a `submitForm(data)` async function stub.
+
+### 2. Includes & Layouts
+- **Legacy:** `include('header.php')`;
+- **Modern:** Use a Layout Component or `<Header />` import.
+
+### 3. Security
+- **Detection:** If you see `mysql_query` or raw SQL strings in the file.
+- **Action:** Add a comment: `// SECURITY: SQL Logic removed. Must be exposed via secure API endpoint.`

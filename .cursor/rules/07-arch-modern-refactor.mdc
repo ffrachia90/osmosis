@@ -1,0 +1,181 @@
+# Modern Code Refactoring Rules
+
+## Capability: Refactorizar Código Moderno con Malas Prácticas
+
+Osmosis NO solo migra legacy → moderno.
+También puede tomar código **MODERNO PERO MAL HECHO** y convertirlo en código **EXCELENTE**.
+
+## Casos de Uso
+
+### 1. React con Class Components Obsoletos
+```jsx
+// ANTES (Obsoleto)
+class UserList extends Component {
+  componentDidMount() {
+    fetch('/api/users').then(r => this.setState({users: r}));
+  }
+}
+
+// DESPUÉS (Moderno)
+export const UserList: React.FC = () => {
+  const [users, setUsers] = useState<User[]>([]);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch('/api/users', { signal: controller.signal })
+      .then(r => r.json())
+      .then(setUsers);
+    return () => controller.abort();
+  }, []);
+};
+```
+
+### 2. React con Malas Prácticas de Performance
+```jsx
+// ANTES (Performance issues)
+function Products() {
+  return products.map(p => (
+    <button onClick={() => deleteProduct(p.id)}>  // ❌ Inline function
+      {p.name}
+    </button>
+  ));
+}
+
+// DESPUÉS (Optimizado)
+function Products() {
+  const handleDelete = useCallback((id: string) => {
+    deleteProduct(id);
+  }, []);
+  
+  return products.map(p => (
+    <ProductItem key={p.id} product={p} onDelete={handleDelete} />
+  ));
+}
+
+const ProductItem = React.memo(({ product, onDelete }) => (
+  <button onClick={() => onDelete(product.id)}>
+    {product.name}
+  </button>
+));
+```
+
+### 3. TypeScript con 'any' por todos lados
+```tsx
+// ANTES (Type unsafe)
+function fetchData(url: any): Promise<any> {
+  return fetch(url).then((r: any) => r.json());
+}
+
+// DESPUÉS (Type safe)
+interface ApiResponse<T> {
+  data: T;
+  status: number;
+  error?: string;
+}
+
+async function fetchData<T>(url: string): Promise<ApiResponse<T>> {
+  const response = await fetch(url);
+  const data: ApiResponse<T> = await response.json();
+  return data;
+}
+```
+
+### 4. Seguridad (XSS, eval, etc.)
+```jsx
+// ANTES (Vulnerable)
+<div dangerouslySetInnerHTML={{__html: userInput}} />
+
+// DESPUÉS (Seguro)
+import DOMPurify from 'dompurify';
+
+<div dangerouslySetInnerHTML={{__html: DOMPurify.sanitize(userInput)}} />
+```
+
+### 5. Accesibilidad
+```jsx
+// ANTES (No accessible)
+<img src={url} />
+<button onClick={handler}><Icon /></button>
+
+// DESPUÉS (Accessible)
+<img src={url} alt="Usuario profile picture" />
+<button onClick={handler} aria-label="Eliminar usuario"><Icon /></button>
+```
+
+## Fuentes de Mejores Prácticas
+
+Osmosis se nutre de:
+
+1. **Documentación Oficial**:
+   - https://react.dev (React 18+)
+   - https://angular.io (Angular 17+)
+   - https://vuejs.org (Vue 3+)
+   - https://typescriptlang.org
+
+2. **Guías Empresariales**:
+   - Airbnb React Style Guide
+   - Google TypeScript Style Guide
+   - Microsoft TypeScript Handbook
+
+3. **Seguridad**:
+   - OWASP Top 10
+   - React Security Cheat Sheet
+   - Content Security Policy
+
+4. **Performance**:
+   - Web Vitals (Google)
+   - Lighthouse best practices
+   - React Performance optimizations
+
+5. **Accesibilidad**:
+   - WCAG 2.1 AA/AAA
+   - ARIA Authoring Practices
+   - Section 508 (US Government)
+
+## Detección Automática
+
+El `ModernCodeAnalyzer` detecta:
+
+- ✅ **Obsolete Patterns**: Class components, lifecycle methods, defaultProps
+- ✅ **Bad Practices**: Inline functions, mutation, index as key
+- ✅ **Security Issues**: dangerouslySetInnerHTML, eval(), XSS vectors
+- ✅ **Performance**: Unnecessary re-renders, missing memoization
+- ✅ **Accessibility**: Missing alt, aria-label, semantic HTML
+- ✅ **Type Safety**: 'any' types, missing interfaces
+
+## Output: Código "Crème de la Crème"
+
+El `BestPracticesRefactor` genera:
+
+- ✅ **React 18+**: Hooks, Suspense, Concurrent features
+- ✅ **TypeScript Strict**: Tipos completos, no 'any'
+- ✅ **Performance**: Memoization inteligente
+- ✅ **Security**: Sanitización, CSP headers
+- ✅ **Accessibility**: WCAG AA compliance
+- ✅ **Testing**: Unit + Integration + E2E tests
+- ✅ **Documentation**: JSDoc + Storybook
+
+## CLI Usage
+
+```bash
+# Analizar código moderno
+osmosis refactor ./src --framework react --output ./refactored
+
+# Con análisis detallado
+osmosis refactor ./src --analyze --report refactor-report.html
+
+# Solo mostrar issues (no refactorizar)
+osmosis analyze ./src --framework react
+```
+
+## Integration con CI/CD
+
+```yaml
+# .github/workflows/code-quality.yml
+- name: Analyze Code Quality
+  run: osmosis analyze ./src --fail-on-critical
+```
+
+## Pricing
+
+✅ **Incluido en Professional y Enterprise tiers**
+❌ No disponible en tier básico

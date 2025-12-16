@@ -239,3 +239,4 @@ export const legacyDetector = new LegacyDetector()
 
 export type { LegacyTechnology, LegacyDetectionResult }
 
+

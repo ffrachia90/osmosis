@@ -312,3 +312,4 @@ export const videoAnalyzer = new VideoAnalyzer()
 
 export type { VideoMetadata, Frame, VideoAnalysisResult, ExtractOptions }
 
+

@@ -1,0 +1,21 @@
+---
+description: TECH: jQuery / Vanilla JS Migration Rules
+globs: *.js, *.html
+---
+# MIGRATION STRATEGY: JQUERY / VANILLA JS
+
+When encountering jQuery (`$`, `jQuery`) or imperative DOM manipulation:
+
+### 1. Declarative over Imperative
+- **Rule:** Convert `$('#id').click()` -> React `onClick` or Angular `(click)`.
+- **State:** Convert `$('#id').val()` -> React `useState` or Angular `Signal`.
+- **Visibility:** Convert `$('#id').show()/hide()` -> Conditional rendering `{visible && <Component />}`.
+
+### 2. Event Cleaning
+- **Review:** Check for global event listeners (`window.on...`, `document.on...`).
+- **Fix:** Move them to `useEffect` (React) or `ngOnInit` (Angular) and RETURN a cleanup function to remove the listener.
+
+### 3. AJAX Modernization
+- **Legacy:** `$.ajax`, `$.post`, `XMLHttpRequest`.
+- **Modern:** Use `fetch` (with async/await) or `TanStack Query` (if available).
+- **Typing:** Define the `interface` of the expected JSON response immediately.

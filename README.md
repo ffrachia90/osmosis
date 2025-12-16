@@ -28,42 +28,22 @@ Enterprises manage extensive portfolios of applications:
 
 **Don't see your tech? We can add support in 1-2 weeks.**
 
-## 🚀 The Solution: Code-First AI Migration
-Osmosis connects directly to your legacy codebase, indexes it to create a semantic understanding of the application, and rewrites the frontend layer.
+## 🧠 Osmosis AI - Brain & Configuration
+Osmosis comes pre-configured with a powerful set of **AI Rules** for Cursor IDE, transforming it into an automated Migration Architect.
 
-### Core Capabilities
-1.  **🔮 Full Codebase Understanding (RAG)**
-    - Ingests the entire legacy source tree.
-    - Understands server-side rendering logic, conditional flows, and data binding (e.g., JSP Scriptlets -> React Logic).
-    - Resolves dependencies and shared resources automatically.
+### Active Rulebook (`.cursor/rules`)
+| Rule ID | Focus Area | Description |
+| :--- | :--- | :--- |
+| `00` | **Master Identity** | Enforces Security, Zero-Hallucination, and Interface-First architecture. |
+| `01-04` | **Legacy Ingestion** | Expert strategies for extracting logic from jQuery, JSP, PHP, and .NET. |
+| `05-06` | **Modern Refactoring** | Guidelines for cleaning up chaotic React and updating Angular. |
+| `10` | **Microfrontends** | "Luca Mezzalira" standard for splitting Monoliths using Module Federation. |
 
-2.  **🛡️ Enterprise-Grade Security**
-    - **Zero Data Leakage**: Works with your corporate LLM Proxy.
-    - **Claude 3.5 Sonnet Integration**: Uses state-of-the-art reasoning for complex logic refactoring.
-    - **On-Premise Ready**: Designed to run within your VPC.
+### Usage in Cursor
+Just open a legacy file and type `Ctrl/Cmd + L`:
+> "Migrate this using Rule 02" 
+> "Split this into a Microfrontend (Rule 10)"
 
-3.  **✨ Intelligent Re-Architecting**
-    - **Logic Extraction**: Separates UI from Logic (e.g., extracts Business Logic from JSP scriptlets into React Hooks/Services).
-    - **Design System Enforcement**: Maps legacy styles to your *current* UI Kit.
-    - **Framework Agnostic Output**: Generate React, Angular, or Vue based on client requirements.
-
-## 🏗️ Architecture
-
-```
-osmosis/
-├── core/
-│   ├── ingestion/         # Source code parsers (JSP, Java, PHP)
-│   ├── rag-engine/        # Vector store & Context retrieval
-│   └── llm-gateway/       # Enterprise Proxy Client (Claude)
-├── analysis/
-│   ├── flow-extractor/    # Logic & State flow analysis
-│   └── component-mapper/  # Legacy to Modern Component mapping
-├── synthesis/
-│   ├── react-generator/   # React Strategy (Hooks, Context)
-│   ├── angular-generator/ # Angular Strategy (Services, Observables)
-│   └── test-generator/    # Auto-generated E2E & Unit tests
-└── cli/                   # Command line interface
-```
 
 ## 🎬 Transformation Workflow
 

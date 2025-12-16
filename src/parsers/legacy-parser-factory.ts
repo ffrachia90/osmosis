@@ -597,3 +597,4 @@ export const legacyParserFactory = new LegacyParserFactory()
 
 export type { LegacyTechnology, LegacyCodebase, ParsedFile }
 
+

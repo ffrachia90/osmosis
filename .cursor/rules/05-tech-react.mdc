@@ -1,0 +1,24 @@
+---
+description: TECH: React Refactoring & Modernization
+globs: *.jsx, *.tsx, *.js
+---
+# MODERNIZATION STRATEGY: REACT
+
+When encountering legacy React patterns (Classes, Mixins, Lifecycle methods):
+
+### 1. Component Transformation
+- **Rule:** `class extends Component` -> `function Component()`.
+- **State:** `this.state` -> `useState`.
+- **Lifecycle:**
+  - `componentDidMount` -> `useEffect(..., [])`
+  - `componentDidUpdate` -> `useEffect(..., [deps])`
+  - `componentWillUnmount` -> `useEffect(() => return cleanup, [])`
+
+### 2. Architecture & Performance
+- **Custom Hooks:** Extract logic into `use[Feature]`.
+- **Context:** If props are drilled > 3 levels, suggest `Context` or strictly typed props.
+- **Memoization:** Wrap callbacks passed to children in `useCallback`.
+
+### 3. Styling
+- **Forbidden:** Do not use `style={{...}}` inline objects unless dynamic.
+- **Enforced:** Use the Design System components (e.g., `<Box>`, `<Stack>`) or CSS Modules/Tailwind classes as per project config.

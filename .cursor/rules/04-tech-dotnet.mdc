@@ -1,0 +1,22 @@
+---
+description: TECH: Legacy .NET / ASP WebForms Rules
+globs: *.aspx, *.ascx
+---
+# MIGRATION STRATEGY: .NET / ASP.NET WEBFORMS
+
+When encountering ASP.NET WebForms (`<asp:Content>`, `runat="server"`):
+
+### 1. ViewState & PostBack
+- **Concept:** WebForms relies on hidden `__VIEWSTATE` and full page PostBacks.
+- **Rule:** Modern apps are Single Page. Ignore ViewState.
+- **Action:** Convert `Page_Load` logic (checking `!IsPostBack`) to `useEffect` (initial load).
+- **Action:** Convert Button `OnClick` (Server Event) to Client API calls.
+
+### 2. Control Mapping
+- `<asp:TextBox ID="txtEmail">` -> `<Input value={email} onChange={...} />`
+- `<asp:Label>` -> `<span>` or `<Text>` component.
+- `<asp:Repeater>` / `<asp:GridView>` -> `{items.map(item => <Row key={item.id} />)}`
+
+### 3. Server Tags
+- Remove `<%@ Page ... %>` directives.
+- Remove `<form runat="server">` (React handles form submission via JS, not form posts).

@@ -1,0 +1,22 @@
+---
+description: TECH: Angular Migration & Refactoring Rules
+globs: *.ts, *.html
+---
+# MIGRATION STRATEGY: ANGULAR (Modernize or Migrate To)
+
+### 1. Angular Modernization (v2 -> v17+)
+- **Modules:** Remove `NgModule`. Use `standalone: true` in Component metadata.
+- **Control Flow:** Replace `*ngIf` -> `@if`, `*ngFor` -> `@for`.
+- **Reactivity:** Replace `BehaviorSubject` with `signal()`.
+- **Change Detection:** Enforce `changeDetection: ChangeDetectionStrategy.OnPush`.
+
+### 2. Angular Context
+- **Services:** Ensure business logic resides in Services (`@Injectable`), not Components.
+- **Pipes:** Use pure pipes for data transformation.
+- **Subscriptions:** Avoid `.subscribe()`. Use `AsyncPipe` (`| async`) or `toSignal()`.
+
+### 3. If Migrating FROM Angular TO React
+- `ngOnInit` -> `useEffect([], ...)`
+- `@Input()` -> `props`
+- `@Output()` -> `props.onEvent` callback
+- Services -> Custom Hooks (`useService`) or Context.

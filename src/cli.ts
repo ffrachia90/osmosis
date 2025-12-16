@@ -307,9 +307,69 @@ export const MigratedComponent: React.FC = () => {
   return '// TODO: Implementar generación real con LLM';
 }
 
-async function attemptRepair(code: string, errors: string[], targetTech: string): Promise<string | null> {
-  // TODO: Implementar auto-reparación
-  console.log('🔧 Intentando reparación automática...');
+/**
+ * Loop de Reparación con Reintentos (Max 3)
+ */
+async function attemptRepair(code: string, errors: string[], targetTech: string, maxRetries = 3): Promise<string | null> {
+  console.log(`\n🔧 Iniciando auto-reparación (Max ${maxRetries} intentos)...`);
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    console.log(`\n   Intento ${attempt}/${maxRetries}...`);
+    
+    try {
+      // Generar prompt de reparación
+      const repairPrompt = CodeSafeGuard.generateRepairPrompt(code, errors);
+      
+      // TODO: Aquí llamaríamos al LLM real
+      // Por ahora simulamos con fixes conocidos
+      let repairedCode = code;
+      
+      // Fix 1: Class Component → Functional
+      if (errors.some(e => e.includes('Class Component'))) {
+        repairedCode = repairedCode.replace(
+          /class\s+(\w+)\s+extends\s+React\.Component/g,
+          'export const $1: React.FC = () =>'
+        );
+      }
+      
+      // Fix 2: dangerouslySetInnerHTML sin sanitizar
+      if (errors.some(e => e.includes('dangerouslySetInnerHTML'))) {
+        if (!repairedCode.includes('DOMPurify')) {
+          repairedCode = "import DOMPurify from 'dompurify';\n" + repairedCode;
+          repairedCode = repairedCode.replace(
+            /dangerouslySetInnerHTML={{__html:\s*(.+?)}}/g,
+            'dangerouslySetInnerHTML={{__html: DOMPurify.sanitize($1)}}'
+          );
+        }
+      }
+      
+      // Fix 3: eval() removal
+      if (errors.some(e => e.includes('eval()'))) {
+        repairedCode = repairedCode.replace(/eval\(/g, '// REMOVED: eval(');
+        console.log('   ⚠️  eval() removido - requiere revisión manual');
+      }
+      
+      // Validar código reparado
+      const validation = CodeSafeGuard.validate(repairedCode, targetTech as any);
+      
+      if (validation.isValid) {
+        console.log(`   ✅ Reparación exitosa en intento ${attempt}`);
+        return repairedCode;
+      } else {
+        console.log(`   ❌ Intento ${attempt} falló. Errores restantes:`);
+        validation.errors.forEach(err => console.log(`      - ${err}`));
+        
+        // Actualizar errors para siguiente intento
+        errors = validation.errors;
+        code = repairedCode; // Usar versión parcialmente reparada
+      }
+      
+    } catch (error) {
+      console.error(`   ❌ Error en intento ${attempt}: ${error}`);
+    }
+  }
+  
+  console.log(`\n❌ Auto-reparación falló después de ${maxRetries} intentos`);
   return null;
 }
 

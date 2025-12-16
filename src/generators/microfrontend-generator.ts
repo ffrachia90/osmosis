@@ -386,7 +386,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         {children}
       </main>
       <footer className="footer">
-        © 2024 Mi Aplicación
+        © 2025 Mi Aplicación
       </footer>
     </div>
   );

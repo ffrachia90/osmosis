@@ -50,7 +50,7 @@ osmosis analyze \
 ```json
 {
   "project": "/path/to/legacy-banking-app",
-  "timestamp": "2024-12-16T10:30:00.000Z",
+  "timestamp": "2025-12-16T10:30:00.000Z",
   "technologies": ["jsp", "java"],
   "totalFiles": 127,
   "migrationOrder": [

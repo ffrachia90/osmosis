@@ -118,7 +118,7 @@ $('#user-list').find('.user-row').filter('.active').each(function() {
 
 const cleanModernCode = `
 /**
- * Modern Banking System - 2024
+ * Modern Banking System - 2025
  * Type-safe, well-structured, tested
  */
 
@@ -195,7 +195,7 @@ console.log(`   Long Methods: ${toxicMetrics.details.longMethodCount}`);
 
 // Analizar código limpio
 console.log('\n' + '='.repeat(70));
-console.log('\n📊 ANÁLISIS 2: Código Moderno (2024)\n');
+console.log('\n📊 ANÁLISIS 2: Código Moderno (2025)\n');
 console.log('-'.repeat(70));
 const cleanMetrics = analyzer.analyzeFile(cleanModernCode, 'modern-banking.ts');
 

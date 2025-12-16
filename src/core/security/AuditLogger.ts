@@ -56,7 +56,7 @@ export class AuditLogger {
     };
     
     // Calcular hash de la entrada (sin incluir el hash mismo)
-    const entryForHash = { ...entry };
+    const entryForHash: Partial<AuditLogEntry> = { ...entry };
     delete entryForHash.hash;
     entry.hash = this.calculateHash(JSON.stringify(entryForHash));
     
@@ -102,7 +102,7 @@ export class AuditLogger {
       const entry = entries[i];
       
       // Verificar hash de la entrada
-      const entryForHash = { ...entry };
+      const entryForHash: Partial<AuditLogEntry> = { ...entry };
       delete entryForHash.hash;
       const expectedHash = this.calculateHash(JSON.stringify(entryForHash));
       

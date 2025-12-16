@@ -1,6 +1,20 @@
 /**
  * Legacy Parser Factory - Detecta y parsea CUALQUIER código legacy
  * JSP, PHP, ASP.NET, Ruby, Django, Cold Fusion, etc.
+ * 
+ * 🟢 PRODUCTION READY:
+ * - JSP Parser (completo con AST)
+ * - Technology detection (completo)
+ * - Basic dependency parsing (composer.json, requirements.txt, Gemfile)
+ * 
+ * 🟡 V1 - EXPERIMENTAL (Route parsing pendiente):
+ * - PHP: Routes parsing TODO (Laravel routes/web.php)
+ * - Ruby: Rails routes.rb parsing TODO
+ * - Python: Django urls.py / Flask routes TODO
+ * - ASP.NET: Web.config routes TODO
+ * 
+ * Los parsers V1 retornan estructuras válidas pero con routes: []
+ * El sistema funciona sin route parsing (usa file scanning en su lugar)
  */
 
 import { promises as fs } from 'fs'

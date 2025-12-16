@@ -13,8 +13,7 @@
     "test:e2e": "playwright test",
     "docker:build": "docker-compose build",
     "docker:up": "docker-compose up -d",
-    "docker:down": "docker-compose down",
-    "mcp:dev": "tsx src/mcp/server.ts"
+    "docker:down": "docker-compose down"
   },
   "keywords": [
     "legacy",

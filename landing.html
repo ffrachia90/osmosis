@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Osmosis - Migración Automática de Legacy a React/Angular/Vue con IA</title>
+    <meta name="description" content="Transforma cualquier código legacy (JSP, PHP, ASP) a React, Angular o Vue moderno usando IA. Ahorra $15M+ y reduce tiempo de 18 meses a 3 semanas.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .gradient-text { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .tech-badge { transition: all 0.3s; }
+        .tech-badge:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .card-hover { transition: all 0.3s; }
+        .card-hover:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .float { animation: float 3s ease-in-out infinite; }
+    </style>
+</head>
+<body class="antialiased bg-gray-50">
+    
+    <!-- Navigation -->
+    <nav class="fixed w-full bg-white/95 backdrop-blur-sm z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <span class="text-2xl font-bold gradient-text">🔄 Osmosis</span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#problema" class="text-gray-700 hover:text-purple-600">Problema</a>
+                    <a href="#solucion" class="text-gray-700 hover:text-purple-600">Solución</a>
+                    <a href="#tecnologias" class="text-gray-700 hover:text-purple-600">Tecnologías</a>
+                    <a href="#roi" class="text-gray-700 hover:text-purple-600">ROI</a>
+                    <a href="#pricing" class="text-gray-700 hover:text-purple-600">Pricing</a>
+                </div>
+                <div>
+                    <a href="#contacto" class="gradient-bg text-white px-6 py-2 rounded-lg font-semibold hover:opacity-90 transition">
+                        Demo Gratis
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="pt-32 pb-20 gradient-bg text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <div class="inline-block bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-medium mb-6">
+                        🚀 IA Enterprise para Migraciones Legacy
+                    </div>
+                    <h1 class="text-5xl md:text-6xl font-bold mb-6 leading-tight">
+                        Migra <span class="underline decoration-yellow-400">Cualquier</span> Legacy a React/Angular/Vue
+                    </h1>
+                    <p class="text-xl mb-8 text-purple-100">
+                        Transforma automáticamente JSP, PHP, ASP.NET y más a código moderno usando IA. 
+                        <strong>Ahorra $15M+</strong> y reduce tiempo de <strong>18 meses a 3 semanas</strong>.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4 mb-8">
+                        <a href="#contacto" class="bg-white text-purple-600 px-8 py-4 rounded-lg font-bold text-lg hover:bg-gray-100 transition text-center">
+                            Ver Demo en Vivo →
+                        </a>
+                        <a href="#roi" class="border-2 border-white text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-white/10 transition text-center">
+                            Calcular ROI
+                        </a>
+                    </div>
+                    <div class="flex items-center gap-8 text-sm">
+                        <div class="flex items-center gap-2">
+                            ✅ <span>15+ Tecnologías Legacy</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            ✅ <span>100% On-Premise</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            ✅ <span>SOC 2 Compliant</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="hidden md:block float">
+                    <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
+                        <pre class="text-sm text-green-300 overflow-x-auto"><code>$ osmosis analyze --source ./legacy-app
+
+<span class="text-yellow-300">🔍 Detectando tecnología...</span>
+<span class="text-green-400">✅ Detectado: PHP Laravel 5.4</span>
+<span class="text-green-400">✅ Encontrado: 47 rutas, 82 controllers</span>
+<span class="text-green-400">✅ Complejidad: Media</span>
+
+$ osmosis migrate --framework react
+
+<span class="text-yellow-300">🔨 Generando componentes React...</span>
+<span class="text-green-400">✅ 156 componentes generados</span>
+<span class="text-green-400">✅ 234 tests E2E creados</span>
+<span class="text-green-400">✅ Coverage: 94%</span>
+
+<span class="text-cyan-300">💰 Ahorro estimado: $1.8M
+⏱️  Tiempo ahorrado: 15 meses</span></code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Problem Section -->
+    <section id="problema" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold mb-4">El Problema es Real</h2>
+                <p class="text-xl text-gray-600">Tu empresa tiene aplicaciones legacy que nadie quiere tocar</p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="card-hover bg-red-50 p-8 rounded-xl border-2 border-red-200">
+                    <div class="text-4xl mb-4">💸</div>
+                    <h3 class="text-2xl font-bold mb-4 text-red-900">Costo Insostenible</h3>
+                    <ul class="space-y-3 text-gray-700">
+                        <li>❌ $1M - $5M por aplicación</li>
+                        <li>❌ 12-24 meses de desarrollo</li>
+                        <li>❌ Mantenimiento carísimo</li>
+                        <li>❌ Imposible encontrar developers</li>
+                    </ul>
+                </div>
+                <div class="card-hover bg-orange-50 p-8 rounded-xl border-2 border-orange-200">
+                    <div class="text-4xl mb-4">⚠️</div>
+                    <h3 class="text-2xl font-bold mb-4 text-orange-900">Riesgo Altísimo</h3>
+                    <ul class="space-y-3 text-gray-700">
+                        <li>❌ Vulnerabilidades de seguridad</li>
+                        <li>❌ Reescrituras que rompen todo</li>
+                        <li>❌ Developers senior retirándose</li>
+                        <li>❌ Código que nadie entiende</li>
+                    </ul>
+                </div>
+                <div class="card-hover bg-yellow-50 p-8 rounded-xl border-2 border-yellow-200">
+                    <div class="text-4xl mb-4">🐌</div>
+                    <h3 class="text-2xl font-bold mb-4 text-yellow-900">Innovación Bloqueada</h3>
+                    <ul class="space-y-3 text-gray-700">
+                        <li>❌ No se puede integrar IA</li>
+                        <li>❌ No funciona en mobile</li>
+                        <li>❌ UX de 1995</li>
+                        <li>❌ Competidores te pasan</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-12 bg-gradient-to-r from-red-100 to-orange-100 p-8 rounded-xl text-center">
+                <p class="text-2xl font-bold text-gray-900">
+                    📊 Promedio: <span class="text-red-600">20 aplicaciones legacy</span> por empresa grande
+                </p>
+                <p class="text-xl text-gray-700 mt-2">
+                    = <strong>$40M+ en costos de migración manual</strong> + <strong>30 años de trabajo</strong>
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Solution Section -->
+    <section id="solucion" class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold mb-4">La Solución: Osmosis</h2>
+                <p class="text-xl text-gray-600">IA que entiende tu código legacy y lo transforma automáticamente</p>
+            </div>
+            <div class="grid md:grid-cols-4 gap-8 mb-16">
+                <div class="text-center">
+                    <div class="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">📖</div>
+                    <h3 class="font-bold text-lg mb-2">1. Analizar</h3>
+                    <p class="text-gray-600 text-sm">Auto-detecta tecnología y analiza 100% del código</p>
+                </div>
+                <div class="text-center">
+                    <div class="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">🧠</div>
+                    <h3 class="font-bold text-lg mb-2">2. Entender</h3>
+                    <p class="text-gray-600 text-sm">RAG + Claude entienden lógica de negocio completa</p>
+                </div>
+                <div class="text-center">
+                    <div class="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">⚡</div>
+                    <h3 class="font-bold text-lg mb-2">3. Generar</h3>
+                    <p class="text-gray-600 text-sm">Crea código moderno (React/Angular/Vue) + tests</p>
+                </div>
+                <div class="text-center">
+                    <div class="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">✅</div>
+                    <h3 class="font-bold text-lg mb-2">4. Validar</h3>
+                    <p class="text-gray-600 text-sm">Tests E2E automáticos validan equivalencia</p>
+                </div>
+            </div>
+            <div class="bg-gradient-to-r from-green-50 to-emerald-50 p-12 rounded-2xl border-2 border-green-200">
+                <div class="grid md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <h3 class="text-3xl font-bold mb-6">¿Por Qué Somos Diferentes?</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-start gap-3">
+                                <div class="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 mt-1">✓</div>
+                                <div>
+                                    <strong>No screenshots</strong> - Leemos TODO tu código fuente
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <div class="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 mt-1">✓</div>
+                                <div>
+                                    <strong>Cualquier tecnología</strong> - 15+ legacy soportadas (JSP, PHP, ASP, etc.)
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <div class="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 mt-1">✓</div>
+                                <div>
+                                    <strong>Tu framework</strong> - React, Angular, Vue - tú eliges
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <div class="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 mt-1">✓</div>
+                                <div>
+                                    <strong>Tu Design System</strong> - Usa tus componentes aprobados
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <div class="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 mt-1">✓</div>
+                                <div>
+                                    <strong>Enterprise Security</strong> - On-premise + tu proxy Claude
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-lg">
+                        <h4 class="font-bold text-lg mb-4 text-center">Competencia vs Osmosis</h4>
+                        <table class="w-full text-sm">
+                            <tr class="border-b">
+                                <td class="py-2"></td>
+                                <td class="py-2 text-center text-gray-500">v0/Lovable</td>
+                                <td class="py-2 text-center font-bold text-purple-600">Osmosis</td>
+                            </tr>
+                            <tr class="border-b">
+                                <td class="py-2 text-gray-700">Legacy Code</td>
+                                <td class="py-2 text-center">❌</td>
+                                <td class="py-2 text-center text-green-600 font-bold">✅</td>
+                            </tr>
+                            <tr class="border-b">
+                                <td class="py-2 text-gray-700">Multi-Framework</td>
+                                <td class="py-2 text-center">❌</td>
+                                <td class="py-2 text-center text-green-600 font-bold">✅</td>
+                            </tr>
+                            <tr class="border-b">
+                                <td class="py-2 text-gray-700">On-Premise</td>
+                                <td class="py-2 text-center">❌</td>
+                                <td class="py-2 text-center text-green-600 font-bold">✅</td>
+                            </tr>
+                            <tr>
+                                <td class="py-2 text-gray-700">Tests E2E</td>
+                                <td class="py-2 text-center">❌</td>
+                                <td class="py-2 text-center text-green-600 font-bold">✅</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technologies Section -->
+    <section id="tecnologias" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold mb-4">Soportamos CUALQUIER Código Legacy</h2>
+                <p class="text-xl text-gray-600">Auto-detección inteligente - no necesitas especificar nada</p>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-12">
+                <div class="tech-badge bg-gradient-to-br from-orange-50 to-red-50 p-6 rounded-xl text-center border border-orange-200">
+                    <div class="text-4xl mb-2">☕</div>
+                    <div class="font-bold">Java JSP</div>
+                    <div class="text-xs text-gray-600">Servlets, Struts</div>
+                </div>
+                <div class="tech-badge bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-xl text-center border border-blue-200">
+                    <div class="text-4xl mb-2">🐘</div>
+                    <div class="font-bold">PHP</div>
+                    <div class="text-xs text-gray-600">Laravel, CI, Symfony</div>
+                </div>
+                <div class="tech-badge bg-gradient-to-br from-purple-50 to-pink-50 p-6 rounded-xl text-center border border-purple-200">
+                    <div class="text-4xl mb-2">🪟</div>
+                    <div class="font-bold">ASP.NET</div>
+                    <div class="text-xs text-gray-600">WebForms, MVC</div>
+                </div>
+                <div class="tech-badge bg-gradient-to-br from-red-50 to-orange-50 p-6 rounded-xl text-center border border-red-200">
+                    <div class="text-4xl mb-2">💎</div>
+                    <div class="font-bold">Ruby Rails</div>
+                    <div class="text-xs text-gray-600">3.x - 5.x</div>
+                </div>
+                <div class="tech-badge bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl text-center border border-green-200">
+                    <div class="text-4xl mb-2">🐍</div>
+                    <div class="font-bold">Django</div>
+                    <div class="text-xs text-gray-600">Flask, Python</div>
+                </div>
+                <div class="tech-badge bg-gradient-to-br from-yellow-50 to-orange-50 p-6 rounded-xl text-center border border-yellow-200">
+                    <div class="text-4xl mb-2">🔥</div>
+                    <div class="font-bold">ColdFusion</div>
+                    <div class="text-xs text-gray-600">CFM, CFC</div>
+                </div>
+                <div class="tech-badge bg-gradient-to-br from-gray-50 to-slate-50 p-6 rounded-xl text-center border border-gray-200">
+                    <div class="text-4xl mb-2">📜</div>
+                    <div class="font-bold">Perl</div>
+                    <div class="text-xs text-gray-600">CGI Scripts</div>
+                </div>
+                <div class="tech-badge bg-gradient-to-br from-blue-50 to-cyan-50 p-6 rounded-xl text-center border border-blue-200">
+                    <div class="text-4xl mb-2">📊</div>
+                    <div class="font-bold">Visual Basic</div>
+                    <div class="text-xs text-gray-600">VB6, VB.NET</div>
+                </div>
+                <div class="tech-badge bg-gradient-to-br from-indigo-50 to-purple-50 p-6 rounded-xl text-center border border-indigo-200">
+                    <div class="text-4xl mb-2">🔧</div>
+                    <div class="font-bold">jQuery</div>
+                    <div class="text-xs text-gray-600">Spaghetti Code</div>
+                </div>
+                <div class="tech-badge bg-gradient-to-br from-gray-50 to-gray-100 p-6 rounded-xl text-center border-2 border-dashed border-gray-300">
+                    <div class="text-4xl mb-2">✨</div>
+                    <div class="font-bold">Tu Tech</div>
+                    <div class="text-xs text-gray-600">2 semanas</div>
+                </div>
+            </div>
+            <div class="text-center mb-12">
+                <h3 class="text-3xl font-bold mb-8">→ Genera en TU Framework Preferido</h3>
+                <div class="flex justify-center gap-6 flex-wrap">
+                    <div class="bg-gradient-to-br from-cyan-50 to-blue-50 px-8 py-4 rounded-xl border-2 border-cyan-300 font-bold text-lg">
+                        ⚛️ React + Next.js
+                    </div>
+                    <div class="bg-gradient-to-br from-red-50 to-pink-50 px-8 py-4 rounded-xl border-2 border-red-300 font-bold text-lg">
+                        🅰️ Angular 17
+                    </div>
+                    <div class="bg-gradient-to-br from-green-50 to-emerald-50 px-8 py-4 rounded-xl border-2 border-green-300 font-bold text-lg">
+                        💚 Vue + Nuxt
+                    </div>
+                    <div class="bg-gradient-to-br from-orange-50 to-red-50 px-8 py-4 rounded-xl border-2 border-orange-300 font-bold text-lg">
+                        🔥 Svelte
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ROI Calculator -->
+    <section id="roi" class="py-20 bg-gradient-to-br from-purple-50 to-indigo-50">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold mb-4">Calculadora de ROI</h2>
+                <p class="text-xl text-gray-600">Descubre cuánto ahorrarías con Osmosis</p>
+            </div>
+            <div class="bg-white rounded-2xl shadow-2xl p-8 md:p-12">
+                <div class="mb-8">
+                    <label class="block text-lg font-semibold mb-3">¿Cuántas aplicaciones legacy tienes?</label>
+                    <input type="range" id="apps" min="1" max="50" value="10" class="w-full h-3 bg-purple-200 rounded-lg appearance-none cursor-pointer">
+                    <div class="flex justify-between text-sm text-gray-600 mt-2">
+                        <span>1</span>
+                        <span id="appsValue" class="text-2xl font-bold text-purple-600">10</span>
+                        <span>50</span>
+                    </div>
+                </div>
+                <div class="grid md:grid-cols-2 gap-8 mt-12">
+                    <div class="bg-red-50 p-6 rounded-xl border-2 border-red-200">
+                        <h3 class="text-xl font-bold mb-4 text-red-900">❌ Migración Manual</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Tiempo:</span>
+                                <span id="manualTime" class="font-bold">15 años</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Costo:</span>
+                                <span id="manualCost" class="font-bold text-red-600">$18,000,000</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Riesgo:</span>
+                                <span class="font-bold">🔴 Alto</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-green-50 p-6 rounded-xl border-2 border-green-200">
+                        <h3 class="text-xl font-bold mb-4 text-green-900">✅ Con Osmosis</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Tiempo:</span>
+                                <span id="osmosisTime" class="font-bold">8 meses</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Costo:</span>
+                                <span id="osmosisCost" class="font-bold text-green-600">$2,500,000</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-700">Riesgo:</span>
+                                <span class="font-bold">🟢 Bajo</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-8 bg-gradient-to-r from-yellow-100 to-orange-100 p-8 rounded-xl text-center">
+                    <div class="text-3xl font-bold mb-2">
+                        💰 Ahorro Total: <span id="savings" class="text-green-600">$15,500,000</span>
+                    </div>
+                    <div class="text-xl text-gray-700">
+                        ⚡ <span id="timeSaved" class="font-bold">13 años</span> más rápido
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing -->
+    <section id="pricing" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold mb-4">Pricing Enterprise</h2>
+                <p class="text-xl text-gray-600">Planes diseñados para migrar a escala</p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Starter -->
+                <div class="card-hover bg-white border-2 border-gray-200 rounded-2xl p-8">
+                    <div class="text-sm font-semibold text-purple-600 mb-2">STARTER</div>
+                    <div class="text-4xl font-bold mb-2">$100K</div>
+                    <div class="text-gray-600 mb-6">por aplicación</div>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-500 font-bold">✓</span>
+                            <span>Hasta 20 pantallas</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-500 font-bold">✓</span>
+                            <span>1 framework output</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-500 font-bold">✓</span>
+                            <span>Tests E2E básicos</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-500 font-bold">✓</span>
+                            <span>Email support</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-500 font-bold">✓</span>
+                            <span>4 semanas entrega</span>
+                        </li>
+                    </ul>
+                    <a href="#contacto" class="block w-full bg-gray-100 text-gray-900 text-center py-3 rounded-lg font-semibold hover:bg-gray-200 transition">
+                        Empezar
+                    </a>
+                </div>
+
+                <!-- Professional -->
+                <div class="card-hover bg-gradient-to-br from-purple-600 to-indigo-600 text-white rounded-2xl p-8 border-4 border-purple-400 relative transform md:scale-105">
+                    <div class="absolute top-0 right-0 bg-yellow-400 text-purple-900 px-4 py-1 rounded-bl-lg rounded-tr-lg text-sm font-bold">
+                        MÁS POPULAR
+                    </div>
+                    <div class="text-sm font-semibold mb-2">PROFESSIONAL</div>
+                    <div class="text-4xl font-bold mb-2">$250K</div>
+                    <div class="text-purple-200 mb-6">por aplicación</div>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-start gap-2">
+                            <span class="font-bold">✓</span>
+                            <span>Hasta 50 pantallas</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="font-bold">✓</span>
+                            <span>Multi-framework</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="font-bold">✓</span>
+                            <span>Tests completos (90%+)</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="font-bold">✓</span>
+                            <span>Priority support</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="font-bold">✓</span>
+                            <span>Code review incluido</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="font-bold">✓</span>
+                            <span>3 semanas entrega</span>
+                        </li>
+                    </ul>
+                    <a href="#contacto" class="block w-full bg-white text-purple-600 text-center py-3 rounded-lg font-bold hover:bg-gray-100 transition">
+                        Empezar Ahora
+                    </a>
+                </div>
+
+                <!-- Enterprise -->
+                <div class="card-hover bg-white border-2 border-gray-200 rounded-2xl p-8">
+                    <div class="text-sm font-semibold text-purple-600 mb-2">ENTERPRISE</div>
+                    <div class="text-4xl font-bold mb-2">$500K+</div>
+                    <div class="text-gray-600 mb-6">custom</div>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-500 font-bold">✓</span>
+                            <span>Pantallas ilimitadas</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-500 font-bold">✓</span>
+                            <span>Múltiples aplicaciones</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-500 font-bold">✓</span>
+                            <span>On-premise deployment</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-500 font-bold">✓</span>
+                            <span>Custom parser (tu tech)</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-500 font-bold">✓</span>
+                            <span>Dedicated team</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-500 font-bold">✓</span>
+                            <span>SLA guarantees</span>
+                        </li>
+                    </ul>
+                    <a href="#contacto" class="block w-full bg-gray-100 text-gray-900 text-center py-3 rounded-lg font-semibold hover:bg-gray-200 transition">
+                        Contactar Ventas
+                    </a>
+                </div>
+            </div>
+            <div class="mt-12 text-center text-gray-600">
+                💡 <strong>Piloto:</strong> Empieza con $50K - migra 1 módulo (5-10 pantallas) en 6 semanas
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section id="contacto" class="py-20 gradient-bg text-white">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-4xl md:text-5xl font-bold mb-6">
+                ¿Listo para Modernizar tu Legacy?
+            </h2>
+            <p class="text-xl mb-8 text-purple-100">
+                Agenda una demo personalizada y ve cómo Osmosis puede ahorrarle millones a tu empresa
+            </p>
+            <div class="bg-white rounded-2xl p-8 max-w-xl mx-auto text-left">
+                <form class="space-y-4" onsubmit="handleSubmit(event)">
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-2">Nombre Completo *</label>
+                        <input type="text" required class="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Juan Pérez">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-2">Email Corporativo *</label>
+                        <input type="email" required class="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="juan@empresa.com">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-2">Empresa *</label>
+                        <input type="text" required class="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Mi Empresa S.A.">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-2">¿Cuántas apps legacy tienen? *</label>
+                        <select required class="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                            <option value="">Seleccionar...</option>
+                            <option value="1-5">1-5 aplicaciones</option>
+                            <option value="6-10">6-10 aplicaciones</option>
+                            <option value="11-20">11-20 aplicaciones</option>
+                            <option value="20+">Más de 20</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-2">Tecnología Principal</label>
+                        <select class="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                            <option value="">Seleccionar...</option>
+                            <option value="jsp">Java JSP / Servlets</option>
+                            <option value="php">PHP (Laravel, CI, etc)</option>
+                            <option value="asp">ASP.NET / Classic ASP</option>
+                            <option value="ruby">Ruby on Rails</option>
+                            <option value="python">Django / Flask</option>
+                            <option value="coldfusion">ColdFusion</option>
+                            <option value="other">Otra</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="w-full gradient-bg text-white py-4 rounded-lg font-bold text-lg hover:opacity-90 transition">
+                        🚀 Agendar Demo Gratis
+                    </button>
+                </form>
+                <p class="text-sm text-gray-600 text-center mt-4">
+                    📞 ¿Prefieres hablar? <strong>+1 (555) OSMOSIS</strong>
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-300 py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <div class="text-2xl font-bold text-white mb-4">🔄 Osmosis</div>
+                    <p class="text-sm">Enterprise Code Migration Agent</p>
+                </div>
+                <div>
+                    <h3 class="font-bold text-white mb-4">Producto</h3>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#solucion" class="hover:text-white">Cómo Funciona</a></li>
+                        <li><a href="#tecnologias" class="hover:text-white">Tecnologías</a></li>
+                        <li><a href="#pricing" class="hover:text-white">Pricing</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-bold text-white mb-4">Empresa</h3>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#" class="hover:text-white">Sobre Nosotros</a></li>
+                        <li><a href="#" class="hover:text-white">Casos de Éxito</a></li>
+                        <li><a href="#" class="hover:text-white">Blog</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-bold text-white mb-4">Contacto</h3>
+                    <ul class="space-y-2 text-sm">
+                        <li>📧 sales@osmosis.dev</li>
+                        <li>📞 +1 (555) OSMOSIS</li>
+                        <li>🌐 www.osmosis.dev</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 pt-8 text-center text-sm">
+                <p>&copy; 2024 Osmosis. All rights reserved. | SOC 2 Compliant | Enterprise Ready</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // ROI Calculator
+        const appsSlider = document.getElementById('apps');
+        const appsValue = document.getElementById('appsValue');
+        
+        function updateROI() {
+            const apps = parseInt(appsSlider.value);
+            appsValue.textContent = apps;
+            
+            // Cálculos
+            const manualTimeMonths = apps * 18;
+            const manualCost = apps * 1800000;
+            const osmosisTimeWeeks = apps * 3;
+            const osmosisCost = apps * 250000;
+            const savings = manualCost - osmosisCost;
+            
+            // Actualizar UI
+            document.getElementById('manualTime').textContent = 
+                manualTimeMonths >= 12 ? `${Math.floor(manualTimeMonths/12)} años` : `${manualTimeMonths} meses`;
+            document.getElementById('manualCost').textContent = 
+                `$${manualCost.toLocaleString()}`;
+            document.getElementById('osmosisTime').textContent = 
+                osmosisTimeWeeks >= 52 ? `${Math.floor(osmosisTimeWeeks/52)} años` : `${Math.ceil(osmosisTimeWeeks/4)} meses`;
+            document.getElementById('osmosisCost').textContent = 
+                `$${osmosisCost.toLocaleString()}`;
+            document.getElementById('savings').textContent = 
+                `$${savings.toLocaleString()}`;
+            document.getElementById('timeSaved').textContent = 
+                `${Math.floor((manualTimeMonths - osmosisTimeWeeks/4)/12)} años`;
+        }
+        
+        appsSlider.addEventListener('input', updateROI);
+        updateROI();
+        
+        // Form submission
+        function handleSubmit(e) {
+            e.preventDefault();
+            alert('¡Gracias! Te contactaremos pronto para agendar tu demo personalizada.');
+            e.target.reset();
+        }
+        
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+

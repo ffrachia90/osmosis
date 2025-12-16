@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Build
+dist/
+build/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+
+# Temp
+tmp/
+temp/
+*.tmp
+
+# Docker
+.dockerignore
+
+# MCP
+mcp-data/
+vector-store/
+
+# Examples outputs
+examples/output/
+

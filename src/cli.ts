@@ -54,16 +54,36 @@ program
       const migrationOrder = graph.getMigrationOrder();
       spinner.succeed(`Grafo construido: ${migrationOrder.length} archivos encontrados`);
       
-      // 3. Construir Knowledge Graph (RAG)
-      spinner.start('🧠 Indexando codebase para RAG...');
-      const indexer = new CodebaseIndexer(projectDir);
-      const knowledgeGraph = await indexer.index(graph);
+      // 3. Construir Knowledge Graph (RAG) con embeddings
+      spinner.start('🧠 Indexando codebase para RAG con embeddings vectoriales...');
+      
+      // Configuración de embeddings (detecta API keys o usa local)
+      const embeddingConfig = {
+        provider: (process.env.OPENAI_API_KEY ? 'openai' : 
+                   process.env.GEMINI_API_KEY ? 'gemini' : 
+                   'local') as 'openai' | 'gemini' | 'local',
+        apiKey: process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY,
+        model: process.env.OPENAI_API_KEY ? 'text-embedding-3-small' : undefined
+      };
+      
+      if (embeddingConfig.provider === 'local') {
+        spinner.info('No API key detectada, usando embeddings locales (TF-IDF)');
+      } else {
+        spinner.info(`Usando ${embeddingConfig.provider} para embeddings semánticos`);
+      }
+      
+      const indexer = new CodebaseIndexer(projectDir, embeddingConfig);
+      const knowledgeGraph = await indexer.index();
       const kgStats = knowledgeGraph.getStats();
+      
       spinner.succeed(
         `Knowledge Graph: ${kgStats.totalEntities} entidades, ` +
-        `${kgStats.designSystem.components} componentes, ` +
-        `${kgStats.designSystem.patterns} patrones`
+        `${kgStats.totalVectors} vectores generados, ` +
+        `${kgStats.byType.component || 0} componentes`
       );
+      
+      // Guardar Knowledge Graph en .osmosis/
+      await knowledgeGraph.save(projectDir);
 
       // 3. Analizar Deuda Técnica
       spinner.start('💰 Calculando deuda técnica...');
@@ -94,9 +114,12 @@ program
         },
         knowledgeGraph: {
           totalEntities: kgStats.totalEntities,
-          components: kgStats.designSystem.components,
-          patterns: kgStats.designSystem.patterns,
-          themeTokens: kgStats.designSystem.themeTokens
+          totalVectors: kgStats.totalVectors,
+          components: kgStats.byType.component || 0,
+          hooks: kgStats.byType.hook || 0,
+          functions: kgStats.byType.function || 0,
+          interfaces: kgStats.byType.interface || 0,
+          hasEmbeddings: kgStats.hasEmbeddings
         },
         migrationOrder: migrationOrder.map((file, index) => {
           // Obtener métricas específicas de este archivo
@@ -118,10 +141,6 @@ program
 
       const outputPath = path.resolve(options.output);
       fs.writeFileSync(outputPath, JSON.stringify(report, null, 2));
-      
-      // Guardar Knowledge Graph para uso posterior
-      const kgPath = path.join(projectDir, '.osmosis-knowledge-graph.json');
-      fs.writeFileSync(kgPath, knowledgeGraph.toJSON());
       
       spinner.succeed(`Reporte generado: ${outputPath}`);
 
@@ -194,6 +213,30 @@ program
         filesToMigrate = [sourcePath];
       }
 
+      // Cargar Knowledge Graph para contexto RAG
+      spinner.start('🧠 Cargando Knowledge Graph...');
+      const projectRoot = isDirectory ? sourcePath : path.dirname(sourcePath);
+      
+      const embeddingConfig = {
+        provider: (process.env.OPENAI_API_KEY ? 'openai' : 
+                   process.env.GEMINI_API_KEY ? 'gemini' : 
+                   'local') as 'openai' | 'gemini' | 'local',
+        apiKey: process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY,
+        model: process.env.OPENAI_API_KEY ? 'text-embedding-3-small' : undefined
+      };
+      
+      let knowledgeGraph = await KnowledgeGraph.load(projectRoot, embeddingConfig);
+      
+      if (!knowledgeGraph) {
+        spinner.info('No se encontró Knowledge Graph, indexando proyecto...');
+        const indexer = new CodebaseIndexer(projectRoot, embeddingConfig);
+        knowledgeGraph = await indexer.index();
+        await knowledgeGraph.save(projectRoot);
+      }
+      
+      const contextInjector = new ContextInjector(knowledgeGraph);
+      spinner.succeed('Knowledge Graph cargado');
+      
       // Migrar cada archivo en orden
       let migratedCount = 0;
       let failedCount = 0;
@@ -213,8 +256,17 @@ program
             fileExt: path.extname(filePath).slice(1)
           };
 
-          // Generar prompt
-          const prompt = PromptAssembler.assemble(context);
+          // Generar prompt base
+          let prompt = PromptAssembler.assemble(context);
+          
+          // Enriquecer con contexto RAG semántico
+          prompt = await contextInjector.enrichPrompt(prompt, {
+            fileName: path.basename(filePath),
+            filePath: filePath,
+            sourceCode: sourceCode,
+            legacyLanguage: options.from,
+            targetFramework: options.to
+          });
 
           // TODO: Aquí se llamaría a Claude API
           // Por ahora simulamos respuesta

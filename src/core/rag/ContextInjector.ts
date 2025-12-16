@@ -1,116 +1,183 @@
 /**
- * ContextInjector - Inyecta contexto del Knowledge Graph en prompts
- * Hace que el LLM entienda el proyecto completo
+ * ContextInjector - Inyecta contexto semántico en prompts
+ * Usa búsqueda vectorial para encontrar código relevante
  */
 
-import { KnowledgeGraph, CodeEntity } from './KnowledgeGraph.js';
+import { KnowledgeGraph } from './KnowledgeGraph.js';
+import { ExtractedEntity } from './EntityExtractor.js';
 import path from 'path';
 
 export interface MigrationContext {
   fileName: string;
   filePath: string;
   sourceCode: string;
-  dependencies: string[];
-  detectedPatterns: string[];
-  isComponent: boolean;
+  legacyLanguage: string;
+  targetFramework: string;
 }
 
 export class ContextInjector {
   constructor(private knowledgeGraph: KnowledgeGraph) {}
   
   /**
-   * Genera un prompt enriquecido con contexto del Knowledge Graph
+   * Enriquece un prompt con contexto semántico del proyecto
    */
-  enrichPrompt(basePrompt: string, context: MigrationContext): string {
+  async enrichPrompt(basePrompt: string, context: MigrationContext): Promise<string> {
     const sections: string[] = [basePrompt];
     
-    // 1. Contexto relevante del proyecto
-    const relevantContext = this.knowledgeGraph.getRelevantContext(
-      context.filePath,
-      context.dependencies
-    );
-    
-    if (relevantContext) {
-      sections.push('\n## 📚 Contexto del Proyecto:\n');
-      sections.push(relevantContext);
+    // 1. Buscar componentes similares (evitar duplicación)
+    const similarComponents = await this.findSimilarComponents(context);
+    if (similarComponents.length > 0) {
+      sections.push(this.buildSimilarComponentsSection(similarComponents, context));
     }
     
-    // 2. Recomendaciones específicas
-    const recommendations = this.knowledgeGraph.generateRecommendations(context);
-    
-    if (recommendations.length > 0) {
-      sections.push('\n## 💡 Recomendaciones:\n');
-      recommendations.forEach(rec => {
-        sections.push(`${rec}\n`);
-      });
+    // 2. Buscar utilities relevantes
+    const relevantUtils = await this.findRelevantUtilities(context);
+    if (relevantUtils.length > 0) {
+      sections.push(this.buildUtilitiesSection(relevantUtils));
     }
     
-    // 3. Componentes similares existentes
-    if (context.isComponent) {
-      const similarComponents = this.findSimilarComponents(context.fileName);
-      if (similarComponents.length > 0) {
-        sections.push('\n## 🔍 Componentes Similares Existentes:\n');
-        similarComponents.forEach(comp => {
-          sections.push(`- ${comp.name}: ${path.relative(path.dirname(context.filePath), comp.filePath)}`);
-          if (comp.description) {
-            sections.push(`  Descripción: ${comp.description}`);
-          }
-        });
-      }
+    // 3. Buscar hooks y patterns
+    const relevantHooks = await this.findRelevantHooks(context);
+    if (relevantHooks.length > 0) {
+      sections.push(this.buildHooksSection(relevantHooks));
     }
     
-    // 4. Patrones detectados y mejores prácticas
-    if (context.detectedPatterns.length > 0) {
-      sections.push('\n## 🎯 Patrones Detectados y Mejores Prácticas:\n');
-      context.detectedPatterns.forEach(pattern => {
-        const bestPractice = this.getBestPracticeForPattern(pattern);
-        if (bestPractice) {
-          sections.push(`- ${pattern}: ${bestPractice}\n`);
-        }
-      });
-    }
-    
-    // 5. Restricciones del proyecto
+    // 4. Restricciones del proyecto
     sections.push(this.getProjectConstraints());
     
-    return sections.join('\n');
+    return sections.join('\n\n');
   }
   
   /**
-   * Encuentra componentes similares para evitar duplicación
+   * Encuentra componentes similares (evita duplicación)
    */
-  private findSimilarComponents(fileName: string): CodeEntity[] {
-    const baseName = path.basename(fileName, path.extname(fileName));
-    return this.knowledgeGraph.findSimilarComponents(baseName);
-  }
-  
-  /**
-   * Obtiene mejores prácticas para un patrón detectado
-   */
-  private getBestPracticeForPattern(pattern: string): string | null {
-    const practices: Record<string, string> = {
-      'auth': 'Usar hook existente useAuth() en lugar de implementar desde cero',
-      'fetch': 'Usar useQuery() o useFetch() para llamadas API con manejo de loading/error',
-      'form': 'Usar useForm() o React Hook Form para validación y manejo de estado',
-      'router': 'Usar React Router v6 con hooks (useNavigate, useParams)',
-      'state': 'Preferir useState para estado local, useContext para estado compartido',
-      'effect': 'useEffect con cleanup function para evitar memory leaks',
-      'callback': 'useCallback para funciones que se pasan como props',
-      'memo': 'useMemo para cálculos costosos, React.memo para componentes'
-    };
+  private async findSimilarComponents(context: MigrationContext): Promise<ExtractedEntity[]> {
+    const baseName = path.basename(context.fileName, path.extname(context.fileName));
+    const similar = await this.knowledgeGraph.findSimilarComponents(
+      baseName,
+      context.sourceCode.substring(0, 500) // Primeras líneas para contexto
+    );
     
-    return practices[pattern] || null;
+    // Filtrar componentes muy similares (> 80% similarity)
+    return similar.slice(0, 3);
   }
   
   /**
-   * Genera restricciones del proyecto
+   * Encuentra utilities relevantes
+   */
+  private async findRelevantUtilities(context: MigrationContext): Promise<ExtractedEntity[]> {
+    const relevant = await this.knowledgeGraph.findRelevant(context.sourceCode, 10);
+    return relevant.filter(e => e.type === 'function' || e.type === 'constant');
+  }
+  
+  /**
+   * Encuentra hooks y patterns relevantes
+   */
+  private async findRelevantHooks(context: MigrationContext): Promise<ExtractedEntity[]> {
+    const relevant = await this.knowledgeGraph.findRelevant(context.sourceCode, 10);
+    return relevant.filter(e => e.type === 'hook');
+  }
+  
+  /**
+   * Construye sección de componentes similares
+   */
+  private buildSimilarComponentsSection(components: ExtractedEntity[], context: MigrationContext): string {
+    const lines = [
+      '## 🔍 COMPONENTES SIMILARES EXISTENTES',
+      '',
+      '⚠️  **IMPORTANTE**: Los siguientes componentes ya existen en el proyecto.',
+      '**NO crees componentes duplicados**. Reutiliza estos o extiéndelos si es necesario.',
+      ''
+    ];
+    
+    components.forEach((comp, idx) => {
+      lines.push(`### ${idx + 1}. \`${comp.id}\` (${path.relative(path.dirname(context.filePath), comp.filePath)})`);
+      
+      if (comp.docstring) {
+        lines.push(`   **Descripción**: ${comp.docstring}`);
+      }
+      
+      if (comp.signature) {
+        lines.push(`   **Signature**: \`${comp.signature}\``);
+      }
+      
+      // Mostrar primeras líneas del código
+      const codePreview = comp.sourceCode.split('\n').slice(0, 5).join('\n');
+      lines.push('```typescript');
+      lines.push(codePreview);
+      lines.push('...');
+      lines.push('```');
+      lines.push('');
+    });
+    
+    return lines.join('\n');
+  }
+  
+  /**
+   * Construye sección de utilities
+   */
+  private buildUtilitiesSection(utilities: ExtractedEntity[]): string {
+    const lines = [
+      '## ⚙️  UTILIDADES DISPONIBLES',
+      '',
+      'Las siguientes funciones/constantes están disponibles y pueden ser útiles:',
+      ''
+    ];
+    
+    utilities.slice(0, 5).forEach(util => {
+      lines.push(`- **\`${util.id}\`** (\`${util.filePath}\`)`);
+      
+      if (util.docstring) {
+        lines.push(`  ${util.docstring}`);
+      }
+      
+      if (util.signature) {
+        lines.push(`  \`${util.signature}\``);
+      }
+      
+      lines.push('');
+    });
+    
+    return lines.join('\n');
+  }
+  
+  /**
+   * Construye sección de hooks
+   */
+  private buildHooksSection(hooks: ExtractedEntity[]): string {
+    const lines = [
+      '## 🪝 HOOKS Y PATTERNS DISPONIBLES',
+      '',
+      'Usa estos hooks en lugar de implementar desde cero:',
+      ''
+    ];
+    
+    hooks.slice(0, 5).forEach(hook => {
+      lines.push(`- **\`${hook.id}\`** (\`${hook.filePath}\`)`);
+      
+      if (hook.docstring) {
+        lines.push(`  ${hook.docstring}`);
+      }
+      
+      if (hook.signature) {
+        lines.push(`  \`${hook.signature}\``);
+      }
+      
+      lines.push('');
+    });
+    
+    return lines.join('\n');
+  }
+  
+  /**
+   * Restricciones del proyecto
    */
   private getProjectConstraints(): string {
     return `
-## ⚠️ Restricciones del Proyecto:
+## ⚠️  RESTRICCIONES DEL PROYECTO
 
-1. **NO crear componentes desde cero** si existe uno similar en el Design System
-2. **NO usar colores hardcodeados** - usar theme tokens
+1. **NO crear componentes desde cero** si existe uno similar (revisa sección anterior)
+2. **NO usar colores hardcodeados** - usar theme tokens si existen
 3. **NO usar Class Components** - solo Functional Components + Hooks
 4. **NO usar 'any'** en TypeScript - siempre tipar correctamente
 5. **Accesibilidad OBLIGATORIA** - todos los elementos interactivos necesitan aria-labels
@@ -120,17 +187,17 @@ export class ContextInjector {
   }
   
   /**
-   * Genera contexto para refactorización (no migración)
+   * Enriquece prompt para refactorización
    */
-  enrichRefactorPrompt(basePrompt: string, filePath: string, issues: string[]): string {
+  async enrichRefactorPrompt(basePrompt: string, filePath: string, issues: string[]): Promise<string> {
     const sections: string[] = [basePrompt];
     
-    sections.push('\n## 🔧 Issues Detectados:\n');
+    sections.push('\n## 🔧 ISSUES DETECTADOS:\n');
     issues.forEach(issue => {
       sections.push(`- ${issue}`);
     });
     
-    sections.push('\n## ✅ Soluciones Recomendadas:\n');
+    sections.push('\n## ✅ SOLUCIONES RECOMENDADAS:\n');
     issues.forEach(issue => {
       const solution = this.getSolutionForIssue(issue);
       if (solution) {
@@ -154,7 +221,7 @@ export class ContextInjector {
     }
     
     if (issue.includes('eval()')) {
-      return 'Eliminar eval() - usar alternativas seguras (Function constructor no recomendado)';
+      return 'Eliminar eval() - usar alternativas seguras';
     }
     
     if (issue.includes('Inline function')) {
@@ -165,41 +232,6 @@ export class ContextInjector {
       return 'Extraer a constantes con nombres descriptivos';
     }
     
-    if (issue.includes('Missing alt')) {
-      return 'Agregar alt descriptivo a todas las imágenes';
-    }
-    
     return null;
   }
-  
-  /**
-   * Genera contexto para generación de tests
-   */
-  enrichTestPrompt(basePrompt: string, componentPath: string): string {
-    const entity = this.knowledgeGraph.search(path.basename(componentPath, path.extname(componentPath)))[0];
-    
-    const sections: string[] = [basePrompt];
-    
-    if (entity) {
-      sections.push('\n## 📋 Información del Componente:\n');
-      sections.push(`- Tipo: ${entity.type}`);
-      
-      if (entity.props && Object.keys(entity.props).length > 0) {
-        sections.push('\n### Props:');
-        Object.entries(entity.props).forEach(([name, type]) => {
-          sections.push(`- ${name}: ${type}`);
-        });
-      }
-      
-      sections.push('\n## ✅ Tests Requeridos:\n');
-      sections.push('1. Renderizado básico (smoke test)');
-      sections.push('2. Props rendering correctamente');
-      sections.push('3. Interacciones de usuario (clicks, inputs)');
-      sections.push('4. Edge cases y error states');
-      sections.push('5. Accesibilidad (aria-labels, keyboard navigation)');
-    }
-    
-    return sections.join('\n');
-  }
 }
-

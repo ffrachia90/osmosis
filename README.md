@@ -28,6 +28,58 @@ Enterprises manage extensive portfolios of applications:
 
 **Don't see your tech? We can add support in 1-2 weeks.**
 
+## 🧠 Enterprise RAG System - El Diferenciador
+
+### **¿Qué Hace Especial a Osmosis?**
+
+La mayoría de herramientas de migración son **estúpidas**: procesan archivos aisladamente sin entender el contexto global. Osmosis es **inteligente**: **entiende tu proyecto completo** antes de generar una sola línea de código.
+
+#### **RAG Enterprise-Grade con Embeddings Vectoriales**
+
+```bash
+# 1. Primera vez: Indexa el proyecto (una sola vez)
+$ osmosis analyze --dir ./my-legacy-app
+🧠 Indexando... 100% (1,234 entidades)
+✅ 1,234 entidades, 1,234 vectores generados
+✅ Cache guardado en .osmosis/
+
+# 2. Migración: Usa contexto del proyecto (instantáneo)
+$ osmosis migrate --source ./legacy --from jsp --to react
+✅ Knowledge Graph cargado desde cache (0.2s)
+[1/50] Migrando LoginForm.jsp...
+  🔍 Encontró componente similar: LoginButton (evita duplicación)
+  ⚙️  Reutilizando: validateEmail, hashPassword
+  🪝 Usando hook existente: useAuth
+✅ LoginForm.jsx generado con contexto del proyecto
+```
+
+#### **Búsqueda Semántica (No Solo Keywords)**
+
+```typescript
+// ❌ RAG Naive: Busca por nombre exacto
+search("Button") → encuentra componentes con "Button" en el nombre
+
+// ✅ RAG Enterprise: Busca por significado
+search("login authentication") 
+  → encuentra: UserAuthForm, LoginButton, useAuth, validateCredentials
+  → aunque NO tengan "login" en el nombre
+```
+
+#### **Capacidades del RAG:**
+
+| Feature | Naive | **Osmosis** |
+|---------|-------|-------------|
+| **Búsqueda** | Keywords | ✅ **Similarity Vectorial** |
+| **Persistencia** | ❌ | ✅ **Cache Inteligente** |
+| **Código Real** | ❌ | ✅ **AST + Docstrings** |
+| **Evita Duplicación** | ❌ | ✅ **Reutiliza Componentes** |
+| **Embeddings** | ❌ | ✅ **OpenAI/Gemini/Local** |
+| **Performance** | O(n) | ✅ **O(log n)** |
+
+📚 **[Ver Documentación Completa del RAG →](docs/RAG-SYSTEM.md)**
+
+---
+
 ## 🧠 Osmosis AI - Brain & Configuration
 Osmosis comes pre-configured with a powerful set of **AI Rules** for Cursor IDE, transforming it into an automated Migration Architect.
 

@@ -1,0 +1,630 @@
+---
+description: RULES: Base de Datos Completa de Reglas de Migración
+globs: *.ts, *.tsx, *.js, *.jsx
+alwaysApply: true
+---
+# REGLAS DE MIGRACIÓN - Base de Datos Completa
+
+## ESTRUCTURA DE UNA REGLA
+
+```typescript
+interface MigrationRule {
+  id: string;                    // Identificador único
+  category: 'state' | 'fetching' | 'routing' | 'styling' | 'components' | 'typescript' | 'security';
+  name: string;                  // Nombre descriptivo
+  detectPattern: string;         // Qué buscar
+  transformInstruction: string;  // Cómo transformar
+  priority: number;              // 1 = más alta
+  example: { before: string; after: string };
+  isCritical: boolean;          // Si bloquea la validación
+}
+```
+
+---
+
+## 🗃️ STATE MANAGEMENT
+
+### `redux-connect-to-hooks` 🔴 CRÍTICA (Priority: 1)
+**Detecta**: `connect(mapStateToProps, mapDispatchToProps)(Component)`
+
+**Transformación**:
+```typescript
+// ❌ ANTES
+import { connect } from 'react-redux';
+
+const mapStateToProps = (state) => ({
+  user: state.auth.user,
+  items: state.cart.items
+});
+
+const mapDispatchToProps = {
+  login,
+  logout,
+  addToCart
+};
+
+class Dashboard extends Component {
+  render() {
+    return <div>{this.props.user.name}</div>;
+  }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Dashboard);
+
+// ✅ DESPUÉS
+import { useSelector, useDispatch } from 'react-redux';
+import type { RootState, AppDispatch } from '@/store';
+import { login, logout } from '@/store/authSlice';
+import { addToCart } from '@/store/cartSlice';
+
+export function Dashboard() {
+  const user = useSelector((state: RootState) => state.auth.user);
+  const items = useSelector((state: RootState) => state.cart.items);
+  const dispatch = useDispatch<AppDispatch>();
+  
+  const handleLogin = () => dispatch(login());
+  const handleLogout = () => dispatch(logout());
+  const handleAddToCart = (item: Item) => dispatch(addToCart(item));
+  
+  return <div>{user.name}</div>;
+}
+```
+
+---
+
+### `redux-to-zustand` (Priority: 2)
+**Detecta**: `createStore()` o `configureStore()` con estado simple
+
+**Transformación**:
+```typescript
+// ❌ ANTES (Redux)
+// store/index.js
+import { configureStore, createSlice } from '@reduxjs/toolkit';
+
+const counterSlice = createSlice({
+  name: 'counter',
+  initialState: { value: 0 },
+  reducers: {
+    increment: (state) => { state.value += 1 },
+    decrement: (state) => { state.value -= 1 },
+    incrementByAmount: (state, action) => { state.value += action.payload }
+  }
+});
+
+export const store = configureStore({
+  reducer: { counter: counterSlice.reducer }
+});
+
+// Component
+import { useSelector, useDispatch } from 'react-redux';
+const count = useSelector(state => state.counter.value);
+const dispatch = useDispatch();
+dispatch(increment());
+
+// ✅ DESPUÉS (Zustand)
+// stores/counterStore.ts
+import { create } from 'zustand';
+
+interface CounterState {
+  value: number;
+  increment: () => void;
+  decrement: () => void;
+  incrementByAmount: (amount: number) => void;
+}
+
+export const useCounterStore = create<CounterState>((set) => ({
+  value: 0,
+  increment: () => set((state) => ({ value: state.value + 1 })),
+  decrement: () => set((state) => ({ value: state.value - 1 })),
+  incrementByAmount: (amount) => set((state) => ({ value: state.value + amount })),
+}));
+
+// Component
+import { useCounterStore } from '@/stores/counterStore';
+const { value, increment, incrementByAmount } = useCounterStore();
+increment();
+```
+
+---
+
+## 🔄 DATA FETCHING
+
+### `useeffect-fetch-to-query` 🔴 CRÍTICA (Priority: 1)
+**Detecta**: `useEffect` con `fetch()` o `axios.get()` + `useState` para loading/error
+
+**Transformación**:
+```typescript
+// ❌ ANTES (Manual fetching)
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+
+function UserList() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get('/api/users');
+        setUsers(response.data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUsers();
+  }, []);
+  
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+  
+  return <ul>{users.map(u => <li key={u.id}>{u.name}</li>)}</ul>;
+}
+
+// ✅ DESPUÉS (TanStack Query)
+import { useQuery } from '@tanstack/react-query';
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+const fetchUsers = async (): Promise<User[]> => {
+  const response = await fetch('/api/users');
+  if (!response.ok) {
+    throw new Error('Failed to fetch users');
+  }
+  return response.json();
+};
+
+function UserList() {
+  const { 
+    data: users = [], 
+    isLoading, 
+    error 
+  } = useQuery({
+    queryKey: ['users'],
+    queryFn: fetchUsers,
+  });
+  
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+  
+  return <ul>{users.map(u => <li key={u.id}>{u.name}</li>)}</ul>;
+}
+```
+
+---
+
+### `axios-post-to-mutation` 🔴 CRÍTICA (Priority: 1)
+**Detecta**: `axios.post/put/delete` en handlers
+
+**Transformación**:
+```typescript
+// ❌ ANTES
+function CreateUserForm() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  
+  const handleSubmit = async (data) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await axios.post('/api/users', data);
+      // Refetch manual
+      await fetchUsers();
+      alert('Usuario creado!');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+}
+
+// ✅ DESPUÉS
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+
+interface CreateUserDto {
+  name: string;
+  email: string;
+}
+
+function CreateUserForm() {
+  const queryClient = useQueryClient();
+  
+  const createUser = useMutation({
+    mutationFn: async (data: CreateUserDto) => {
+      const response = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error('Failed to create user');
+      return response.json();
+    },
+    onSuccess: () => {
+      // Invalidar cache automáticamente
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+    onError: (error) => {
+      console.error('Error creating user:', error);
+    },
+  });
+  
+  const handleSubmit = (data: CreateUserDto) => {
+    createUser.mutate(data);
+  };
+  
+  return (
+    <form onSubmit={handleSubmit}>
+      {createUser.isPending && <span>Saving...</span>}
+      {createUser.error && <span>Error: {createUser.error.message}</span>}
+      {/* ... */}
+    </form>
+  );
+}
+```
+
+---
+
+## 🧭 ROUTING
+
+### `switch-to-routes` 🔴 CRÍTICA (Priority: 1)
+**Detecta**: `<Switch>` component
+
+**Transformación**:
+```typescript
+// ❌ ANTES (React Router v5)
+import { BrowserRouter, Switch, Route, Redirect } from 'react-router-dom';
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Switch>
+        <Route exact path="/" component={Home} />
+        <Route path="/users" render={(props) => <Users {...props} data={data} />} />
+        <Route path="/user/:id" component={UserDetail} />
+        <Redirect from="/old-path" to="/new-path" />
+        <Route component={NotFound} />
+      </Switch>
+    </BrowserRouter>
+  );
+}
+
+// ✅ DESPUÉS (React Router v6)
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/users" element={<Users data={data} />} />
+        <Route path="/user/:id" element={<UserDetail />} />
+        <Route path="/old-path" element={<Navigate to="/new-path" replace />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+```
+
+---
+
+### `withrouter-to-hooks` 🔴 CRÍTICA (Priority: 1)
+**Detecta**: `withRouter(Component)` HOC
+
+**Transformación**:
+```typescript
+// ❌ ANTES
+import { withRouter } from 'react-router-dom';
+
+class UserDetail extends Component {
+  componentDidMount() {
+    const { id } = this.props.match.params;
+    this.fetchUser(id);
+  }
+  
+  goBack = () => {
+    this.props.history.push('/users');
+  };
+  
+  goToEdit = () => {
+    this.props.history.replace(`/user/${this.props.match.params.id}/edit`);
+  };
+  
+  render() {
+    const { search, pathname } = this.props.location;
+    return <div>User: {this.props.match.params.id}</div>;
+  }
+}
+
+export default withRouter(UserDetail);
+
+// ✅ DESPUÉS
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
+
+interface UserDetailParams {
+  id: string;
+}
+
+export function UserDetail() {
+  const navigate = useNavigate();
+  const { id } = useParams<UserDetailParams>();
+  const location = useLocation();
+  
+  useEffect(() => {
+    if (id) {
+      fetchUser(id);
+    }
+  }, [id]);
+  
+  const goBack = () => navigate('/users');
+  const goToEdit = () => navigate(`/user/${id}/edit`, { replace: true });
+  
+  return <div>User: {id}</div>;
+}
+```
+
+---
+
+## 🧩 COMPONENTS
+
+### `class-to-functional` 🔴 CRÍTICA (Priority: 1)
+**Detecta**: `class X extends Component` o `React.Component`
+
+**Mapeo de Lifecycle**:
+| Lifecycle Method | Hook Equivalent |
+|-----------------|-----------------|
+| `constructor(props)` | Eliminar, usar defaults en useState |
+| `this.state = {}` | `useState()` por cada propiedad |
+| `this.setState()` | Setter de useState |
+| `componentDidMount` | `useEffect(() => {}, [])` |
+| `componentDidUpdate(prevProps)` | `useEffect(() => {}, [deps])` |
+| `componentWillUnmount` | `useEffect(() => () => cleanup, [])` |
+| `shouldComponentUpdate` | `React.memo()` |
+| `getDerivedStateFromProps` | Calcular en render o useMemo |
+| `getSnapshotBeforeUpdate` | useLayoutEffect (raro) |
+| `componentDidCatch` | Error Boundary (mantener clase) |
+| `this.props` | Destructuring en parámetros |
+| `this.handleClick.bind(this)` | Arrow function o useCallback |
+
+**Transformación Completa**:
+```typescript
+// ❌ ANTES
+class Counter extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { 
+      count: props.initialCount || 0,
+      lastUpdated: null
+    };
+    this.increment = this.increment.bind(this);
+  }
+  
+  componentDidMount() {
+    document.title = `Count: ${this.state.count}`;
+    this.interval = setInterval(this.tick, 1000);
+  }
+  
+  componentDidUpdate(prevProps, prevState) {
+    if (prevState.count !== this.state.count) {
+      document.title = `Count: ${this.state.count}`;
+      this.setState({ lastUpdated: new Date() });
+    }
+  }
+  
+  componentWillUnmount() {
+    clearInterval(this.interval);
+  }
+  
+  increment() {
+    this.setState(prev => ({ count: prev.count + 1 }));
+  }
+  
+  tick = () => {
+    console.log('Tick');
+  };
+  
+  render() {
+    const { label } = this.props;
+    const { count, lastUpdated } = this.state;
+    
+    return (
+      <div>
+        <span>{label}: {count}</span>
+        <button onClick={this.increment}>+</button>
+        {lastUpdated && <small>Updated: {lastUpdated.toISOString()}</small>}
+      </div>
+    );
+  }
+}
+
+Counter.defaultProps = { initialCount: 0 };
+
+// ✅ DESPUÉS
+import { useState, useEffect, useCallback } from 'react';
+
+interface CounterProps {
+  label: string;
+  initialCount?: number;
+}
+
+export function Counter({ label, initialCount = 0 }: CounterProps) {
+  const [count, setCount] = useState(initialCount);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  
+  // componentDidMount + componentWillUnmount
+  useEffect(() => {
+    const interval = setInterval(() => {
+      console.log('Tick');
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
+  
+  // componentDidUpdate para count
+  useEffect(() => {
+    document.title = `Count: ${count}`;
+    setLastUpdated(new Date());
+  }, [count]);
+  
+  const increment = useCallback(() => {
+    setCount(prev => prev + 1);
+  }, []);
+  
+  return (
+    <div>
+      <span>{label}: {count}</span>
+      <button onClick={increment}>+</button>
+      {lastUpdated && <small>Updated: {lastUpdated.toISOString()}</small>}
+    </div>
+  );
+}
+```
+
+---
+
+### `proptypes-to-typescript` 🔴 CRÍTICA (Priority: 2)
+**Detecta**: `Component.propTypes = {}`
+
+**Mapeo de PropTypes a TypeScript**:
+| PropTypes | TypeScript |
+|-----------|------------|
+| `PropTypes.string` | `string` |
+| `PropTypes.number` | `number` |
+| `PropTypes.bool` | `boolean` |
+| `PropTypes.func` | `() => void` o tipo específico |
+| `PropTypes.array` | `unknown[]` o tipo específico |
+| `PropTypes.object` | `Record<string, unknown>` o interface |
+| `PropTypes.node` | `React.ReactNode` |
+| `PropTypes.element` | `React.ReactElement` |
+| `PropTypes.oneOf(['a', 'b'])` | `'a' \| 'b'` |
+| `PropTypes.oneOfType([...])` | Union type |
+| `PropTypes.arrayOf(PropTypes.string)` | `string[]` |
+| `PropTypes.shape({...})` | Interface |
+| `.isRequired` | Sin `?` en la propiedad |
+
+---
+
+## 📘 TYPESCRIPT
+
+### `remove-any-types` (Priority: 3)
+**Detecta**: `: any` o `as any`
+
+**Transformación por contexto**:
+```typescript
+// ❌ ANTES
+const handleChange = (e: any) => {
+  setValue(e.target.value);
+};
+
+const data: any = await fetchData();
+
+const items = response.data as any[];
+
+// ✅ DESPUÉS
+const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  setValue(e.target.value);
+};
+
+interface ApiResponse {
+  id: string;
+  name: string;
+  items: Item[];
+}
+
+const data: ApiResponse = await fetchData();
+
+interface Item {
+  id: string;
+  value: number;
+}
+const items: Item[] = response.data;
+```
+
+---
+
+## 🎨 STYLING
+
+### `inline-styles-to-tailwind` (Priority: 3)
+**Detecta**: `style={{ marginTop: X, padding: Y }}`
+
+**Mapeo de CSS a Tailwind**:
+| CSS Property | Tailwind Class |
+|--------------|----------------|
+| `display: 'flex'` | `flex` |
+| `display: 'grid'` | `grid` |
+| `flexDirection: 'column'` | `flex-col` |
+| `justifyContent: 'center'` | `justify-center` |
+| `alignItems: 'center'` | `items-center` |
+| `gap: 16` | `gap-4` |
+| `margin: 16` | `m-4` |
+| `marginTop: 8` | `mt-2` |
+| `padding: 20` | `p-5` |
+| `paddingX: 16` | `px-4` |
+| `width: '100%'` | `w-full` |
+| `height: 'auto'` | `h-auto` |
+| `backgroundColor: '#fff'` | `bg-white` |
+| `backgroundColor: '#f5f5f5'` | `bg-gray-100` |
+| `color: '#333'` | `text-gray-700` |
+| `fontSize: 14` | `text-sm` |
+| `fontWeight: 'bold'` | `font-bold` |
+| `borderRadius: 8` | `rounded-lg` |
+| `boxShadow: '...'` | `shadow-md` |
+
+**Conversión de unidades**: 4px = 1 unit en Tailwind
+- 4px → `1`, 8px → `2`, 12px → `3`, 16px → `4`, 20px → `5`, 24px → `6`
+
+---
+
+## 🔒 SECURITY
+
+### `sanitize-innerhtml` 🔴 CRÍTICA (Priority: 1)
+**Detecta**: `dangerouslySetInnerHTML={{ __html: X }}`
+
+**Transformación**:
+```typescript
+// ❌ ANTES (XSS vulnerable)
+<div dangerouslySetInnerHTML={{ __html: userContent }} />
+
+// ✅ DESPUÉS
+import DOMPurify from 'dompurify';
+
+// En el componente
+<div 
+  dangerouslySetInnerHTML={{ 
+    __html: DOMPurify.sanitize(userContent, {
+      ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br'],
+      ALLOWED_ATTR: ['href', 'target']
+    }) 
+  }} 
+/>
+
+// O mejor aún, evitar dangerouslySetInnerHTML si es posible
+// Usar librería de markdown: react-markdown, marked, etc.
+```
+
+---
+
+## TABLA DE PRIORIDADES
+
+| Prioridad | ID | Categoría | Crítica |
+|-----------|------|-----------|---------|
+| 1 | `redux-connect-to-hooks` | state | ✅ |
+| 1 | `useeffect-fetch-to-query` | fetching | ✅ |
+| 1 | `axios-post-to-mutation` | fetching | ✅ |
+| 1 | `switch-to-routes` | routing | ✅ |
+| 1 | `withrouter-to-hooks` | routing | ✅ |
+| 1 | `class-to-functional` | components | ✅ |
+| 1 | `sanitize-innerhtml` | security | ✅ |
+| 2 | `redux-to-zustand` | state | ❌ |
+| 2 | `proptypes-to-typescript` | typescript | ✅ |
+| 3 | `remove-any-types` | typescript | ❌ |
+| 3 | `inline-styles-to-tailwind` | styling | ❌ |

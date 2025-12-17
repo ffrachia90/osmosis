@@ -25,33 +25,43 @@ Input File: \`{{FILENAME}}\`
 `;
 
 export const SOURCE_MODULES: Record<string, string> = {
-    jsp: `
+  jsp: `
 - **Scriptlet Extraction:** Treat \`<% ... %>\` blocks as Backend Logic. Do NOT port them to client-side JS. Instead, create a TypeScript interface representing the data these blocks *would have produced* and assume it arrives via a prop or API hook.
 - **JSTL Handling:** Map \`<c:forEach>\` to \`.map()\`. Map \`<c:if>\`/\`<c:choose>\` to conditional rendering.
 - **Scope Awareness:** Identify if variables come from \`sessionScope\`, \`requestScope\`, or \`pageScope\` to determine if they should be Global State (Context/Store) or Local State.
   `,
-    php: `
+  php: `
 - **Echo Locations:** Identify \`<?php echo $var; ?>\` as injection points for React props/Angular bindings.
 - **Form Handling:** Standard PHP checks \`if ($_POST)\` for submission logic. Convert this into an async \`submitData()\` function that calls an API endpoint.
 - **Includes:** If you see \`include('header.php')\`, map this to a Layout Component wrapper.
   `,
-    jquery: `
+  jquery: `
 - **Imperative to Declarative:**
   - \`$('#btn').click(...)\` -> Add \`onClick\` handler to the button component.
   - \`$('#msg').text('Error')\` -> Bind \`{errorMessage}\` state variable.
   - \`$('.row').show()\` -> Use boolean state \`isVisible\` for conditional rendering.
 - **Event Unbinding:** Ensure no memory leaks. React/Angular handle this automatically, but be wary of global \`window\` listeners.
+  `,
+  'react-legacy': `
+- **Class to Function:** Convert class properties to simple constants or \`useRef\`. Convert \`this.state\` to multiple \`useState\` hooks.
+- **Lifecycle Mapping:**
+  - \`componentDidMount\` -> \`useEffect(() => { ... }, [])\`
+  - \`componentDidUpdate\` -> \`useEffect(() => { ... }, [deps])\`
+  - \`componentWillUnmount\` -> \`useEffect(() => { return () => { ... } }, [])\`
+- **HOCs:** Identify Higher Order Components like \`withRouter\` or \`connect\`. Replace them with their hook equivalents (\`useLocation\`, \`useSelector\`).
+- **Refs:** Change \`createRef()\` to \`useRef()\`.
+- **Typing:** If PropTypes exist, extract them into a TypeScript \`interface Props\`.
   `
 };
 
 export const TARGET_MODULES: Record<string, string> = {
-    react: `
+  react: `
 - **Paradigm:** Functional Components + Hooks ONLY. No Class components.
 - **State:** Use \`useState\` for local UI state. Use \`React Query\` (or equivalent provided in context) for server state.
 - **Performance:** Memoize expensive calculations (\`useMemo\`) and callback handlers (\`useCallback\`) if passing to children.
 - **Naming:** PascalCase for components, camelCase for props.
   `,
-    angular: `
+  angular: `
 - **Paradigm:** Use Standalone Components (no NgModules unless specified). use Signals \`computed()\` for derived state.
 - **Services:** All HTTP calls and Business Logic MUST reside in injectable Services, never in the Component class.
 - **Templating:** Use Control Flow syntax (\`@if\`, \`@for\`) instead of \`*ngIf\`/\`*ngFor\` if using Angular 17+.

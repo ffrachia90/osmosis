@@ -33,3 +33,4 @@ services:
     command: ["node", "dist/mcp/server.js"]
     restart: unless-stopped
 
+

@@ -12,6 +12,9 @@ import { ContextInjector } from './core/rag/ContextInjector.js';
 import { KnowledgeGraph } from './core/rag/KnowledgeGraph.js';
 import { TechDebtAnalyzer } from './core/analysis/TechDebtAnalyzer.js';
 import { LLMService } from './core/llm/LLMService.js';
+import { ArchitecturePlanner } from './core/architecture/ArchitecturePlanner.js';
+import { ManifestManager, ArchitectureManifest } from './core/architecture/ArchitectureManifest.js';
+import { ConfigGenerator } from './generators/config-generator.js';
 
 const program = new Command();
 
@@ -55,38 +58,38 @@ program
       spinner.start('📊 Construyendo grafo de dependencias...');
       const graph = new DependencyGraph(projectDir);
       await graph.build();
-      
+
       const migrationOrder = graph.getMigrationOrder();
       spinner.succeed(`Grafo construido: ${migrationOrder.length} archivos encontrados`);
-      
+
       // 3. Construir Knowledge Graph (RAG) con embeddings
       spinner.start('🧠 Indexando codebase para RAG con embeddings vectoriales...');
-      
+
       // Configuración de embeddings (detecta API keys o usa local)
       const embeddingConfig = {
-        provider: (process.env.OPENAI_API_KEY ? 'openai' : 
-                   process.env.GEMINI_API_KEY ? 'gemini' : 
-                   'local') as 'openai' | 'gemini' | 'local',
+        provider: (process.env.OPENAI_API_KEY ? 'openai' :
+          process.env.GEMINI_API_KEY ? 'gemini' :
+            'local') as 'openai' | 'gemini' | 'local',
         apiKey: process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY,
         model: process.env.OPENAI_API_KEY ? 'text-embedding-3-small' : undefined
       };
-      
+
       if (embeddingConfig.provider === 'local') {
         spinner.info('No API key detectada, usando embeddings locales (TF-IDF)');
       } else {
         spinner.info(`Usando ${embeddingConfig.provider} para embeddings semánticos`);
       }
-      
+
       const indexer = new CodebaseIndexer(projectDir, embeddingConfig);
       const knowledgeGraph = await indexer.index();
       const kgStats = knowledgeGraph.getStats();
-      
+
       spinner.succeed(
         `Knowledge Graph: ${kgStats.totalEntities} entidades, ` +
         `${kgStats.totalVectors} vectores generados, ` +
         `${kgStats.byType.component || 0} componentes`
       );
-      
+
       // Guardar Knowledge Graph en .osmosis/
       await knowledgeGraph.save(projectDir);
 
@@ -146,7 +149,7 @@ program
 
       const outputPath = path.resolve(options.output);
       fs.writeFileSync(outputPath, JSON.stringify(report, null, 2));
-      
+
       spinner.succeed(`Reporte generado: ${outputPath}`);
 
       // Mostrar resumen en consola
@@ -221,43 +224,43 @@ program
       // Cargar Knowledge Graph para contexto RAG
       spinner.start('🧠 Cargando Knowledge Graph...');
       const projectRoot = isDirectory ? sourcePath : path.dirname(sourcePath);
-      
+
       const embeddingConfig = {
-        provider: (process.env.OPENAI_API_KEY ? 'openai' : 
-                   process.env.GEMINI_API_KEY ? 'gemini' : 
-                   'local') as 'openai' | 'gemini' | 'local',
+        provider: (process.env.OPENAI_API_KEY ? 'openai' :
+          process.env.GEMINI_API_KEY ? 'gemini' :
+            'local') as 'openai' | 'gemini' | 'local',
         apiKey: process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY,
         model: process.env.OPENAI_API_KEY ? 'text-embedding-3-small' : undefined
       };
-      
+
       let knowledgeGraph = await KnowledgeGraph.load(projectRoot, embeddingConfig);
-      
+
       if (!knowledgeGraph) {
         spinner.info('No se encontró Knowledge Graph, indexando proyecto...');
         const indexer = new CodebaseIndexer(projectRoot, embeddingConfig);
         knowledgeGraph = await indexer.index();
         await knowledgeGraph.save(projectRoot);
       }
-      
+
       const contextInjector = new ContextInjector(knowledgeGraph);
       spinner.succeed('Knowledge Graph cargado');
-      
+
       // Inicializar LLM Service
       spinner.start('🤖 Conectando con Claude 3.5 Sonnet...');
       let llmService: LLMService;
-      
+
       try {
         llmService = new LLMService({
           apiKey: process.env.ANTHROPIC_API_KEY,
           baseURL: process.env.ANTHROPIC_BASE_URL
         });
-        
+
         // Health check
         const isHealthy = await llmService.healthCheck();
         if (!isHealthy) {
           throw new Error('LLM service health check failed');
         }
-        
+
         spinner.succeed(`Claude 3.5 Sonnet conectado (${llmService.getModelInfo()})`);
       } catch (error) {
         spinner.fail('❌ Error conectando con Claude');
@@ -267,7 +270,7 @@ program
         console.error('   export ANTHROPIC_BASE_URL="https://your-proxy.com"');
         process.exit(1);
       }
-      
+
       // Migrar cada archivo en orden
       let migratedCount = 0;
       let failedCount = 0;
@@ -280,8 +283,8 @@ program
           const sourceCode = fs.readFileSync(filePath, 'utf-8');
           const context: PromptContext = {
             clientName: options.client || 'GenericClient',
-            sourceTech: options.from as any,
-            targetTech: options.to as any,
+            sourceTech: options.from as PromptContext['sourceTech'],
+            targetTech: options.to as PromptContext['targetTech'],
             filename: path.basename(filePath),
             sourceCode,
             fileExt: path.extname(filePath).slice(1)
@@ -289,7 +292,7 @@ program
 
           // Generar prompt base
           let prompt = PromptAssembler.assemble(context);
-          
+
           // Enriquecer con contexto RAG semántico
           prompt = await contextInjector.enrichPrompt(prompt, {
             fileName: path.basename(filePath),
@@ -301,10 +304,10 @@ program
 
           // Generar código con Claude 3.5 Sonnet + Streaming
           spinner.text = `[${index + 1}/${filesToMigrate.length}] 🤖 Generando código para ${relPath}...`;
-          
+
           let generatedCode = '';
           let tokenCount = 0;
-          
+
           generatedCode = await llmService.generateWithStreaming(prompt, {
             onStart: () => {
               process.stdout.write('\n     ');
@@ -325,7 +328,7 @@ program
           });
 
           // Validar con SafeGuard
-          const validation = CodeSafeGuard.validate(generatedCode, options.to as any);
+          const validation = CodeSafeGuard.validate(generatedCode, options.to as 'react' | 'angular' | 'vue');
 
           if (!validation.isValid) {
             spinner.warn(`⚠️  SafeGuard detectó problemas en ${relPath}`);
@@ -379,7 +382,7 @@ program
   });
 
 /**
- * REFACTOR COMMAND
+ * REFACTOR COMMAND - Enhanced with Architectural Mode
  * Refactoriza código moderno con malas prácticas
  */
 program
@@ -389,16 +392,364 @@ program
   .requiredOption('--framework <name>', 'Framework (react, angular, vue)')
   .option('--output <dir>', 'Directorio de salida', './refactored')
   .option('--analyze-only', 'Solo analizar sin refactorizar', false)
+  .option('--integral', 'Refactorización arquitectónica completa (analiza y moderniza stack entero)', false)
+  .option('--manifest <path>', 'Usar manifiesto arquitectónico existente')
+  .option('--apply-config', 'Aplicar configuración generada (package.json, tsconfig, etc.)', false)
+  .option('--force', 'Forzar re-análisis aunque exista manifiesto', false)
   .action(async (options) => {
-    const spinner = ora('🔍 Analizando código...').start();
+    const spinner = ora('🚀 Iniciando Refactorización...').start();
 
     try {
-      // TODO: Implementar ModernCodeAnalyzer
-      spinner.succeed('Análisis completado (TODO: implementar)');
-      console.log('⚠️  Comando en desarrollo');
+      const sourcePath = path.resolve(options.source);
+
+      if (!fs.existsSync(sourcePath)) {
+        spinner.fail(`Source path not found: ${sourcePath}`);
+        process.exit(1);
+      }
+
+      const isDirectory = fs.statSync(sourcePath).isDirectory();
+      const projectRoot = isDirectory ? sourcePath : path.dirname(sourcePath);
+
+      // Inicializar LLM Service
+      spinner.start('🤖 Conectando con Claude...');
+      let llmService: LLMService;
+
+      try {
+        llmService = new LLMService({
+          apiKey: process.env.ANTHROPIC_API_KEY,
+          baseURL: process.env.ANTHROPIC_BASE_URL
+        });
+        await llmService.healthCheck();
+        spinner.succeed(`Motor AI conectado (${llmService.getModelInfo()})`);
+      } catch (error) {
+        spinner.fail('❌ Error conectando con la API de AI');
+        console.error('Asegúrate de tener ANTHROPIC_API_KEY configurada.');
+        process.exit(1);
+      }
+
+      // ========================================================================
+      // MODO INTEGRAL: Refactorización Arquitectónica Completa
+      // ========================================================================
+      let manifest: ArchitectureManifest | null = null;
+
+      if (options.integral) {
+        console.log('\n🏗️  ═══════════════════════════════════════════════════════');
+        console.log('   MODO ARQUITECTÓNICO INTEGRAL');
+        console.log('   Analizando proyecto completo para modernización coherente');
+        console.log('═══════════════════════════════════════════════════════════\n');
+
+        // Cargar o generar manifiesto
+        if (options.manifest) {
+          spinner.start('📋 Cargando manifiesto existente...');
+          const manifestPath = path.resolve(options.manifest);
+          if (fs.existsSync(manifestPath)) {
+            manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+            spinner.succeed('Manifiesto cargado');
+          } else {
+            spinner.fail('Manifiesto no encontrado');
+            process.exit(1);
+          }
+        } else {
+          const planner = new ArchitecturePlanner(llmService);
+          const planResult = await planner.planFull(projectRoot, {
+            force: options.force,
+            verbose: true
+          });
+          manifest = planResult.manifest;
+
+          if (!planResult.isNew) {
+            console.log('\n📋 Usando manifiesto existente (usa --force para re-analizar)');
+          }
+        }
+
+        // Mostrar resumen del manifiesto
+        console.log('\n📊 RESUMEN DEL ANÁLISIS ARQUITECTÓNICO:');
+        console.log('─'.repeat(60));
+        console.log(`   Proyecto: ${manifest!.projectName}`);
+        console.log(`   Legacy Score: ${manifest!.patternAnalysis.summary.legacyScore}/100`);
+        console.log(`   Archivos a procesar: ${manifest!.patternAnalysis.summary.totalFiles}`);
+        console.log(`   Reglas de migración: ${manifest!.migrationRules.length}`);
+        console.log('─'.repeat(60));
+
+        // Aplicar configuración si se solicita
+        if (options.applyConfig) {
+          spinner.start('⚙️  Aplicando configuración moderna...');
+          const configResult = await ConfigGenerator.apply(projectRoot, manifest!.configUpdates);
+
+          console.log('\n📁 CONFIGURACIÓN APLICADA:');
+          if (configResult.created.length > 0) {
+            console.log(`   ✅ Creados: ${configResult.created.join(', ')}`);
+          }
+          if (configResult.updated.length > 0) {
+            console.log(`   📝 Actualizados: ${configResult.updated.join(', ')}`);
+          }
+          if (configResult.skipped.length > 0) {
+            console.log(`   ⏭️  Omitidos: ${configResult.skipped.join(', ')}`);
+          }
+
+          spinner.succeed('Configuración aplicada');
+
+          // Mostrar comando para instalar dependencias
+          console.log('\n💡 Ejecuta para instalar nuevas dependencias:');
+          console.log('   npm install');
+          console.log('');
+        }
+
+        if (options.analyzeOnly) {
+          console.log('\n✅ Análisis completado (--analyze-only)');
+          console.log(`   Manifiesto guardado en: ${projectRoot}/.osmosis/architecture-manifest.json`);
+          process.exit(0);
+        }
+      }
+
+      // ========================================================================
+      // OBTENER ARCHIVOS A REFACTORIZAR
+      // ========================================================================
+      let filesToRefactor: string[];
+
+      if (isDirectory) {
+        spinner.text = '📊 Analizando dependencias para refactorización segura...';
+        const graph = new DependencyGraph(sourcePath);
+        await graph.build();
+        filesToRefactor = graph.getMigrationOrder();
+        spinner.succeed(`Orden de refactorización calculado: ${filesToRefactor.length} archivos`);
+      } else {
+        filesToRefactor = [sourcePath];
+      }
+
+      // Cargar Knowledge Graph para RAG
+      spinner.start('🧠 Cargando Contexto del Proyecto (RAG)...');
+
+      const embeddingConfig = {
+        provider: (process.env.OPENAI_API_KEY ? 'openai' :
+          process.env.GEMINI_API_KEY ? 'gemini' :
+            'local') as 'openai' | 'gemini' | 'local',
+        apiKey: process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY
+      };
+
+      let knowledgeGraph = await KnowledgeGraph.load(projectRoot, embeddingConfig);
+
+      if (!knowledgeGraph) {
+        spinner.info('Indexando codebase para entender el contexto global...');
+        const indexer = new CodebaseIndexer(projectRoot, embeddingConfig);
+        knowledgeGraph = await indexer.index();
+        await knowledgeGraph.save(projectRoot);
+      }
+
+      const contextInjector = new ContextInjector(knowledgeGraph);
+      spinner.succeed('Contexto cargado');
+
+      // ========================================================================
+      // LOOP PRINCIPAL DE REFACTORIZACIÓN
+      // ========================================================================
+      let successCount = 0;
+      let failCount = 0;
+
+      console.log('\n🔄 INICIANDO REFACTORIZACIÓN...\n');
+
+      for (const [index, filePath] of filesToRefactor.entries()) {
+        const relPath = isDirectory ? path.relative(sourcePath, filePath) : path.basename(filePath);
+
+        // Filtrar solo archivos JS/TS/JSX/TSX
+        if (!filePath.match(/\.(js|jsx|ts|tsx)$/)) continue;
+
+        spinner.start(`[${index + 1}/${filesToRefactor.length}] Modernizando ${relPath}...`);
+
+        try {
+          const sourceCode = fs.readFileSync(filePath, 'utf-8');
+
+          const context: PromptContext = {
+            clientName: 'Osmosis User',
+            sourceTech: 'react-legacy',
+            targetTech: options.framework as PromptContext['targetTech'],
+            filename: path.basename(filePath),
+            sourceCode,
+            fileExt: path.extname(filePath).slice(1),
+            // IMPORTANTE: Pasar el manifiesto para modo integral
+            architectureManifest: manifest || undefined
+          };
+
+          // 1. Ensamblar Prompt (con o sin manifiesto)
+          let prompt: string;
+          if (manifest) {
+            prompt = PromptAssembler.assembleIntegral(context, manifest);
+          } else {
+            prompt = PromptAssembler.assemble(context);
+          }
+
+          // 2. Inyectar Contexto RAG
+          prompt = await contextInjector.enrichPrompt(prompt, {
+            fileName: path.basename(filePath),
+            filePath: filePath,
+            sourceCode: sourceCode,
+            legacyLanguage: 'react-legacy',
+            targetFramework: options.framework
+          });
+
+          // 3. Generar Código Moderno
+          spinner.text = `[${index + 1}/${filesToRefactor.length}] 🤖 Reescribiendo ${relPath}...`;
+
+          let generatedCode = await llmService.generateWithStreaming(prompt, {
+            onToken: () => { },
+            onError: (e) => spinner.fail(`Error LLM: ${e.message}`)
+          });
+
+          // 4. Validar Calidad
+          const validation = CodeSafeGuard.validate(generatedCode, options.framework as 'react' | 'angular' | 'vue');
+
+          if (!validation.isValid) {
+            spinner.warn(`⚠️  SafeGuard detectó problemas en ${relPath}. Auto-reparando...`);
+
+            const repairedCode = await attemptRepair(
+              llmService,
+              generatedCode,
+              validation.errors,
+              options.framework
+            );
+
+            if (repairedCode) {
+              generatedCode = repairedCode;
+              spinner.succeed(`✅ ${relPath} reparado y modernizado`);
+              successCount++;
+            } else {
+              spinner.fail(`❌ No se pudo reparar automáticamente ${relPath}`);
+              failCount++;
+            }
+          } else {
+            successCount++;
+            spinner.succeed(`✅ ${relPath} modernizado perfectamente`);
+          }
+
+          // 5. Guardar resultado
+          await writeOutput(filePath, generatedCode, options.output, options.analyzeOnly);
+
+        } catch (error) {
+          spinner.fail(`❌ Falló modernización de ${relPath}`);
+          console.error(error);
+          failCount++;
+        }
+      }
+
+      // ========================================================================
+      // RESUMEN FINAL
+      // ========================================================================
+      console.log('\n═══════════════════════════════════════════════════════════');
+      console.log('   📊 RESUMEN DE REFACTORIZACIÓN');
+      console.log('═══════════════════════════════════════════════════════════');
+      console.log(`   ✅ Exitosos: ${successCount}/${filesToRefactor.length}`);
+      console.log(`   ❌ Fallidos: ${failCount}/${filesToRefactor.length}`);
+      console.log(`   📁 Output: ${options.output}`);
+
+      if (options.integral && manifest) {
+        console.log('\n   🏗️  MODO INTEGRAL:');
+        console.log(`   └─ Stack: ${manifest.proposedStack.stateManagement.library} + ` +
+          `${manifest.proposedStack.dataFetching.library} + ` +
+          `${manifest.proposedStack.routing.library}`);
+        console.log(`   └─ Reglas aplicadas: ${manifest.migrationRules.length}`);
+      }
+
+      console.log('═══════════════════════════════════════════════════════════\n');
+
+      if (options.analyzeOnly) {
+        console.log('⚠️  MODO ANALYZE-ONLY: No se escribieron archivos');
+      }
+
+      // Sugerencia de próximos pasos
+      if (options.integral && !options.applyConfig) {
+        console.log('💡 PRÓXIMOS PASOS:');
+        console.log('   1. Revisa el manifiesto: .osmosis/architecture-manifest.json');
+        console.log('   2. Aplica configuración: osmosis refactor --source . --framework react --integral --apply-config');
+        console.log('   3. Instala dependencias: npm install');
+        console.log('');
+      }
 
     } catch (error) {
-      spinner.fail('Error durante refactorización');
+      spinner.fail('Error crítico durante la refactorización');
+      console.error(error);
+      process.exit(1);
+    }
+  });
+
+/**
+ * PLAN COMMAND - Solo genera el plan arquitectónico
+ */
+program
+  .command('plan')
+  .description('Genera un plan de modernización arquitectónica sin ejecutar cambios')
+  .requiredOption('--dir <directory>', 'Directorio del proyecto a analizar')
+  .option('--force', 'Forzar re-análisis aunque exista manifiesto', false)
+  .option('--output <path>', 'Ruta del manifiesto de salida')
+  .action(async (options) => {
+    const spinner = ora('🏗️ Generando plan arquitectónico...').start();
+
+    try {
+      const projectDir = path.resolve(options.dir);
+
+      if (!fs.existsSync(projectDir)) {
+        spinner.fail(`Directorio no encontrado: ${projectDir}`);
+        process.exit(1);
+      }
+
+      // Inicializar LLM
+      spinner.text = '🤖 Conectando con Claude...';
+      const llmService = new LLMService({
+        apiKey: process.env.ANTHROPIC_API_KEY,
+        baseURL: process.env.ANTHROPIC_BASE_URL
+      });
+
+      await llmService.healthCheck();
+      spinner.succeed('Motor AI conectado');
+
+      // Ejecutar planificación
+      const planner = new ArchitecturePlanner(llmService);
+      const result = await planner.planFull(projectDir, {
+        force: options.force,
+        verbose: true
+      });
+
+      // Guardar en ubicación personalizada si se especifica
+      if (options.output) {
+        const outputPath = path.resolve(options.output);
+        fs.writeFileSync(outputPath, JSON.stringify(result.manifest, null, 2));
+        console.log(`\n✅ Manifiesto guardado en: ${outputPath}`);
+      }
+
+      // Mostrar resumen
+      const m = result.manifest;
+      console.log('\n═══════════════════════════════════════════════════════════');
+      console.log('   📋 PLAN DE MODERNIZACIÓN GENERADO');
+      console.log('═══════════════════════════════════════════════════════════');
+      console.log(`   Proyecto: ${m.projectName}`);
+      console.log(`   Legacy Score: ${m.patternAnalysis.summary.legacyScore}/100`);
+      console.log(`   Confianza: ${m.metadata.confidence}%`);
+      console.log(`   Tiempo de análisis: ${m.metadata.generationTime}ms`);
+      console.log('');
+      console.log('   📦 STACK PROPUESTO:');
+      console.log(`   ├─ State: ${m.proposedStack.stateManagement.library}`);
+      console.log(`   ├─ Fetching: ${m.proposedStack.dataFetching.library}`);
+      console.log(`   ├─ Routing: ${m.proposedStack.routing.library}`);
+      console.log(`   ├─ Styling: ${m.proposedStack.styling.library}`);
+      console.log(`   └─ Testing: ${m.proposedStack.testing.library}`);
+      console.log('');
+      console.log('   📝 REGLAS DE MIGRACIÓN:');
+      m.migrationRules.slice(0, 5).forEach(rule => {
+        console.log(`   ├─ ${rule.name} ${rule.isCritical ? '🔴' : ''}`);
+      });
+      if (m.migrationRules.length > 5) {
+        console.log(`   └─ ... y ${m.migrationRules.length - 5} más`);
+      }
+      console.log('');
+      console.log('   📁 CONFIGURACIÓN A GENERAR:');
+      console.log(`   ├─ Nuevas deps: ${Object.keys(m.configUpdates.dependencies).length}`);
+      console.log(`   ├─ A eliminar: ${m.configUpdates.removePackages.length}`);
+      console.log(`   └─ Config files: ${m.configUpdates.configFiles.length}`);
+      console.log('═══════════════════════════════════════════════════════════');
+      console.log('\n💡 Ejecuta para aplicar:');
+      console.log(`   osmosis refactor --source ${projectDir} --framework react --integral --apply-config`);
+      console.log('');
+
+    } catch (error) {
+      spinner.fail('Error generando plan');
       console.error(error);
       process.exit(1);
     }
@@ -432,10 +783,10 @@ async function attemptRepair(
   maxRetries = 3
 ): Promise<string | null> {
   console.log(`\n🔧 Iniciando auto-reparación con Claude (Max ${maxRetries} intentos)...`);
-  
+
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     console.log(`\n   🤖 Intento ${attempt}/${maxRetries} - Enviando a Claude...`);
-    
+
     try {
       // Llamar al LLM para reparar el código
       const repairedCode = await llmService.repair(
@@ -444,33 +795,33 @@ async function attemptRepair(
         targetTech,
         attempt
       );
-      
+
       // Validar código reparado
-      const validation = CodeSafeGuard.validate(repairedCode, targetTech as any);
-      
+      const validation = CodeSafeGuard.validate(repairedCode, targetTech as 'react' | 'angular' | 'vue');
+
       if (validation.isValid) {
         console.log(`   ✅ Reparación exitosa en intento ${attempt}`);
         return repairedCode;
       } else {
         console.log(`   ⚠️  Intento ${attempt} - Aún hay errores:`);
         validation.errors.forEach(err => console.log(`      - ${err}`));
-        
+
         // Actualizar para siguiente intento
         errors = validation.errors;
         code = repairedCode; // Usar versión parcialmente reparada como base
-        
+
         if (attempt < maxRetries) {
           console.log(`   🔄 Reintentando con errores actualizados...`);
         }
       }
-      
+
     } catch (error) {
       console.error(`   ❌ Error en intento ${attempt}: ${error}`);
-      
+
       // Si falla la conexión al LLM, intentar fallback con fixes conocidos
       console.log(`   🔧 Intentando fixes automáticos conocidos...`);
       let repairedCode = code;
-      
+
       // Fix 1: Class Component → Functional
       if (errors.some(e => e.includes('Class Component'))) {
         repairedCode = repairedCode.replace(
@@ -478,7 +829,7 @@ async function attemptRepair(
           'export const $1: React.FC = () =>'
         );
       }
-      
+
       // Fix 2: dangerouslySetInnerHTML sin sanitizar
       if (errors.some(e => e.includes('dangerouslySetInnerHTML'))) {
         if (!repairedCode.includes('DOMPurify')) {
@@ -489,23 +840,23 @@ async function attemptRepair(
           );
         }
       }
-      
+
       // Fix 3: eval() removal
       if (errors.some(e => e.includes('eval()'))) {
         repairedCode = repairedCode.replace(/eval\(/g, '// REMOVED: eval(');
       }
-      
+
       // Validar fallback
-      const validation = CodeSafeGuard.validate(repairedCode, targetTech as any);
+      const validation = CodeSafeGuard.validate(repairedCode, targetTech as 'react' | 'angular' | 'vue');
       if (validation.isValid) {
         console.log(`   ✅ Reparación exitosa con fixes automáticos`);
         return repairedCode;
       }
-      
+
       code = repairedCode;
     }
   }
-  
+
   console.log(`\n❌ Auto-reparación falló después de ${maxRetries} intentos`);
   console.log(`   💡 Considera revisar manualmente el archivo`);
   return null;

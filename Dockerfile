@@ -41,3 +41,4 @@ EXPOSE 3000
 ENTRYPOINT ["node", "dist/cli.js"]
 CMD ["--help"]
 
+

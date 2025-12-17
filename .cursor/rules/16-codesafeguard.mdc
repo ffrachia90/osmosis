@@ -1,0 +1,451 @@
+---
+description: SAFEGUARD: Sistema de Validación de Código
+globs: src/core/safeguard/*
+alwaysApply: true
+---
+# CODESAFEGUARD - Validación Enterprise de Código Generado
+
+## CONCEPTO
+
+CodeSafeGuard valida TODO el código generado usando **TypeScript Compiler API** (no regex). Esto garantiza que el código generado sea:
+- ✅ Sintácticamente correcto
+- ✅ Libre de patrones obsoletos
+- ✅ Seguro (sin XSS, eval, etc.)
+- ✅ Performante
+- ✅ Accesible
+
+---
+
+## UBICACIÓN
+
+`src/core/safeguard/validator.ts`
+
+---
+
+## API
+
+```typescript
+interface ValidationResult {
+  isValid: boolean;      // true si no hay errores
+  errors: string[];      // Errores que BLOQUEAN
+  warnings: string[];    // Warnings que NO bloquean
+}
+
+class CodeSafeGuard {
+  static validate(code: string, targetTech: 'react' | 'angular' | 'vue'): ValidationResult;
+  static generateRepairPrompt(code: string, errors: string[]): string;
+}
+```
+
+---
+
+## VALIDACIONES
+
+### 1. Validación Sintáctica (TypeScript Compiler API)
+
+```typescript
+private static validateSyntax(code: string): string[] {
+  const sourceFile = ts.createSourceFile(
+    'temp.tsx',
+    code,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TSX
+  );
+  
+  const program = ts.createProgram(['temp.tsx'], {
+    noEmit: true,
+    strict: true,
+    jsx: ts.JsxEmit.React,
+    target: ts.ScriptTarget.ESNext,
+    module: ts.ModuleKind.ESNext
+  }, host);
+  
+  const diagnostics = ts.getPreEmitDiagnostics(program);
+  return diagnostics.map(d => `Syntax Error: ${d.messageText}`);
+}
+```
+
+**Detecta**:
+- ❌ Errores de sintaxis
+- ❌ Imports incorrectos
+- ❌ JSX malformado
+- ❌ TypeScript errors (strict mode)
+
+---
+
+### 2. Patrones Obsoletos (React)
+
+```typescript
+private static detectObsoletePatterns(code: string, targetTech: string): string[] {
+  const errors: string[] = [];
+  
+  if (targetTech === 'react') {
+    // Class Components
+    if (/class\s+\w+\s+extends\s+(React\.)?Component/g.test(code)) {
+      errors.push('Class Component detected (use Functional Component + Hooks)');
+    }
+    
+    // Lifecycle methods
+    if (/componentDidMount|componentWillMount|componentWillReceiveProps/g.test(code)) {
+      errors.push('Legacy lifecycle methods detected (use useEffect)');
+    }
+    
+    // createRef
+    if (/React\.createRef|createRef/g.test(code)) {
+      errors.push('createRef detected (use useRef)');
+    }
+  }
+  
+  if (targetTech === 'angular') {
+    // NgModule
+    if (/@NgModule/g.test(code)) {
+      errors.push('NgModule detected (use standalone: true)');
+    }
+    
+    // Old control flow
+    if (/\*ngIf|\*ngFor/g.test(code)) {
+      errors.push('Old control flow detected (use @if, @for)');
+    }
+  }
+  
+  return errors;
+}
+```
+
+**Detecta (React)**:
+- ❌ `class X extends Component`
+- ❌ `componentDidMount`, `componentWillMount`, `componentWillReceiveProps`
+- ❌ `React.createRef()`, `createRef()`
+
+**Detecta (Angular)**:
+- ❌ `@NgModule` (usar standalone)
+- ❌ `*ngIf`, `*ngFor` (usar @if, @for)
+
+---
+
+### 3. Problemas de Seguridad
+
+```typescript
+private static detectSecurityIssues(code: string): string[] {
+  const errors: string[] = [];
+  
+  // XSS: dangerouslySetInnerHTML sin sanitizar
+  if (/dangerouslySetInnerHTML/.test(code) && !/DOMPurify/.test(code)) {
+    errors.push('dangerouslySetInnerHTML without DOMPurify (XSS risk)');
+  }
+  
+  // eval()
+  if (/\beval\s*\(/.test(code)) {
+    errors.push('eval() detected (security risk)');
+  }
+  
+  // Function constructor
+  if (/new\s+Function\s*\(/.test(code)) {
+    errors.push('Function constructor detected (security risk)');
+  }
+  
+  // innerHTML directo
+  if (/\.innerHTML\s*=/.test(code)) {
+    errors.push('innerHTML assignment without sanitization (XSS risk)');
+  }
+  
+  return errors;
+}
+```
+
+**Detecta**:
+- ❌ `dangerouslySetInnerHTML` sin DOMPurify
+- ❌ `eval(...)` 
+- ❌ `new Function(...)`
+- ❌ `.innerHTML = ...`
+
+---
+
+### 4. Problemas de Performance (Warnings)
+
+```typescript
+private static detectPerformanceIssues(code: string): string[] {
+  const warnings: string[] = [];
+  
+  // Inline functions en JSX
+  if (/onClick=\{.*?=>.*?\}/g.test(code)) {
+    warnings.push('Inline arrow functions in JSX (consider useCallback)');
+  }
+  
+  // Array.map sin key
+  if (/\.map\(.*?=>\s*</.test(code) && !/key=/g.test(code)) {
+    warnings.push('Array.map without key prop');
+  }
+  
+  return warnings;
+}
+```
+
+**Detecta**:
+- ⚠️ `onClick={() => ...}` (inline functions)
+- ⚠️ `.map(x => <div>)` sin `key`
+
+---
+
+### 5. Problemas de Accesibilidad (Warnings)
+
+```typescript
+private static detectAccessibilityIssues(code: string): string[] {
+  const warnings: string[] = [];
+  
+  // img sin alt
+  if (/<img[^>]*src=/g.test(code) && !/<img[^>]*alt=/g.test(code)) {
+    warnings.push('img tag without alt attribute');
+  }
+  
+  // button con solo icono sin aria-label
+  if (/<button[^>]*>\s*<(?:Icon|Svg|i)/g.test(code) && !/<button[^>]*aria-label=/g.test(code)) {
+    warnings.push('Icon button without aria-label');
+  }
+  
+  // div con onClick pero sin role
+  if (/<div[^>]*onClick/g.test(code) && !/<div[^>]*role=/g.test(code)) {
+    warnings.push('Interactive div without role attribute');
+  }
+  
+  return warnings;
+}
+```
+
+**Detecta**:
+- ⚠️ `<img src="...">` sin `alt`
+- ⚠️ `<button><Icon/></button>` sin `aria-label`
+- ⚠️ `<div onClick={...}>` sin `role`
+
+---
+
+## FLUJO DE VALIDACIÓN
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ LLMService.generate(prompt)                                     │
+│   ↓                                                              │
+│ generatedCode = "..."                                           │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ CodeSafeGuard.validate(generatedCode, 'react')                  │
+│   │                                                              │
+│   ├─ validateSyntax(code)        → TypeScript Compiler API     │
+│   ├─ detectObsoletePatterns(code) → Regex patterns             │
+│   ├─ detectSecurityIssues(code)   → Security checks            │
+│   ├─ detectPerformanceIssues(code) → Performance warnings      │
+│   └─ detectAccessibilityIssues(code) → A11y warnings           │
+│                                                                  │
+│   Return: { isValid, errors, warnings }                         │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ Si isValid === true:                                            │
+│   → Guardar archivo                                             │
+│                                                                  │
+│ Si isValid === false:                                           │
+│   → LLMService.repair(code, errors, framework, attempt)        │
+│   → CodeSafeGuard.validate(repairedCode)                       │
+│   → Repetir hasta 3 veces                                       │
+│   → Si falla 3 veces: Fallback con fixes conocidos             │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## AUTO-REPARACIÓN
+
+### Prompt de Reparación
+
+```typescript
+static generateRepairPrompt(code: string, errors: string[]): string {
+  return `# 🔧 REPAIR REQUIRED
+
+El código generado tiene los siguientes problemas:
+
+${errors.map((e, i) => `${i + 1}. ❌ ${e}`).join('\n')}
+
+## Código Original:
+
+\`\`\`typescript
+${code}
+\`\`\`
+
+## Instrucciones:
+
+Corrige TODOS los problemas listados arriba. Responde SOLO con el código corregido, sin explicaciones.
+
+## Código Corregido:
+
+\`\`\`typescript
+// Tu código aquí
+\`\`\``;
+}
+```
+
+### LLMService.repair()
+
+```typescript
+async repair(
+  code: string,
+  errors: string[],
+  targetTech: string,
+  attempt: number
+): Promise<string> {
+  const prompt = `# 🔧 CODE REPAIR - Attempt ${attempt}/3
+
+## ❌ Validation Errors Detected
+${errors.map((e, i) => `${i + 1}. ${e}`).join('\n')}
+
+## 🐛 Problematic Code
+\`\`\`tsx
+${code}
+\`\`\`
+
+## ✅ Your Task
+1. Fix ALL errors listed above
+2. Maintain the original functionality
+3. Keep the same component structure
+4. Use modern best practices
+5. Return ONLY the fixed code
+
+## 🎯 Common Fixes
+- Class Components → Functional Components + Hooks
+- dangerouslySetInnerHTML → Use DOMPurify
+- Missing alt → Add descriptive alt text
+- eval() → Remove or use safe alternative
+
+## 📤 Output
+\`\`\`tsx
+// Fixed code here
+\`\`\``;
+
+  return this.generate(prompt);
+}
+```
+
+---
+
+## FALLBACK CONOCIDOS
+
+Si LLM falla 3 veces, se aplican fixes automáticos:
+
+```typescript
+// Fix 1: Class Component → Functional (regex simple)
+if (errors.some(e => e.includes('Class Component'))) {
+  repairedCode = repairedCode.replace(
+    /class\s+(\w+)\s+extends\s+React\.Component/g,
+    'export const $1: React.FC = () =>'
+  );
+}
+
+// Fix 2: dangerouslySetInnerHTML → Agregar DOMPurify
+if (errors.some(e => e.includes('dangerouslySetInnerHTML'))) {
+  if (!repairedCode.includes('DOMPurify')) {
+    repairedCode = "import DOMPurify from 'dompurify';\n" + repairedCode;
+    repairedCode = repairedCode.replace(
+      /dangerouslySetInnerHTML={{__html:\s*(.+?)}}/g,
+      'dangerouslySetInnerHTML={{__html: DOMPurify.sanitize($1)}}'
+    );
+  }
+}
+
+// Fix 3: eval() → Comentar
+if (errors.some(e => e.includes('eval()'))) {
+  repairedCode = repairedCode.replace(/eval\(/g, '// REMOVED: eval(');
+}
+```
+
+---
+
+## EJEMPLO COMPLETO
+
+### Input (Código Problemático)
+```typescript
+class UserList extends React.Component {
+  state = { users: [] };
+  
+  componentDidMount() {
+    eval('console.log("hello")'); // ❌ eval
+    fetch('/api').then(r => this.setState({ users: r }));
+  }
+  
+  render() {
+    return (
+      <div>
+        <img src="/logo.png" /> {/* ❌ sin alt */}
+        <div dangerouslySetInnerHTML={{__html: data}} /> {/* ❌ sin DOMPurify */}
+        {this.state.users.map(u => <div>{u.name}</div>)} {/* ❌ sin key */}
+      </div>
+    );
+  }
+}
+```
+
+### Validation Result
+```typescript
+{
+  isValid: false,
+  errors: [
+    "Class Component detected (use Functional Component + Hooks)",
+    "Legacy lifecycle methods detected (use useEffect)",
+    "eval() detected (security risk)",
+    "dangerouslySetInnerHTML without DOMPurify (XSS risk)"
+  ],
+  warnings: [
+    "img tag without alt attribute",
+    "Array.map without key prop"
+  ]
+}
+```
+
+### Output (Después de Auto-Repair)
+```typescript
+import { useState, useEffect } from 'react';
+import DOMPurify from 'dompurify';
+
+interface User {
+  id: string;
+  name: string;
+}
+
+export function UserList() {
+  const [users, setUsers] = useState<User[]>([]);
+  
+  useEffect(() => {
+    // REMOVED: eval('console.log("hello")');
+    fetch('/api')
+      .then(r => r.json())
+      .then(setUsers);
+  }, []);
+  
+  return (
+    <div>
+      <img src="/logo.png" alt="Company logo" />
+      <div dangerouslySetInnerHTML={{__html: DOMPurify.sanitize(data)}} />
+      {users.map(u => <div key={u.id}>{u.name}</div>)}
+    </div>
+  );
+}
+```
+
+---
+
+## TABLA DE VALIDACIONES
+
+| Categoría | Patrón | Severidad | Auto-Fix |
+|-----------|--------|-----------|----------|
+| Obsolete | Class Component | 🔴 Error | ✅ LLM |
+| Obsolete | Lifecycle methods | 🔴 Error | ✅ LLM |
+| Obsolete | createRef | 🔴 Error | ✅ LLM |
+| Security | dangerouslySetInnerHTML | 🔴 Error | ✅ LLM + Fallback |
+| Security | eval() | 🔴 Error | ✅ Fallback |
+| Security | new Function | 🔴 Error | ✅ LLM |
+| Security | innerHTML = | 🔴 Error | ✅ LLM |
+| Performance | Inline functions | 🟡 Warning | ❌ |
+| Performance | map sin key | 🟡 Warning | ❌ |
+| A11y | img sin alt | 🟡 Warning | ❌ |
+| A11y | button sin aria-label | 🟡 Warning | ❌ |
+| A11y | div onClick sin role | 🟡 Warning | ❌ |

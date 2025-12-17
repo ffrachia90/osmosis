@@ -1,0 +1,402 @@
+---
+description: DETECT: Sistema de Detección de Tecnologías Legacy
+globs: src/analyzers/*
+alwaysApply: true
+---
+# LEGACY DETECTOR - Detección de Tecnologías Antiguas
+
+## UBICACIÓN
+
+`src/analyzers/legacy-detector.ts`
+
+---
+
+## CONCEPTO
+
+LegacyDetector analiza el código REAL (no solo extensiones de archivo) para detectar tecnologías legacy y estimar su complejidad de migración.
+
+---
+
+## TECNOLOGÍAS DETECTABLES
+
+| Tecnología | Detección | Complejidad | Era |
+|------------|-----------|-------------|-----|
+| **jQuery** | Code analysis | Medium | 2000s |
+| **AngularJS (v1)** | Code analysis | Medium | 2010s |
+| **JSP** | File + content | High | 2000s |
+| **PHP** | File + content | Medium | 2000s |
+| **ASP.NET WebForms** | File + content | High | 1990s |
+| **ColdFusion** | File extension | Medium | 2000s |
+| **Perl CGI** | File extension | Medium | 1990s |
+| **VB6/VB.NET** | File extension | High | 1990s |
+
+---
+
+## API
+
+```typescript
+interface LegacyTechnology {
+  name: string;
+  confidence: number;           // 0-1
+  indicators: string[];         // Evidencias encontradas
+  migrationComplexity: 'low' | 'medium' | 'high';
+}
+
+interface LegacyDetectionResult {
+  technologies: LegacyTechnology[];
+  primary: LegacyTechnology | null;  // La de mayor confidence
+  era: '1990s' | '2000s' | '2010s' | 'modern';
+  estimatedAge: number;               // años
+  recommendations: string[];
+}
+
+class LegacyDetector {
+  // Método rápido: solo extensiones
+  async detectFromCode(projectDir: string): Promise<string[]>;
+  
+  // Método completo: análisis de contenido
+  async detectFromCodebase(projectDir: string): Promise<LegacyDetectionResult>;
+}
+```
+
+---
+
+## DETECCIÓN POR TECNOLOGÍA
+
+### jQuery
+
+```typescript
+private detectJQueryFromCode(files: Map<string, string>): string[] {
+  const indicators: string[] = [];
+  
+  for (const [filePath, content] of files.entries()) {
+    // jQuery selectors
+    if (content.includes('$("') || content.includes("$('") || content.includes('jQuery(')) {
+      jqueryUsageCount++;
+    }
+    
+    // jQuery UI widgets
+    if (content.includes('.dialog(') || content.includes('.datepicker(') || content.includes('.accordion(')) {
+      indicators.push(`jQuery UI widgets en ${fileName}`);
+    }
+    
+    // jQuery AJAX
+    if (content.includes('$.ajax') || content.includes('$.get') || content.includes('$.post')) {
+      indicators.push(`jQuery AJAX calls en ${fileName}`);
+    }
+  }
+  
+  return indicators;
+}
+```
+
+**Patterns Detectados**:
+- `$("selector")`, `$('selector')`, `jQuery(...)`
+- `.dialog()`, `.datepicker()`, `.accordion()`
+- `$.ajax`, `$.get`, `$.post`
+
+---
+
+### AngularJS (v1)
+
+```typescript
+private detectAngularJSFromCode(files: Map<string, string>): string[] {
+  const indicators: string[] = [];
+  
+  for (const [filePath, content] of files.entries()) {
+    // Module definition
+    if (content.includes('angular.module(')) {
+      indicators.push(`AngularJS modules en ${fileName}`);
+    }
+    
+    // Controllers
+    if (content.includes('.controller(') || content.includes('$scope')) {
+      indicators.push(`AngularJS controllers en ${fileName}`);
+    }
+    
+    // Directives ng-*
+    if (content.includes('ng-repeat') || content.includes('ng-if') || content.includes('ng-model')) {
+      indicators.push(`AngularJS directives en ${fileName}`);
+    }
+  }
+  
+  return indicators;
+}
+```
+
+**Patterns Detectados**:
+- `angular.module(...)`
+- `.controller(...)`, `$scope`
+- `ng-repeat`, `ng-if`, `ng-model`
+
+---
+
+### JSP
+
+```typescript
+private detectJSPFromCode(files: Map<string, string>): string[] {
+  const indicators: string[] = [];
+  
+  for (const [filePath, content] of files.entries()) {
+    if (filePath.endsWith('.jsp')) {
+      indicators.push(`Archivo JSP: ${fileName}`);
+      
+      // Scriptlets
+      if (content.includes('<%') && content.includes('%>')) {
+        indicators.push(`JSP scriptlets detectados`);
+      }
+      
+      // JSTL tags
+      if (content.includes('<c:') || content.includes('<fmt:')) {
+        indicators.push(`JSTL tags detectados`);
+      }
+    }
+  }
+  
+  return indicators;
+}
+```
+
+**Patterns Detectados**:
+- Archivos `.jsp`
+- `<% ... %>` (scriptlets)
+- `<c:...>`, `<fmt:...>` (JSTL)
+
+---
+
+### PHP
+
+```typescript
+private detectPHPFromCode(files: Map<string, string>): string[] {
+  const indicators: string[] = [];
+  
+  for (const [filePath, content] of files.entries()) {
+    if (filePath.endsWith('.php')) {
+      indicators.push(`Archivo PHP: ${fileName}`);
+      
+      // Legacy MySQL functions (inseguras)
+      if (content.includes('mysql_query') || content.includes('mysql_connect')) {
+        indicators.push(`MySQL legacy functions (inseguras)`);
+      }
+      
+      // Superglobals
+      if (content.includes('$_GET') || content.includes('$_POST') || content.includes('$_REQUEST')) {
+        indicators.push(`PHP superglobals usage`);
+      }
+    }
+  }
+  
+  return indicators;
+}
+```
+
+**Patterns Detectados**:
+- Archivos `.php`
+- `mysql_query()`, `mysql_connect()` (inseguras)
+- `$_GET`, `$_POST`, `$_REQUEST`
+
+---
+
+### ASP.NET WebForms
+
+```typescript
+private detectASPFromCode(files: Map<string, string>): string[] {
+  const indicators: string[] = [];
+  
+  for (const [filePath, content] of files.entries()) {
+    if (filePath.endsWith('.aspx') || filePath.endsWith('.ascx')) {
+      indicators.push(`ASP.NET WebForms: ${fileName}`);
+      
+      // Server controls
+      if (content.includes('runat="server"')) {
+        indicators.push(`ASP.NET Server Controls detectados`);
+      }
+      
+      // ViewState (anti-pattern moderno)
+      if (content.includes('ViewState')) {
+        indicators.push(`ViewState usage (anti-pattern moderno)`);
+      }
+    }
+  }
+  
+  return indicators;
+}
+```
+
+**Patterns Detectados**:
+- Archivos `.aspx`, `.ascx`
+- `runat="server"`
+- `ViewState`
+
+---
+
+## ESTIMACIÓN DE ERA
+
+```typescript
+private estimateEra(technologies: LegacyTechnology[]): Era {
+  // 1990s: JSP original, ASP clásico, Visual Basic
+  if (technologies.some(t => 
+    t.name.includes('Visual Basic') || 
+    t.name.includes('Java Swing') ||
+    t.name.includes('ASP.NET WebForms')
+  )) {
+    return '1990s';
+  }
+
+  // 2000s: jQuery, PHP sin frameworks, JSP maduro
+  if (technologies.some(t => 
+    t.name.includes('jQuery') || 
+    t.name.includes('JSP') ||
+    t.name.includes('PHP Legacy')
+  )) {
+    return '2000s';
+  }
+
+  // 2010s: AngularJS (v1)
+  if (technologies.some(t => t.name.includes('AngularJS'))) {
+    return '2010s';
+  }
+
+  return 'modern';
+}
+
+private estimateAge(era: Era): number {
+  const currentYear = new Date().getFullYear();
+  switch (era) {
+    case '1990s': return currentYear - 1995; // ~30 años
+    case '2000s': return currentYear - 2005; // ~20 años
+    case '2010s': return currentYear - 2013; // ~12 años
+    default: return 0;
+  }
+}
+```
+
+---
+
+## RECOMENDACIONES AUTOMÁTICAS
+
+```typescript
+private generateRecommendations(technologies: LegacyTechnology[]): string[] {
+  const recommendations: string[] = [];
+  
+  for (const tech of technologies) {
+    if (tech.name.includes('jQuery')) {
+      recommendations.push(
+        'Migrar jQuery a React hooks nativos',
+        'Reemplazar jQuery UI con componentes modernos (shadcn/ui, MUI)',
+        'Eliminar manipulación directa del DOM',
+        'Refactorizar AJAX a fetch/axios con React Query'
+      );
+    } else if (tech.name.includes('JSP')) {
+      recommendations.push(
+        'Separar lógica de negocio del frontend (API REST)',
+        'Migrar templates JSP a componentes React',
+        'Modernizar backend Java (Spring Boot)',
+        'Implementar autenticación moderna (JWT)'
+      );
+    } else if (tech.name.includes('PHP')) {
+      recommendations.push(
+        'Migrar a arquitectura API-first (REST o GraphQL)',
+        'Frontend moderno (React/Vue) + PHP backend',
+        'Actualizar a PHP 8+ y Laravel/Symfony si aplica',
+        'Eliminar funciones inseguras (mysql_*, eval)'
+      );
+    } else if (tech.name.includes('ASP.NET')) {
+      recommendations.push(
+        'Migrar de WebForms a SPA (React)',
+        'Modernizar backend a ASP.NET Core',
+        'Eliminar ViewState y postbacks',
+        'Implementar API REST para frontend desacoplado'
+      );
+    } else if (tech.name.includes('AngularJS')) {
+      recommendations.push(
+        'Migrar a React o Angular moderno',
+        'Refactorizar controladores a componentes funcionales',
+        'Modernizar bundling (de Grunt/Gulp a Vite)',
+        'Reemplazar $scope con state management moderno'
+      );
+    }
+  }
+  
+  return [...new Set(recommendations)]; // Sin duplicados
+}
+```
+
+---
+
+## EJEMPLO DE OUTPUT
+
+```typescript
+const result = await legacyDetector.detectFromCodebase('./old-project');
+
+// result =
+{
+  technologies: [
+    {
+      name: 'jQuery',
+      confidence: 0.9,
+      indicators: [
+        'jQuery usado en 47 archivos',
+        'jQuery UI widgets en dashboard.js',
+        'jQuery AJAX calls en api.js'
+      ],
+      migrationComplexity: 'medium'
+    },
+    {
+      name: 'AngularJS (v1)',
+      confidence: 0.6,
+      indicators: [
+        'AngularJS modules en app.js',
+        'AngularJS controllers en main.js'
+      ],
+      migrationComplexity: 'medium'
+    }
+  ],
+  primary: { name: 'jQuery', ... },
+  era: '2000s',
+  estimatedAge: 20,
+  recommendations: [
+    'Migrar jQuery a React hooks nativos',
+    'Reemplazar jQuery UI con componentes modernos',
+    'Eliminar manipulación directa del DOM',
+    'Refactorizar AJAX a fetch/axios con React Query'
+  ]
+}
+```
+
+---
+
+## USO EN CLI
+
+```bash
+$ osmosis analyze --dir ./legacy-project
+
+🔍 Analizando codebase para detectar tecnologías...
+✅ Detectado: jQuery (2 tecnologías legacy)
+
+📈 RESUMEN DEL ANÁLISIS:
+────────────────────────────────────────────────────────
+📁 Proyecto: /Users/me/legacy-project
+🔧 Tecnologías: jQuery (90% confidence), AngularJS (v1) (60% confidence)
+📅 Era Estimada: 2000s (~20 años)
+
+🎯 RECOMENDACIONES:
+   1. Migrar jQuery a React hooks nativos
+   2. Reemplazar jQuery UI con componentes modernos
+   3. Eliminar manipulación directa del DOM
+   4. Refactorizar AJAX a fetch/axios con React Query
+```
+
+---
+
+## EXTENSIONES DE ARCHIVO SOPORTADAS
+
+| Extensión | Tecnología |
+|-----------|------------|
+| `.jsp` | JavaServer Pages |
+| `.php` | PHP |
+| `.aspx`, `.ascx` | ASP.NET WebForms |
+| `.cfm`, `.cfc` | ColdFusion |
+| `.pl` | Perl |
+| `.vb` | Visual Basic |
+| `.js`, `.html` | jQuery, AngularJS (con análisis de contenido) |

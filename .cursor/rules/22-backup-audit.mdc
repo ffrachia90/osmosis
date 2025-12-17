@@ -1,0 +1,379 @@
+---
+description: SECURITY: Backup Manager y Audit Logger
+globs: src/core/security/*
+alwaysApply: true
+---
+# BACKUP & AUDIT - Sistema de Seguridad Enterprise
+
+## UBICACIÓN
+
+- `src/core/security/BackupManager.ts`
+- `src/core/security/AuditLogger.ts`
+
+---
+
+## BACKUP MANAGER
+
+### Concepto
+
+BackupManager crea snapshots ANTES de modificar cualquier archivo, permitiendo rollback completo.
+
+### API
+
+```typescript
+interface BackupSnapshot {
+  id: string;                    // UUID
+  timestamp: string;             // ISO timestamp
+  files: BackupFile[];
+  reason: string;                // "migration", "refactor", etc.
+}
+
+interface BackupFile {
+  path: string;
+  content: string;
+  hash: string;                  // SHA-256
+}
+
+class BackupManager {
+  // Crear snapshot de archivos
+  async createSnapshot(files: string[], reason: string): Promise<BackupSnapshot>;
+  
+  // Restaurar desde snapshot
+  async restore(snapshotId: string): Promise<void>;
+  
+  // Listar snapshots
+  async listSnapshots(): Promise<BackupSnapshot[]>;
+  
+  // Limpiar snapshots antiguos (>7 días)
+  async cleanup(daysOld: number): Promise<number>;
+}
+```
+
+### Ubicación de Backups
+
+```
+project/
+└── .osmosis/
+    └── backups/
+        ├── 2025-12-17_migration_abc123/
+        │   ├── manifest.json
+        │   └── files/
+        │       ├── src_components_Button.tsx
+        │       └── src_hooks_useAuth.ts
+        └── 2025-12-16_refactor_def456/
+            └── ...
+```
+
+### Flujo de Backup
+
+```typescript
+// En cli.ts antes de modificar archivos
+
+const backupManager = new BackupManager(projectRoot);
+
+// Antes de migración
+const filesToModify = graph.getMigrationOrder();
+const snapshot = await backupManager.createSnapshot(
+  filesToModify,
+  `migration-${Date.now()}`
+);
+
+console.log(`📸 Snapshot creado: ${snapshot.id}`);
+console.log(`   Archivos: ${snapshot.files.length}`);
+
+try {
+  // Ejecutar migración
+  for (const file of filesToModify) {
+    await migrateFile(file);
+  }
+} catch (error) {
+  // Rollback automático
+  console.error('❌ Error en migración. Restaurando...');
+  await backupManager.restore(snapshot.id);
+  console.log('✅ Restaurado al estado anterior');
+}
+```
+
+### Hash de Integridad
+
+```typescript
+import { createHash } from 'crypto';
+
+function hashFile(content: string): string {
+  return createHash('sha256')
+    .update(content)
+    .digest('hex');
+}
+
+// Verificar integridad antes de restaurar
+async function verifySnapshot(snapshot: BackupSnapshot): boolean {
+  for (const file of snapshot.files) {
+    const currentHash = hashFile(file.content);
+    if (currentHash !== file.hash) {
+      console.error(`❌ Integridad fallida: ${file.path}`);
+      return false;
+    }
+  }
+  return true;
+}
+```
+
+---
+
+## AUDIT LOGGER
+
+### Concepto
+
+AuditLogger mantiene un log INMUTABLE de todas las operaciones, con hash chain para detectar manipulación.
+
+### API
+
+```typescript
+interface AuditEntry {
+  id: string;                    // UUID
+  timestamp: string;             // ISO timestamp
+  operation: string;             // "migrate", "refactor", "restore"
+  details: Record<string, any>;  // Metadata específica
+  user: string;                  // (si aplica)
+  hash: string;                  // SHA-256 del entry
+  previousHash: string;          // Hash del entry anterior (chain)
+}
+
+class AuditLogger {
+  // Registrar operación
+  async log(operation: string, details: Record<string, any>): Promise<AuditEntry>;
+  
+  // Obtener logs
+  async getLogs(filter?: { from?: Date; to?: Date; operation?: string }): Promise<AuditEntry[]>;
+  
+  // Verificar integridad de la cadena
+  async verifyChain(): Promise<boolean>;
+  
+  // Exportar logs (para compliance)
+  async export(format: 'json' | 'csv'): Promise<string>;
+}
+```
+
+### Hash Chain (Blockchain-like)
+
+```typescript
+function createAuditEntry(
+  operation: string,
+  details: Record<string, any>,
+  previousHash: string
+): AuditEntry {
+  const entry = {
+    id: uuidv4(),
+    timestamp: new Date().toISOString(),
+    operation,
+    details,
+    user: process.env.USER || 'system',
+    previousHash,
+    hash: ''  // Se calcula después
+  };
+  
+  // Hash del contenido
+  const content = JSON.stringify({
+    id: entry.id,
+    timestamp: entry.timestamp,
+    operation: entry.operation,
+    details: entry.details,
+    previousHash: entry.previousHash
+  });
+  
+  entry.hash = createHash('sha256').update(content).digest('hex');
+  
+  return entry;
+}
+```
+
+### Ubicación de Logs
+
+```
+project/
+└── .osmosis/
+    └── audit/
+        └── audit.log.json
+```
+
+### Formato de Log
+
+```json
+{
+  "entries": [
+    {
+      "id": "abc123",
+      "timestamp": "2025-12-17T10:30:00.000Z",
+      "operation": "migration",
+      "details": {
+        "source": "login.jsp",
+        "target": "LoginForm.tsx",
+        "framework": "react",
+        "linesChanged": 150
+      },
+      "user": "developer",
+      "previousHash": "000000...",
+      "hash": "a1b2c3..."
+    },
+    {
+      "id": "def456",
+      "timestamp": "2025-12-17T10:31:00.000Z",
+      "operation": "validation",
+      "details": {
+        "file": "LoginForm.tsx",
+        "passed": true,
+        "warnings": 2
+      },
+      "user": "developer",
+      "previousHash": "a1b2c3...",
+      "hash": "d4e5f6..."
+    }
+  ]
+}
+```
+
+### Verificación de Cadena
+
+```typescript
+async function verifyChain(): Promise<boolean> {
+  const entries = await loadEntries();
+  
+  for (let i = 1; i < entries.length; i++) {
+    const current = entries[i];
+    const previous = entries[i - 1];
+    
+    // Verificar que previousHash apunta al anterior
+    if (current.previousHash !== previous.hash) {
+      console.error(`❌ Cadena rota en entry ${i}`);
+      return false;
+    }
+    
+    // Verificar que el hash es correcto
+    const calculatedHash = calculateHash(current);
+    if (calculatedHash !== current.hash) {
+      console.error(`❌ Hash incorrecto en entry ${i}`);
+      return false;
+    }
+  }
+  
+  console.log('✅ Cadena de auditoría íntegra');
+  return true;
+}
+```
+
+---
+
+## USO EN CLI
+
+```typescript
+// En cli.ts
+
+const auditLogger = new AuditLogger(projectRoot);
+const backupManager = new BackupManager(projectRoot);
+
+// Antes de migración
+await auditLogger.log('migration_start', {
+  source: options.source,
+  from: options.from,
+  to: options.to,
+  filesCount: filesToMigrate.length
+});
+
+const snapshot = await backupManager.createSnapshot(filesToMigrate, 'migration');
+
+await auditLogger.log('backup_created', {
+  snapshotId: snapshot.id,
+  filesCount: snapshot.files.length
+});
+
+// Durante migración
+for (const file of filesToMigrate) {
+  const result = await migrateFile(file);
+  
+  await auditLogger.log('file_migrated', {
+    source: file,
+    target: result.output,
+    linesOriginal: result.linesOriginal,
+    linesGenerated: result.linesGenerated,
+    validationPassed: result.validation.isValid
+  });
+}
+
+// Al finalizar
+await auditLogger.log('migration_complete', {
+  totalFiles: filesToMigrate.length,
+  successful: successCount,
+  failed: failedCount,
+  duration: Date.now() - startTime
+});
+
+// Verificar integridad
+const isValid = await auditLogger.verifyChain();
+if (!isValid) {
+  console.error('⚠️ La cadena de auditoría ha sido modificada');
+}
+```
+
+---
+
+## COMPLIANCE Y ENTERPRISE
+
+### Exportación para Auditoría
+
+```typescript
+// Exportar logs para compliance
+const csvLogs = await auditLogger.export('csv');
+fs.writeFileSync('audit-report.csv', csvLogs);
+
+// Formato CSV:
+// timestamp,operation,user,details_json,hash
+// 2025-12-17T10:30:00.000Z,migration,developer,"{...}",a1b2c3...
+```
+
+### Retención de Datos
+
+```typescript
+// Configuración de retención
+const RETENTION_DAYS = 90; // 90 días
+
+// Limpiar backups antiguos
+await backupManager.cleanup(RETENTION_DAYS);
+
+// Archivar logs antes de eliminar
+const oldLogs = await auditLogger.getLogs({
+  to: new Date(Date.now() - RETENTION_DAYS * 24 * 60 * 60 * 1000)
+});
+await archiveToS3(oldLogs);
+```
+
+### Integración con SIEM
+
+```typescript
+// Enviar eventos críticos a sistema de logging externo
+auditLogger.on('entry', async (entry) => {
+  if (entry.operation === 'restore' || entry.operation === 'error') {
+    await sendToSiem(entry);
+  }
+});
+```
+
+---
+
+## ROLLBACK MANUAL
+
+```bash
+# Listar snapshots disponibles
+osmosis backup list
+
+# Output:
+# 📸 Snapshots disponibles:
+#    1. 2025-12-17_migration_abc123 (45 archivos, hace 2h)
+#    2. 2025-12-16_refactor_def456 (12 archivos, hace 1d)
+
+# Restaurar snapshot específico
+osmosis backup restore abc123
+
+# Output:
+# 🔄 Restaurando snapshot abc123...
+# ✅ 45 archivos restaurados
+```

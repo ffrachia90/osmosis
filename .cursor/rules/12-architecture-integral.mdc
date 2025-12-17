@@ -1,0 +1,539 @@
+---
+description: ARCH: Sistema de Arquitectura Integral - Detalle Completo
+globs: *.ts, *.tsx, *.js, *.jsx
+alwaysApply: true
+---
+# SISTEMA DE ARQUITECTURA INTEGRAL - Documentación Completa
+
+## CONCEPTO FUNDAMENTAL
+
+El **Modo Integral** resuelve el problema de refactorización "archivo por archivo" que pierde coherencia global.
+
+### Problema Tradicional
+```
+Archivo 1: Migra Redux → Zustand
+Archivo 2: Migra Redux → RTK (inconsistencia!)
+Archivo 3: Usa axios manual (no migrado)
+→ Proyecto incoherente, imposible de mantener
+```
+
+### Solución Integral
+```
+1. Analizar TODO el proyecto
+2. Proponer UN stack coherente
+3. Generar reglas específicas
+4. Aplicar las MISMAS reglas a TODOS los archivos
+→ Proyecto coherente, mantenible
+```
+
+---
+
+## DEEPPATTERNSCANNER - Detección de Patterns
+
+### Ubicación: `src/core/architecture/DeepPatternScanner.ts`
+
+Escanea el código REAL (no solo package.json) usando regex optimizados.
+
+### State Management Detection
+
+```typescript
+// Redux Legacy
+/connect\s*\(\s*map/g                    → connect()
+/mapStateToProps/g                        → mapStateToProps
+/mapDispatchToProps/g                     → mapDispatchToProps
+/dispatch\s*\(\s*\w+\s*\(/g              → thunks
+/yield\s+(takeEvery|takeLatest|put|call)/g → sagas
+
+// Redux Toolkit
+/@reduxjs\/toolkit/g                      → RTK detected
+/createSlice\s*\(/g                       → slices
+
+// MobX
+/@observable/g                            → observables
+/@action/g                                → actions
+/@computed/g                              → computed
+
+// Context
+/<\w+\.Provider/g                         → providers
+/useContext\s*\(/g                        → consumers
+/createContext\s*\(/g                     → createContext
+
+// Zustand
+/create\s*\(\s*\(set\)/g                 → stores
+/useStore\s*\(/g                          → useStore
+
+// Jotai
+/\batom\s*\(/g                           → atoms
+/useAtom\s*\(/g                          → useAtom
+
+// Recoil
+/atom\s*\(\s*\{[\s\S]*?key\s*:/g         → atoms
+/selector\s*\(\s*\{[\s\S]*?key\s*:/g     → selectors
+```
+
+### Data Fetching Detection
+
+```typescript
+// Manual (Legacy)
+/useEffect\s*\([^)]*\{[\s\S]*?fetch\s*\(/g     → useEffect + fetch
+/useEffect\s*\([^)]*\{[\s\S]*?axios\./g        → useEffect + axios
+/componentDidMount[\s\S]*?(fetch|axios)/g      → CDM + fetch
+
+// React Query
+/useQuery\s*\(/g                               → useQuery
+/useMutation\s*\(/g                            → useMutation
+/QueryClient/g                                 → queryClient
+
+// SWR
+/useSWR\s*\(/g                                 → useSWR
+
+// Apollo
+/useQuery\s*\(\s*gql/g                         → Apollo useQuery
+/useMutation\s*\(\s*gql/g                      → Apollo useMutation
+/gql`/g                                        → gql template
+
+// RTK Query
+/createApi\s*\(/g                              → createApi
+/use\w+Query\s*\(/g                            → generated hooks
+```
+
+### Routing Detection
+
+```typescript
+// React Router v5 (Legacy)
+/<Switch[\s>]/g                                → Switch
+/<Route[^>]+component\s*=/g                    → Route component=
+/<Route[^>]+render\s*=/g                       → Route render=
+/withRouter\s*\(/g                             → withRouter HOC
+/history\.push\s*\(/g                          → history.push
+
+// React Router v6+
+/<Routes[\s>]/g                                → Routes
+/<Route[^>]+element\s*=/g                      → Route element=
+/useNavigate\s*\(\s*\)/g                       → useNavigate
+/useParams\s*\(\s*\)/g                         → useParams
+/useLocation\s*\(\s*\)/g                       → useLocation
+/createBrowserRouter\s*\(/g                    → v6 data router
+/loader\s*:\s*(async\s*)?\(/g                  → loaders
+```
+
+### Styling Detection
+
+```typescript
+// Styled Components
+/styled\.\w+`/g                                → styled.div`
+/\bcss`/g                                      → css``
+
+// Emotion
+/@emotion\/styled/g                            → emotion styled
+/@emotion\/react/g                             → emotion css
+
+// CSS Modules
+/import\s+\w+\s+from\s+['"][^'"]+\.module\.(css|scss)['"]/g
+
+// Tailwind
+/className\s*=\s*["'][^"']*\b(flex|grid|p-|m-|bg-|text-|w-|h-)/g
+
+// Inline Styles
+/style\s*=\s*\{\s*\{/g                         → style={{ }}
+/\bsx\s*=\s*\{\s*\{/g                          → sx={{ }} (MUI)
+
+// SASS
+/import\s+['"][^'"]+\.scss['"]/g               → SCSS imports
+```
+
+### Component Detection
+
+```typescript
+// Class Components (Legacy)
+/class\s+\w+\s+extends\s+(React\.)?(Component|PureComponent)/g
+
+// Functional Components
+/(function\s+[A-Z]\w*\s*\(|const\s+[A-Z]\w*\s*=\s*(\([^)]*\)|[\w]+)\s*=>)/g
+
+// HOCs
+/with[A-Z]\w*\s*\(/g                           → withRouter, withStyles
+
+// Render Props
+/render\s*=\s*\{\s*\([^)]*\)\s*=>/g
+
+// Modern Patterns
+/forwardRef\s*\(/g
+/(React\.)?memo\s*\(/g
+
+// Hooks Usage
+/useState\s*[<(]/g
+/useEffect\s*\(/g
+/useCallback\s*\(/g
+/useMemo\s*\(/g
+/useRef\s*[<(]/g
+/useReducer\s*\(/g
+/\buse[A-Z][a-zA-Z0-9]*\s*\(/g                 → custom hooks
+```
+
+---
+
+## ARCHITECTURE MANIFEST - Estructura Completa
+
+### Ubicación: `.osmosis/architecture-manifest.json`
+
+```typescript
+interface ArchitectureManifest {
+  version: '1.0.0';
+  projectName: string;
+  projectRoot: string;
+  analyzedAt: string;  // ISO timestamp
+  
+  patternAnalysis: {
+    stateManagement: {
+      redux: { connect: number; mapStateToProps: number; thunks: number; sagas: number; rtk: boolean; slices: number };
+      mobx: { observables: number; actions: number; computed: number };
+      context: { providers: number; consumers: number; createContext: number };
+      zustand: { stores: number; useStore: number };
+      jotai: { atoms: number; useAtom: number };
+      recoil: { atoms: number; selectors: number };
+    };
+    dataFetching: {
+      manual: { useEffectFetch: number; useEffectAxios: number; componentDidMountFetch: number };
+      reactQuery: { useQuery: number; useMutation: number; queryClient: number };
+      swr: { useSWR: number };
+      apollo: { useQuery: number; useMutation: number; gql: number };
+      rtk: { createApi: number; useGetQuery: number };
+    };
+    routing: {
+      version: 'v5' | 'v6' | 'v7' | 'unknown';
+      legacy: { switch: number; routeComponent: number; withRouter: number; historyPush: number };
+      modern: { routes: number; routeElement: number; useNavigate: number; createBrowserRouter: number };
+    };
+    styling: {
+      styledComponents: { styled: number; css: number; version: 'v3' | 'v5' | 'v6' };
+      emotion: { styled: number; css: number };
+      cssModules: { imports: number; usage: number };
+      tailwind: { classes: number; config: boolean };
+      inlineStyles: { styleObjects: number; cssInJs: number };
+      sass: { imports: number };
+    };
+    components: {
+      classComponents: number;
+      functionalComponents: number;
+      hocs: number;
+      renderProps: number;
+      hooks: { useState: number; useEffect: number; useCallback: number; useMemo: number; customHooks: number };
+    };
+    summary: {
+      totalFiles: number;
+      totalComponents: number;
+      legacyScore: number;         // 0-100, más alto = más legacy
+      primaryStateLib: string;     // 'redux-legacy' | 'zustand' | etc.
+      primaryFetchLib: string;     // 'manual' | 'tanstack-query' | etc.
+      primaryStyling: string;      // 'inline-styles' | 'tailwind' | etc.
+    };
+  };
+  
+  proposedStack: {
+    stateManagement: { library: 'zustand' | 'redux-toolkit' | 'jotai' | 'none'; reasoning: string };
+    dataFetching: { library: 'tanstack-query' | 'swr' | 'rtk-query' | 'apollo' | 'manual'; reasoning: string };
+    routing: { library: 'react-router-v7' | 'react-router-v6' | 'tanstack-router'; reasoning: string };
+    styling: { library: 'tailwind' | 'css-modules' | 'styled-components' | 'emotion'; reasoning: string };
+    forms: { library: 'react-hook-form' | 'formik' | 'native'; reasoning: string };
+    testing: { library: 'vitest' | 'jest'; reasoning: string };
+  };
+  
+  migrationRules: MigrationRule[];  // Ver regla 13 para detalle
+  
+  configUpdates: {
+    dependencies: Record<string, string>;     // { "zustand": "^5.0.0" }
+    devDependencies: Record<string, string>;
+    removePackages: string[];                 // ["redux", "redux-thunk"]
+    scripts: Record<string, string>;          // { "test": "vitest" }
+    configFiles: ConfigFile[];                // tsconfig, eslint, etc.
+  };
+  
+  metadata: {
+    llmModel: string;           // "claude-3-5-sonnet-20241022"
+    generationTime: number;     // ms
+    confidence: number;         // 0-100
+  };
+}
+```
+
+---
+
+## CONFIGGENERATOR - Archivos Generados
+
+### Ubicación: `src/generators/config-generator.ts`
+
+### tsconfig.json
+```json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "baseUrl": ".",
+    "paths": { "@/*": ["./src/*"] }
+  }
+}
+```
+
+### eslint.config.js (Flat Config)
+```javascript
+export default tseslint.config(
+  { ignores: ['dist', 'build', 'node_modules'] },
+  {
+    extends: [js.configs.recommended, ...tseslint.configs.strictTypeChecked],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'error',
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
+    },
+  }
+);
+```
+
+### tailwind.config.ts
+```typescript
+const config: Config = {
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  theme: {
+    extend: {
+      colors: {
+        primary: { 50: '#f0f9ff', 500: '#0ea5e9', 700: '#0369a1' }
+      }
+    }
+  }
+};
+```
+
+### vitest.config.ts
+```typescript
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
+    coverage: { provider: 'v8' }
+  }
+});
+```
+
+### Dependencias por Stack
+
+| Stack | Dependencias |
+|-------|-------------|
+| zustand | `zustand: ^5.0.0` |
+| redux-toolkit | `@reduxjs/toolkit: ^2.3.0`, `react-redux: ^9.1.0` |
+| tanstack-query | `@tanstack/react-query: ^5.60.0`, `@tanstack/react-query-devtools: ^5.60.0` |
+| react-router-v6 | `react-router-dom: ^6.28.0` |
+| react-router-v7 | `react-router: ^7.0.0`, `react-router-dom: ^7.0.0` |
+| tailwind | `tailwindcss: ^3.4.0`, `autoprefixer: ^10.4.0`, `postcss: ^8.4.0` |
+| react-hook-form | `react-hook-form: ^7.53.0`, `zod: ^3.23.0`, `@hookform/resolvers: ^3.9.0` |
+| vitest | `vitest: ^2.1.0`, `@testing-library/react: ^16.0.0`, `jsdom: ^25.0.0` |
+
+### Paquetes a Eliminar
+```typescript
+const DEPRECATED_PACKAGES = [
+  'redux',           // Si migramos a Zustand
+  'redux-thunk',     // Si migramos a TanStack Query
+  'redux-saga',      // Obsoleto
+  'react-redux',     // Si usamos Zustand (se mantiene con RTK)
+  'history',         // React Router v6+ no lo necesita
+  'enzyme',          // Obsoleto
+  'enzyme-adapter-react-16',
+  'prop-types',      // TypeScript lo reemplaza
+  'recompose',       // HOCs obsoletos
+  'create-react-class' // Muy obsoleto
+];
+```
+
+---
+
+## FLUJO COMPLETO DEL MODO INTEGRAL
+
+```
+Usuario ejecuta: osmosis refactor --source ./src --framework react --integral
+
+┌─────────────────────────────────────────────────────────────────┐
+│ FASE 1: ESCANEO PROFUNDO                                        │
+├─────────────────────────────────────────────────────────────────┤
+│ DeepPatternScanner.scan(projectRoot)                            │
+│   ├─ Obtener archivos: glob('**/*.{js,jsx,ts,tsx}')            │
+│   ├─ Leer contenido de cada archivo                             │
+│   ├─ Ejecutar TODOS los regex de detección                      │
+│   ├─ Contar ocurrencias por categoría                           │
+│   └─ Calcular legacyScore y librerías primarias                │
+│                                                                  │
+│ Output: DeepPatternAnalysis                                      │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ FASE 2: PROPUESTA DE STACK (Claude)                             │
+├─────────────────────────────────────────────────────────────────┤
+│ ArchitecturePlanner.generateStackProposal(analysis)             │
+│   ├─ Construir prompt con métricas detectadas                   │
+│   ├─ Enviar a Claude 3.5 Sonnet                                 │
+│   ├─ Parsear respuesta JSON                                      │
+│   └─ Validar stack propuesto                                    │
+│                                                                  │
+│ Output: ProposedStack (zustand, tanstack-query, etc.)           │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ FASE 3: SELECCIÓN DE REGLAS                                     │
+├─────────────────────────────────────────────────────────────────┤
+│ MigrationRuleSelector.selectRules(analysis, proposedStack)      │
+│   ├─ Si redux.connect > 0 → agregar 'redux-connect-to-hooks'   │
+│   ├─ Si manual.useEffectAxios > 0 → agregar 'useeffect-to-query'│
+│   ├─ Si routing.legacy.switch > 0 → agregar 'switch-to-routes' │
+│   ├─ Si components.classComponents > 0 → agregar 'class-to-func'│
+│   └─ Ordenar por prioridad                                      │
+│                                                                  │
+│ Output: MigrationRule[] (12+ reglas específicas)                │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ FASE 4: GENERACIÓN DE CONFIG                                    │
+├─────────────────────────────────────────────────────────────────┤
+│ ConfigGenerator.generate(analysis, proposedStack, projectRoot)  │
+│   ├─ Agregar dependencias del stack propuesto                   │
+│   ├─ Detectar paquetes a eliminar                               │
+│   ├─ Generar scripts modernos                                   │
+│   └─ Crear archivos de config (tsconfig, eslint, etc.)         │
+│                                                                  │
+│ Output: ConfigUpdates                                            │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ FASE 5: PERSISTENCIA DEL MANIFIESTO                             │
+├─────────────────────────────────────────────────────────────────┤
+│ ManifestManager.save(projectRoot, manifest)                     │
+│   └─ Guarda en .osmosis/architecture-manifest.json             │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ FASE 6: REFACTORIZACIÓN POR ARCHIVO                             │
+├─────────────────────────────────────────────────────────────────┤
+│ Para cada archivo en DependencyGraph.getMigrationOrder():       │
+│   ├─ PromptAssembler.assembleIntegral(context, manifest)       │
+│   │   └─ Incluye reglas de migración en el prompt              │
+│   ├─ ContextInjector.enrichPrompt(prompt, ragContext)          │
+│   │   └─ Agrega componentes similares existentes               │
+│   ├─ LLMService.generateWithStreaming(prompt)                  │
+│   │   └─ Claude genera código con stack del manifiesto         │
+│   ├─ CodeSafeGuard.validate(code, 'react')                     │
+│   │   └─ Si errores → LLMService.repair() (max 3)              │
+│   └─ writeOutput(filePath, code, outputDir)                    │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## EJEMPLO DE TRANSFORMACIÓN REAL
+
+### Input: Archivo con múltiples patterns legacy
+```typescript
+// UserDashboard.tsx (ANTES)
+import React, { Component } from 'react';
+import { connect } from 'react-redux';
+import { withRouter } from 'react-router-dom';
+import axios from 'axios';
+
+class UserDashboard extends Component {
+  state = { users: [], loading: true };
+  
+  componentDidMount() {
+    axios.get('/api/users').then(r => {
+      this.setState({ users: r.data, loading: false });
+    });
+  }
+  
+  handleEdit = (id) => {
+    this.props.history.push(`/user/${id}`);
+  };
+  
+  render() {
+    return (
+      <div style={{ padding: 20 }}>
+        {this.state.loading ? 'Loading...' : 
+          this.state.users.map(u => (
+            <div onClick={() => this.handleEdit(u.id)}>{u.name}</div>
+          ))
+        }
+      </div>
+    );
+  }
+}
+
+const mapStateToProps = (state) => ({ auth: state.auth });
+export default withRouter(connect(mapStateToProps)(UserDashboard));
+```
+
+### Output: Con stack del manifiesto (Zustand + TanStack Query + React Router v6 + Tailwind)
+```typescript
+// UserDashboard.tsx (DESPUÉS)
+import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '@/stores/authStore';
+
+interface User {
+  id: string;
+  name: string;
+}
+
+const fetchUsers = async (): Promise<User[]> => {
+  const response = await fetch('/api/users');
+  if (!response.ok) throw new Error('Failed to fetch users');
+  return response.json();
+};
+
+export function UserDashboard() {
+  const navigate = useNavigate();
+  const auth = useAuthStore(state => state.auth);
+  
+  const { data: users = [], isLoading } = useQuery({
+    queryKey: ['users'],
+    queryFn: fetchUsers,
+  });
+  
+  const handleEdit = (id: string) => {
+    navigate(`/user/${id}`);
+  };
+  
+  if (isLoading) {
+    return <div className="p-5">Loading...</div>;
+  }
+  
+  return (
+    <div className="p-5">
+      {users.map(user => (
+        <button
+          key={user.id}
+          onClick={() => handleEdit(user.id)}
+          className="block w-full text-left p-2 hover:bg-gray-100"
+          aria-label={`Edit user ${user.name}`}
+        >
+          {user.name}
+        </button>
+      ))}
+    </div>
+  );
+}
+```
+
+### Reglas Aplicadas
+1. ✅ `class-to-functional` - Class → Function
+2. ✅ `redux-connect-to-hooks` - connect() → useAuthStore (Zustand)
+3. ✅ `useeffect-fetch-to-query` - componentDidMount+axios → useQuery
+4. ✅ `withrouter-to-hooks` - withRouter → useNavigate
+5. ✅ `inline-styles-to-tailwind` - style={{}} → className
+6. ✅ `proptypes-to-typescript` - Added interfaces
+7. ✅ Accesibilidad - aria-label agregado
+8. ✅ Keys - Agregadas a map

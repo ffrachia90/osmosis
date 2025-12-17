@@ -1,20 +1,254 @@
 ---
-description: GLOBAL: Master Identity & Osmosis Safeguards
+description: GLOBAL: Osmosis Master Context - Todo lo que necesitas saber
 globs: *
+alwaysApply: true
 ---
-# OSMOSIS - MASTER AGENT IDENTITY
+# 🧬 OSMOSIS - AI-Powered Legacy Code Modernizer
 
-You are **Osmosis**, an elite Principal Software Architect specialized in modernizing legacy codebases.
+## IDENTIDAD Y MISIÓN
 
-## 🧠 CORE BEHAVIOR
-1.  **Identity:** You are NOT a generic AI. You are a strict, senior architect. You do not just "write code"; you *architect solutions*.
-2.  **Zero Hallucinations:** You never invent imports. If you need a component, ask: "Does the Design System have a component for X?".
-3.  **Security First:** Assume all legacy input is insecure (SQLi, XSS). You MUST sanitize and modernize data handling.
-4.  **Backend Agnostic:** You do not write backend logic in the frontend. You generate **Interfaces** and **Service Mocks**.
+**Osmosis** es una herramienta empresarial que transforma código legacy de décadas a código moderno production-ready usando Claude 3.5 Sonnet + RAG + validación TypeScript.
 
-## 🛡️ "SAFEGUARD" VALIDATION PROTOCOL
-Before outputting ANY code, you must internally verify:
-- [ ] **No Class Components** (unless specifically asked).
-- [ ] **No `dangerouslySetInnerHTML`** without explicit `// TRUSTED` comment.
-- [ ] **No `any` types**. You must define Interfaces.
-- [ ] **Accessibility:** All interactive elements need `aria-label` or role.
+### Capacidades Core
+1. **Migración Legacy→Modern**: JSP, PHP, jQuery, ASP.NET, ColdFusion, Perl, VB → React/Angular/Vue
+2. **Refactorización Integral**: React antiguo → React 2025 con stack moderno coherente
+3. **Planificación Arquitectónica**: Analiza patterns y propone Zustand, TanStack Query, React Router v6, Tailwind
+4. **Generación de Config**: tsconfig.json, eslint.config.js, tailwind.config.ts, vitest.config.ts
+5. **MCP Server para Cursor**: Integración directa en el IDE
+
+### Stack Tecnológico de Osmosis
+- **Runtime**: Node.js 20+, TypeScript 5.x
+- **LLM**: Claude 3.5 Sonnet via @anthropic-ai/sdk
+- **Embeddings**: OpenAI text-embedding-3-small / Gemini / TF-IDF local
+- **Validación**: TypeScript Compiler API (no regex)
+- **CLI**: Commander.js + Ora spinners
+- **MCP**: @modelcontextprotocol/sdk
+
+---
+
+## ARQUITECTURA DEL PROYECTO
+
+```
+osmosis/
+├── src/
+│   ├── cli.ts                    # Punto de entrada CLI (analyze, migrate, refactor, plan)
+│   │
+│   ├── core/
+│   │   ├── architecture/         # 🏗️ SISTEMA DE ARQUITECTURA INTEGRAL
+│   │   │   ├── ArchitecturePlanner.ts    # Orquesta análisis + propuesta stack
+│   │   │   ├── ArchitectureManifest.ts   # Interfaces + 12 reglas migración
+│   │   │   ├── DeepPatternScanner.ts     # Escanea código para detectar patterns
+│   │   │   └── index.ts
+│   │   │
+│   │   ├── llm/
+│   │   │   └── LLMService.ts     # Claude 3.5 Sonnet + streaming + auto-repair
+│   │   │
+│   │   ├── prompt-engine/
+│   │   │   ├── assembler.ts      # Ensambla prompts con/sin manifiesto
+│   │   │   └── templates.ts      # Templates por tecnología legacy
+│   │   │
+│   │   ├── rag/                  # 🧠 SISTEMA RAG ENTERPRISE
+│   │   │   ├── CodebaseIndexer.ts     # Indexa proyecto en vectores
+│   │   │   ├── ContextInjector.ts     # Inyecta contexto RAG en prompts
+│   │   │   ├── EmbeddingsEngine.ts    # OpenAI/Gemini/Local embeddings
+│   │   │   ├── EntityExtractor.ts     # AST parsing → entidades
+│   │   │   └── KnowledgeGraph.ts      # Vector storage + búsqueda semántica
+│   │   │
+│   │   ├── analysis/
+│   │   │   ├── DependencyGraph.ts     # AST + topological sort
+│   │   │   └── TechDebtAnalyzer.ts    # 7 heurísticas de deuda
+│   │   │
+│   │   ├── safeguard/
+│   │   │   └── validator.ts      # CodeSafeGuard - TypeScript Compiler API
+│   │   │
+│   │   ├── security/
+│   │   │   ├── AuditLogger.ts    # Logs inmutables con hash chain
+│   │   │   └── BackupManager.ts  # Snapshots antes de modificar
+│   │   │
+│   │   └── resolution/
+│   │       └── PathResolver.ts   # tsconfig.paths + aliases
+│   │
+│   ├── analyzers/
+│   │   ├── legacy-detector.ts    # Detecta jQuery, JSP, PHP, ASP, etc.
+│   │   ├── modern-code-analyzer.ts # Detecta bad practices en código moderno
+│   │   ├── behavior-extractor.ts # Extrae comportamiento de UI
+│   │   └── microfrontend-analyzer.ts # Analiza boundaries MFE
+│   │
+│   ├── generators/
+│   │   ├── config-generator.ts   # 🆕 Genera tsconfig, eslint, tailwind, vitest
+│   │   ├── framework-generator.ts # Estructura de proyecto
+│   │   ├── best-practices-refactor.ts # Aplica mejores prácticas
+│   │   ├── e2e-test-generator.ts # Tests Playwright
+│   │   └── microfrontend-generator.ts # Module Federation config
+│   │
+│   ├── parsers/
+│   │   ├── jsp-parser.ts         # Parser JSP con JSTL
+│   │   └── legacy-parser-factory.ts # Factory pattern para parsers
+│   │
+│   ├── mappers/
+│   │   ├── component-mapper.ts   # Mapea legacy UI → componentes modernos
+│   │   └── design-system-scanner.ts # Detecta design system existente
+│   │
+│   ├── knowledge/
+│   │   └── best-practices-knowledge-base.ts # Fuentes de verdad
+│   │
+│   └── mcp/
+│       └── server.ts             # 🔌 MCP Server v2.0 con 11 herramientas
+│
+├── docs/                         # Documentación técnica
+├── examples/                     # Ejemplos de uso
+├── .cursor/rules/                # Estas reglas
+└── .osmosis/                     # Cache (Knowledge Graph, manifiestos)
+```
+
+---
+
+## FLUJO DE DATOS PRINCIPAL
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      CLI: osmosis <command>                      │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  1. ANÁLISIS                                                     │
+│     LegacyDetector → detecta tecnología (jQuery, JSP, etc.)     │
+│     DependencyGraph → construye grafo con AST                   │
+│     TechDebtAnalyzer → calcula score y horas de refactor        │
+│     CodebaseIndexer → genera Knowledge Graph + embeddings       │
+│                                                                  │
+│  2. PLANIFICACIÓN ARQUITECTÓNICA (--integral)                   │
+│     DeepPatternScanner → escanea patterns en código real        │
+│     ArchitecturePlanner → consulta Claude para stack propuesto  │
+│     ManifestManager → persiste en .osmosis/architecture-manifest│
+│     ConfigGenerator → genera tsconfig, eslint, tailwind, etc.   │
+│                                                                  │
+│  3. GENERACIÓN DE CÓDIGO                                        │
+│     PromptAssembler → ensambla prompt con reglas del manifiesto │
+│     ContextInjector → enriquece con RAG (componentes similares) │
+│     LLMService → Claude 3.5 Sonnet con streaming                │
+│                                                                  │
+│  4. VALIDACIÓN Y REPARACIÓN                                     │
+│     CodeSafeGuard → TypeScript Compiler API validation          │
+│     Si errores → LLMService.repair() (max 3 intentos)           │
+│     BackupManager → snapshot antes de escribir                  │
+│     AuditLogger → log inmutable de cambios                      │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## COMANDOS CLI
+
+### `osmosis analyze --dir <path>`
+- Detecta tecnologías legacy
+- Construye grafo de dependencias
+- Calcula deuda técnica (score 0-100, horas estimadas)
+- Genera Knowledge Graph para RAG
+- Output: `analysis-report.json`
+
+### `osmosis plan --dir <path>` (NUEVO)
+- Escaneo profundo de patterns (Redux, axios, Router, styling)
+- Propuesta de stack moderno por Claude
+- Selección de reglas de migración
+- Output: `.osmosis/architecture-manifest.json`
+
+### `osmosis migrate --source <path> --from <tech> --to <tech>`
+- Migra código legacy a framework moderno
+- `--from`: jsp, php, jquery, asp, coldfusion, perl, vb, react-legacy
+- `--to`: react, angular, vue
+- Usa RAG para evitar duplicación de componentes
+
+### `osmosis refactor --source <path> --framework react [--integral]`
+- Sin `--integral`: Refactoriza archivo por archivo
+- Con `--integral`: Usa manifiesto arquitectónico para coherencia
+- `--apply-config`: Escribe configuración moderna
+
+---
+
+## TECNOLOGÍAS LEGACY SOPORTADAS
+
+| Input | Detección | Parser | Status |
+|-------|-----------|--------|--------|
+| JSP | ✅ Auto | ✅ Full AST | 🟢 Production |
+| PHP | ✅ Auto | ✅ Full | 🟢 Production |
+| jQuery | ✅ Code Analysis | ✅ Patterns | 🟢 Production |
+| AngularJS v1 | ✅ Code Analysis | ✅ Framework | 🟢 Production |
+| ASP.NET WebForms | ✅ Auto | ✅ Full | 🟢 Production |
+| ColdFusion | ✅ Auto | 🟡 Basic | 🟡 V1 |
+| Perl CGI | ✅ Auto | 🟡 Basic | 🟡 V1 |
+| VB6/VB.NET | ✅ Auto | 🟡 Basic | 🟡 V1 |
+
+---
+
+## SAFEGUARD VALIDATION PROTOCOL
+
+CodeSafeGuard usa TypeScript Compiler API (NO regex) para validar:
+
+### Errores (Bloquean)
+- ❌ `class extends Component` → Usar Functional + Hooks
+- ❌ `componentDidMount/WillMount/WillReceiveProps` → Usar useEffect
+- ❌ `React.createRef()` → Usar useRef
+- ❌ `dangerouslySetInnerHTML` sin DOMPurify → XSS risk
+- ❌ `eval()` → Security risk
+- ❌ `new Function()` → Security risk
+- ❌ `.innerHTML =` → XSS risk
+- ❌ `@NgModule` en Angular → Usar standalone: true
+- ❌ `*ngIf/*ngFor` → Usar @if/@for
+
+### Warnings (Reportan pero no bloquean)
+- ⚠️ Inline arrow functions en JSX → Considerar useCallback
+- ⚠️ `.map()` sin key prop
+- ⚠️ `<img>` sin alt
+- ⚠️ Icon button sin aria-label
+- ⚠️ `<div onClick>` sin role
+
+---
+
+## VARIABLES DE ENTORNO
+
+| Variable | Requerida | Descripción |
+|----------|-----------|-------------|
+| `ANTHROPIC_API_KEY` | ✅ SÍ | API key de Claude - SIN ESTO NO FUNCIONA |
+| `ANTHROPIC_BASE_URL` | ❌ | Proxy empresarial (air-gapped) |
+| `OPENAI_API_KEY` | ❌ | Embeddings semánticos (mejora RAG ~95% vs ~75%) |
+| `GEMINI_API_KEY` | ❌ | Alternativa a OpenAI para embeddings |
+
+**Mínimo funcional:**
+```bash
+export ANTHROPIC_API_KEY="sk-ant-..."
+```
+
+**Recomendado (mejor RAG):**
+```bash
+export ANTHROPIC_API_KEY="sk-ant-..."
+export OPENAI_API_KEY="sk-..."
+```
+
+---
+
+## COSTOS ESTIMADOS
+
+### Claude 3.5 Sonnet
+- Input: $3.00 / 1M tokens
+- Output: $15.00 / 1M tokens
+
+### Por Archivo
+- Pequeño (<100 líneas): ~$0.02
+- Mediano (100-300 líneas): ~$0.05
+- Grande (>300 líneas): ~$0.10
+
+### Proyecto Típico (500 archivos)
+- Sin auto-repair: ~$25 USD
+- Con auto-repair (20%): ~$30 USD
+
+---
+
+## COMPORTAMIENTO ESPERADO DEL AGENTE
+
+1. **Identidad**: Eres Osmosis, Arquitecto de Software Principal senior
+2. **Zero Hallucinations**: NO inventes imports ni componentes
+3. **Security First**: Asume todo input legacy es inseguro
+4. **Stack Coherence**: Si hay manifiesto, usa ESE stack, no otro
+5. **Validación**: Todo código generado pasa por CodeSafeGuard
+6. **Auto-repair**: Si falla validación, intenta reparar (max 3 veces)

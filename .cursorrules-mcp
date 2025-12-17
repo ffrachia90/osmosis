@@ -3,19 +3,72 @@
     "osmosis": {
       "command": "node",
       "args": [
-        "/absolute/path/to/osmosis/dist/mcp/server.js"
+        "/REPLACE/WITH/YOUR/PATH/osmosis/dist/mcp/server.js"
       ],
       "env": {
-        "ANTHROPIC_API_KEY": "sk-ant-...",
-        "OPENAI_API_KEY": "sk-..."
+        "ANTHROPIC_API_KEY": "sk-ant-YOUR-KEY-HERE",
+        "OPENAI_API_KEY": "sk-OPTIONAL-FOR-EMBEDDINGS"
       }
     }
   }
 }
 
-// Notes:
-// - ANTHROPIC_API_KEY: REQUIRED (for Claude 3.5 Sonnet - code generation)
-// - OPENAI_API_KEY: OPTIONAL (for RAG embeddings - better component detection)
-//   If not provided, uses local embeddings (TF-IDF)
-// - Replace "/absolute/path/to/osmosis" with your actual path
-
+/**
+ * ═══════════════════════════════════════════════════════════════════════════
+ * OSMOSIS MCP SERVER v2.0.0 - Configuración para Cursor
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 
+ * INSTALACIÓN:
+ * 1. Copia este contenido a ~/.cursor/mcp.json (global)
+ *    O a .cursor/mcp.json en tu proyecto (local)
+ * 2. Reemplaza /REPLACE/WITH/YOUR/PATH con la ruta real a osmosis
+ * 3. Agrega tu ANTHROPIC_API_KEY
+ * 4. Reinicia Cursor
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 
+ * VARIABLES DE ENTORNO:
+ * 
+ * ANTHROPIC_API_KEY (REQUERIDA)
+ *   - API key de Claude para generación de código
+ *   - Obtener en: https://console.anthropic.com
+ * 
+ * OPENAI_API_KEY (OPCIONAL)
+ *   - Para embeddings semánticos en RAG
+ *   - Si no se proporciona, usa TF-IDF local (funciona pero menos preciso)
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 
+ * HERRAMIENTAS DISPONIBLES:
+ * 
+ * 🔍 ANÁLISIS:
+ *   - analyze_project      → Análisis completo (tech debt, deps, KG)
+ *   - detect_technology    → Detecta jQuery, JSP, PHP, etc.
+ *   - calculate_tech_debt  → Calcula horas de refactor
+ * 
+ * 🏗️ ARQUITECTURA (NUEVO):
+ *   - plan_architecture     → Genera plan de modernización
+ *   - get_architecture_manifest → Lee manifiesto existente
+ *   - generate_config       → Genera tsconfig, eslint, tailwind
+ *   - get_migration_rules   → Lista reglas por categoría
+ * 
+ * 🔄 MIGRACIÓN:
+ *   - migrate_file          → Migra archivo legacy a React
+ *   - refactor_file_integral → Refactoriza con manifiesto
+ *   - validate_code         → Valida con SafeGuard
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 
+ * EJEMPLO DE USO EN CURSOR:
+ * 
+ * 1. "Genera un plan de arquitectura para /Users/me/mi-proyecto"
+ *    → Usa plan_architecture
+ * 
+ * 2. "Refactoriza src/components/Dashboard.tsx con el manifiesto"
+ *    → Usa refactor_file_integral
+ * 
+ * 3. "Aplica la configuración moderna"
+ *    → Usa generate_config con apply=true
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════
+ */

@@ -1,0 +1,457 @@
+---
+description: CLI: Referencia Completa de Comandos con Todos los Flags
+globs: *
+alwaysApply: true
+---
+# OSMOSIS CLI - Referencia Exhaustiva
+
+## INSTALACIÓN Y SETUP
+
+### Clonar y Construir
+```bash
+git clone https://github.com/tu-usuario/osmosis.git
+cd osmosis
+npm install
+npm run build
+```
+
+### Configurar API Keys
+```bash
+# OBLIGATORIA - Sin esto Osmosis NO funciona
+export ANTHROPIC_API_KEY="sk-ant-api03-..."
+
+# OPCIONAL - Mejora precisión de RAG de ~75% a ~95%
+export OPENAI_API_KEY="sk-..."
+
+# OPCIONAL - Alternativa a OpenAI para embeddings
+export GEMINI_API_KEY="..."
+
+# OPCIONAL - Para empresas con proxy
+export ANTHROPIC_BASE_URL="https://llm-proxy.company.com"
+```
+
+### Verificar Instalación
+```bash
+# Debería mostrar ayuda
+npx tsx src/cli.ts --help
+
+# O después de build
+node dist/cli.js --help
+```
+
+---
+
+## COMANDO: `analyze`
+
+### Descripción
+Analiza un proyecto legacy completo y genera reporte con:
+- Tecnologías detectadas (jQuery, JSP, PHP, etc.)
+- Grafo de dependencias
+- Knowledge Graph para RAG
+- Deuda técnica (score, horas, archivos tóxicos)
+- Orden de migración recomendado
+
+### Sintaxis
+```bash
+osmosis analyze --dir <directory> [--output <file>]
+```
+
+### Flags
+
+| Flag | Tipo | Requerido | Default | Descripción |
+|------|------|-----------|---------|-------------|
+| `--dir` | string | ✅ | - | Directorio del proyecto a analizar |
+| `--output` | string | ❌ | `analysis-report.json` | Archivo de salida para el reporte |
+
+### Ejemplos
+
+```bash
+# Análisis básico
+osmosis analyze --dir ./legacy-app
+
+# Con output personalizado
+osmosis analyze --dir ./my-project --output reports/analysis.json
+
+# Proyecto grande
+osmosis analyze --dir /Users/me/enterprise-app --output ./debt-report.json
+```
+
+### Output Generado
+
+**Archivos**:
+- `analysis-report.json` - Reporte completo
+- `.osmosis/knowledge-graph.json` - Knowledge Graph para RAG
+- `.osmosis/embeddings-cache.json` - Cache de embeddings
+
+**Consola**:
+```
+📈 RESUMEN DEL ANÁLISIS:
+────────────────────────────────────────────────────────
+📁 Proyecto: /Users/me/legacy-app
+🔧 Tecnologías: jQuery, AngularJS (v1)
+📄 Total de archivos: 500
+
+⚡ ESFUERZO DE DEUDA TÉCNICA:
+   Puntaje de Salud: 22/100
+   Horas de Refactor: 1200h
+   Sprints Estimados: ~15 sprints
+   Archivos Críticos: 45
+   Recomendación: Migrar jQuery a React hooks nativos
+
+🎯 TOP 5 ARCHIVOS MÁS COMPLEJOS:
+  🔥 dashboard.js
+     ├─ Toxicidad: 95/100
+     └─ Problemas: God class, Deep nesting...
+```
+
+---
+
+## COMANDO: `plan`
+
+### Descripción
+Genera un plan de modernización arquitectónica SIN ejecutar cambios. Analiza patterns en el código y propone un stack moderno coherente.
+
+### Sintaxis
+```bash
+osmosis plan --dir <directory> [--force] [--output <path>]
+```
+
+### Flags
+
+| Flag | Tipo | Requerido | Default | Descripción |
+|------|------|-----------|---------|-------------|
+| `--dir` | string | ✅ | - | Directorio del proyecto React |
+| `--force` | boolean | ❌ | false | Re-analizar aunque exista manifiesto |
+| `--output` | string | ❌ | `.osmosis/architecture-manifest.json` | Ruta del manifiesto |
+
+### Ejemplos
+
+```bash
+# Generar plan
+osmosis plan --dir ./my-react-app
+
+# Forzar re-análisis
+osmosis plan --dir ./my-app --force
+
+# Guardar en ubicación personalizada
+osmosis plan --dir ./project --output ./plans/architecture.json
+```
+
+### Output Generado
+
+**Archivos**:
+- `.osmosis/architecture-manifest.json` - Manifiesto arquitectónico completo
+
+**Consola**:
+```
+🏗️ Iniciando planificación arquitectónica integral...
+
+📊 Fase 1: Escaneo profundo del código fuente...
+   📁 234 archivos encontrados
+
+   📈 RESUMEN DE PATRONES DETECTADOS:
+   ──────────────────────────────────────────────────
+   📁 Total archivos: 234
+   🧩 Total componentes: 89
+   📊 Legacy Score: 67/100
+   🗃️ State Principal: redux-legacy
+   🔄 Fetching Principal: manual
+   🎨 Styling Principal: inline-styles
+   ⚠️ Class Components: 23
+   ⚠️ Redux connect(): 45
+   ⚠️ React Router v5 <Switch>: 12
+
+🤖 Fase 2: Consultando Arquitecto AI para propuesta de stack...
+
+   🚀 STACK MODERNO PROPUESTO:
+   ──────────────────────────────────────────────────
+   🗃️ State: zustand
+      └─ Estado simple, no necesita la complejidad de Redux
+   🔄 Fetching: tanstack-query
+      └─ Centraliza caching, estados de loading y error
+   🧭 Routing: react-router-v6
+      └─ Migración directa desde v5, menos breaking changes
+   🎨 Styling: tailwind
+      └─ Elimina inline styles, mejor DX y performance
+   📝 Forms: react-hook-form
+   🧪 Testing: vitest
+
+═══════════════════════════════════════════════════════════
+   📋 PLAN DE MODERNIZACIÓN GENERADO
+═══════════════════════════════════════════════════════════
+   Confianza: 85%
+   Reglas de migración: 12
+   Dependencias nuevas: 8
+   Paquetes a eliminar: 5
+
+💡 Ejecuta para aplicar:
+   osmosis refactor --source ./my-react-app --framework react --integral --apply-config
+```
+
+---
+
+## COMANDO: `migrate`
+
+### Descripción
+Migra código legacy (JSP, PHP, jQuery, ASP) a framework moderno (React, Angular, Vue).
+
+### Sintaxis
+```bash
+osmosis migrate --source <path> --from <tech> --to <tech> [options]
+```
+
+### Flags
+
+| Flag | Tipo | Requerido | Default | Descripción |
+|------|------|-----------|---------|-------------|
+| `--source` | string | ✅ | - | Archivo o directorio a migrar |
+| `--from` | string | ✅ | - | Tecnología origen |
+| `--to` | string | ✅ | - | Tecnología destino |
+| `--output` | string | ❌ | `./migrated` | Directorio de salida |
+| `--client` | string | ❌ | `GenericClient` | Nombre del cliente (contexto) |
+| `--design-system` | string | ❌ | - | Path al design system |
+| `--dry-run` | boolean | ❌ | false | Simular sin escribir |
+
+### Valores Válidos
+
+**`--from`** (legacy):
+- `jsp` - JavaServer Pages
+- `php` - PHP vanilla o frameworks
+- `jquery` - jQuery / vanilla JS
+- `asp` - ASP.NET WebForms
+- `coldfusion` - ColdFusion
+- `perl` - Perl CGI
+- `vb` - Visual Basic
+- `react-legacy` - React con Class Components
+
+**`--to`** (modern):
+- `react` - React 18+ con Hooks
+- `angular` - Angular 17+ con Signals
+- `vue` - Vue 3 con Composition API
+
+### Ejemplos
+
+```bash
+# Migrar directorio completo
+osmosis migrate --source ./legacy --from jsp --to react
+
+# Migrar archivo único
+osmosis migrate --source ./login.php --from php --to react --output ./modern
+
+# Con contexto de cliente
+osmosis migrate --source ./bank-app --from jquery --to react --client "Banco Nacional"
+
+# Dry run (ver sin escribir)
+osmosis migrate --source ./app --from asp --to react --dry-run
+```
+
+### Flujo de Migración
+
+```
+1. Detectar tecnología legacy (si es directorio)
+2. Construir grafo de dependencias
+3. Cargar/Construir Knowledge Graph (RAG)
+4. Para cada archivo (en orden de dependencias):
+   a. Ensamblar prompt con contexto
+   b. Enriquecer con RAG (componentes similares)
+   c. Generar código con Claude (streaming)
+   d. Validar con CodeSafeGuard
+   e. Si errores: Auto-repair (max 3 intentos)
+   f. Escribir archivo migrado
+```
+
+---
+
+## COMANDO: `refactor`
+
+### Descripción
+Refactoriza código moderno con malas prácticas. Puede ser archivo por archivo o en **modo integral** (arquitectónico).
+
+### Sintaxis
+```bash
+osmosis refactor --source <path> --framework <name> [options]
+```
+
+### Flags
+
+| Flag | Tipo | Requerido | Default | Descripción |
+|------|------|-----------|---------|-------------|
+| `--source` | string | ✅ | - | Archivo o directorio |
+| `--framework` | string | ✅ | - | Framework (`react`, `angular`, `vue`) |
+| `--output` | string | ❌ | `./refactored` | Directorio de salida |
+| `--analyze-only` | boolean | ❌ | false | Solo analizar, no refactorizar |
+| `--integral` | boolean | ❌ | false | **Modo arquitectónico completo** |
+| `--manifest` | string | ❌ | - | Usar manifiesto existente |
+| `--apply-config` | boolean | ❌ | false | Escribir configuración moderna |
+| `--force` | boolean | ❌ | false | Re-analizar aunque exista manifiesto |
+
+### Modo Normal vs Integral
+
+**Modo Normal** (sin `--integral`):
+- Refactoriza archivo por archivo
+- Reglas estáticas de conversión
+- Sin coherencia global de stack
+
+**Modo Integral** (con `--integral`):
+- Analiza proyecto completo primero
+- Propone stack coherente
+- Genera reglas específicas
+- Aplica las MISMAS reglas a TODOS los archivos
+- Genera configuración moderna
+
+### Ejemplos
+
+```bash
+# Modo normal - archivo único
+osmosis refactor --source ./Dashboard.tsx --framework react
+
+# Modo normal - directorio
+osmosis refactor --source ./src/components --framework react
+
+# Modo integral - análisis + refactor + config
+osmosis refactor --source ./src --framework react --integral --apply-config
+
+# Solo análisis (ver qué haría)
+osmosis refactor --source ./src --framework react --integral --analyze-only
+
+# Usar manifiesto existente
+osmosis refactor --source ./src --framework react --manifest ./custom-manifest.json
+
+# Forzar re-análisis
+osmosis refactor --source ./src --framework react --integral --force
+```
+
+### Output del Modo Integral
+
+```
+🏗️ ═══════════════════════════════════════════════════════
+   MODO ARQUITECTÓNICO INTEGRAL
+   Analizando proyecto completo para modernización coherente
+═══════════════════════════════════════════════════════════
+
+[Fases 1-4 del plan...]
+
+📊 RESUMEN DEL ANÁLISIS ARQUITECTÓNICO:
+────────────────────────────────────────────────────────
+   Proyecto: mi-proyecto
+   Legacy Score: 67/100
+   Archivos a procesar: 234
+   Reglas de migración: 12
+
+📁 CONFIGURACIÓN APLICADA:
+   ✅ Creados: tsconfig.json, eslint.config.js, tailwind.config.ts
+   📝 Actualizados: package.json
+   ⏭️ Omitidos: .prettierrc
+
+💡 Ejecuta para instalar nuevas dependencias:
+   npm install
+
+🔄 INICIANDO REFACTORIZACIÓN...
+
+[1/234] Modernizando Dashboard.tsx...
+   ✅ Dashboard.tsx modernizado perfectamente
+
+[2/234] Modernizando UserList.tsx...
+   ⚠️ SafeGuard detectó problemas. Auto-reparando...
+   ✅ UserList.tsx reparado y modernizado
+
+...
+
+═══════════════════════════════════════════════════════════
+   📊 RESUMEN DE REFACTORIZACIÓN
+═══════════════════════════════════════════════════════════
+   ✅ Exitosos: 232/234
+   ❌ Fallidos: 2/234
+   📁 Output: ./refactored
+
+   🏗️ MODO INTEGRAL:
+   └─ Stack: zustand + tanstack-query + react-router-v6
+   └─ Reglas aplicadas: 12
+═══════════════════════════════════════════════════════════
+```
+
+---
+
+## SCRIPTS NPM
+
+### Desarrollo
+```bash
+npm run dev              # CLI con hot-reload (tsx watch)
+npm run mcp:dev          # MCP server con hot-reload
+```
+
+### Producción
+```bash
+npm run build            # Compilar TypeScript → dist/
+npm run start            # Ejecutar CLI compilado
+npm run mcp              # Ejecutar MCP server compilado
+```
+
+### Testing
+```bash
+npm test                 # Vitest
+npm run test:e2e         # Playwright E2E
+```
+
+### Docker
+```bash
+npm run docker:build     # Construir imagen
+npm run docker:up        # Levantar contenedor
+npm run docker:down      # Detener contenedor
+```
+
+### Atajos de Análisis/Migración
+```bash
+npm run analyze -- --dir ./project
+npm run migrate -- --source ./legacy --from jsp --to react
+```
+
+---
+
+## ARCHIVOS GENERADOS
+
+| Archivo | Generado Por | Descripción |
+|---------|--------------|-------------|
+| `analysis-report.json` | `analyze` | Reporte de análisis completo |
+| `.osmosis/knowledge-graph.json` | `analyze`, `migrate` | Knowledge Graph RAG |
+| `.osmosis/embeddings-cache.json` | `analyze`, `migrate` | Cache de embeddings |
+| `.osmosis/architecture-manifest.json` | `plan`, `refactor --integral` | Manifiesto arquitectónico |
+| `./migrated/*.tsx` | `migrate` | Código migrado |
+| `./refactored/*.tsx` | `refactor` | Código refactorizado |
+| `tsconfig.json` | `refactor --apply-config` | Config TypeScript |
+| `eslint.config.js` | `refactor --apply-config` | Config ESLint flat |
+| `tailwind.config.ts` | `refactor --apply-config` | Config Tailwind |
+| `vitest.config.ts` | `refactor --apply-config` | Config Vitest |
+| `postcss.config.js` | `refactor --apply-config` | Config PostCSS |
+| `.prettierrc` | `refactor --apply-config` | Config Prettier |
+
+---
+
+## TROUBLESHOOTING
+
+### "ANTHROPIC_API_KEY no configurada"
+```bash
+export ANTHROPIC_API_KEY="sk-ant-api03-..."
+```
+
+### "No se encontró Knowledge Graph"
+```bash
+# Ejecutar analyze primero
+osmosis analyze --dir ./project
+```
+
+### "No architecture manifest found"
+```bash
+# Ejecutar plan primero
+osmosis plan --dir ./project
+```
+
+### "Rate limit exceeded"
+- Esperar 60 segundos
+- Reducir concurrencia (archivos procesados)
+- Upgradar plan de Anthropic
+
+### "LLM service health check failed"
+- Verificar API key
+- Verificar conexión a internet
+- Verificar proxy si aplica

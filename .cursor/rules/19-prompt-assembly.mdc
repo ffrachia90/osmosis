@@ -1,0 +1,449 @@
+---
+description: PROMPTS: Sistema de Ensamblaje de Prompts
+globs: src/core/prompt-engine/*
+alwaysApply: true
+---
+# PROMPT ASSEMBLER - Ensamblaje Dinámico de Prompts
+
+## UBICACIÓN
+
+- `src/core/prompt-engine/assembler.ts` - Lógica de ensamblaje
+- `src/core/prompt-engine/templates.ts` - Templates por tecnología
+
+---
+
+## CONCEPTO
+
+PromptAssembler construye prompts DINÁMICOS que incluyen:
+1. Contexto de la migración (archivo, tecnología)
+2. Reglas de migración (desde el manifiesto arquitectónico)
+3. Stack propuesto (si existe manifiesto)
+4. Componentes similares (desde RAG)
+5. Restricciones del proyecto
+
+---
+
+## ESTRUCTURA DEL PROMPT
+
+```markdown
+# 🧬 OSMOSIS - Legacy Code Migration
+
+## CONTEXTO
+- Archivo: {fileName}
+- Tecnología origen: {legacyLanguage}
+- Framework destino: {targetFramework}
+
+## CÓDIGO LEGACY
+```{legacyLanguage}
+{legacyCode}
+```
+
+## 🎯 STACK TECNOLÓGICO REQUERIDO (desde manifiesto)
+- State: {zustand/redux-toolkit}
+- Fetching: {tanstack-query}
+- Routing: {react-router-v6}
+- Styling: {tailwind}
+
+## 📋 REGLAS DE MIGRACIÓN
+
+### State Management
+1. ❌ NO usar connect(). ✅ USAR useStore() de Zustand
+2. ❌ NO usar mapStateToProps. ✅ USAR selector functions
+...
+
+### Data Fetching
+1. ❌ NO usar useEffect + fetch. ✅ USAR useQuery()
+2. ❌ NO usar axios manual. ✅ USAR useMutation()
+...
+
+### Routing
+1. ❌ NO usar <Switch>. ✅ USAR <Routes>
+2. ❌ NO usar withRouter. ✅ USAR useNavigate
+...
+
+## 🔍 COMPONENTES EXISTENTES (RAG)
+[Inyectado por ContextInjector]
+
+## ✅ REQUISITOS
+1. TypeScript estricto (no any)
+2. Functional components + Hooks
+3. Props interfaces
+4. Accesibilidad (aria-labels)
+5. Solo el código, sin explicaciones
+
+## 📤 OUTPUT
+```tsx
+// Código migrado aquí
+```
+```
+
+---
+
+## API
+
+```typescript
+interface PromptContext {
+  fileName: string;
+  filePath: string;
+  legacyCode: string;
+  legacyLanguage: string;
+  targetFramework: string;
+  additionalContext?: string;
+  clientName?: string;
+  projectType?: string;
+  architectureManifest?: ArchitectureManifest;  // Para modo integral
+}
+
+class PromptAssembler {
+  // Ensamblaje estándar
+  static assemble(context: PromptContext): string;
+  
+  // Ensamblaje integral (con manifiesto)
+  static assembleIntegral(context: PromptContext, manifest: ArchitectureManifest): string;
+  
+  // Helpers privados
+  private static getMigrationRulesSection(manifest: ArchitectureManifest): string;
+  private static getProposedStackSection(manifest: ArchitectureManifest): string;
+  private static getConsistencySection(manifest: ArchitectureManifest): string;
+}
+```
+
+---
+
+## MÉTODO: `assemble(context)`
+
+Ensamblaje estándar para migraciones archivo por archivo.
+
+```typescript
+static assemble(context: PromptContext): string {
+  const template = getTemplate(context.legacyLanguage, context.targetFramework);
+  
+  let prompt = template
+    .replace('{fileName}', context.fileName)
+    .replace('{legacyCode}', context.legacyCode)
+    .replace('{legacyLanguage}', context.legacyLanguage)
+    .replace('{targetFramework}', context.targetFramework);
+  
+  // Si hay manifiesto, agregar reglas y stack
+  if (context.architectureManifest) {
+    const migrationRules = this.getMigrationRulesSection(context.architectureManifest);
+    const stackSection = this.getProposedStackSection(context.architectureManifest);
+    
+    prompt = prompt
+      .replace('{MIGRATION_RULES}', migrationRules)
+      .replace('{PROPOSED_STACK}', stackSection);
+  } else {
+    // Reglas default sin manifiesto
+    prompt = prompt
+      .replace('{MIGRATION_RULES}', this.getDefaultMigrationRules(context))
+      .replace('{PROPOSED_STACK}', '');
+  }
+  
+  return prompt;
+}
+```
+
+---
+
+## MÉTODO: `assembleIntegral(context, manifest)`
+
+Ensamblaje para modo integral con manifiesto arquitectónico.
+
+```typescript
+static assembleIntegral(context: PromptContext, manifest: ArchitectureManifest): string {
+  const base = this.assemble({
+    ...context,
+    architectureManifest: manifest
+  });
+  
+  // Agregar sección de consistencia global
+  const consistencySection = this.getConsistencySection(manifest);
+  
+  return `${base}
+
+## 🏗️ CONSISTENCIA GLOBAL
+
+**IMPORTANTE**: Este archivo es parte de un proyecto con ${manifest.patternAnalysis.summary.totalComponents} componentes.
+La modernización debe ser COHERENTE con el resto del proyecto.
+
+${consistencySection}
+
+### Imports Esperados (usa estos, no otros)
+${this.getStackImports(manifest)}
+`;
+}
+```
+
+---
+
+## SECCIONES INYECTADAS
+
+### Stack Propuesto
+
+```typescript
+private static getProposedStackSection(manifest: ArchitectureManifest): string {
+  const { proposedStack } = manifest;
+  
+  return `
+## 🎯 STACK TECNOLÓGICO REQUERIDO
+
+**OBLIGATORIO: Usar EXACTAMENTE estas tecnologías:**
+
+| Categoría | Librería | Razón |
+|-----------|----------|-------|
+| State | **${proposedStack.stateManagement.library}** | ${proposedStack.stateManagement.reasoning} |
+| Fetching | **${proposedStack.dataFetching.library}** | ${proposedStack.dataFetching.reasoning} |
+| Routing | **${proposedStack.routing.library}** | ${proposedStack.routing.reasoning} |
+| Styling | **${proposedStack.styling.library}** | ${proposedStack.styling.reasoning} |
+| Forms | **${proposedStack.forms.library}** | ${proposedStack.forms.reasoning} |
+| Testing | **${proposedStack.testing.library}** | ${proposedStack.testing.reasoning} |
+
+⚠️ **NO usar alternativas**: Si el stack dice Zustand, NO usar Redux ni Context.
+`;
+}
+```
+
+### Reglas de Migración
+
+```typescript
+private static getMigrationRulesSection(manifest: ArchitectureManifest): string {
+  const rules = manifest.migrationRules;
+  
+  // Agrupar por categoría
+  const grouped = this.groupRulesByCategory(rules);
+  
+  let section = '## 📋 REGLAS DE MIGRACIÓN ESPECÍFICAS\n\n';
+  
+  for (const [category, categoryRules] of Object.entries(grouped)) {
+    section += `### ${this.getCategoryTitle(category)}\n\n`;
+    
+    for (const rule of categoryRules) {
+      section += `#### ${rule.name} ${rule.isCritical ? '🔴' : ''}\n`;
+      section += `- ❌ Detecta: \`${rule.detectPattern}\`\n`;
+      section += `- ✅ Transformar a: ${rule.transformInstruction}\n`;
+      section += `\n**Ejemplo:**\n`;
+      section += `\`\`\`typescript\n// ANTES\n${rule.example.before}\n\n// DESPUÉS\n${rule.example.after}\n\`\`\`\n\n`;
+    }
+  }
+  
+  return section;
+}
+```
+
+### Imports Esperados
+
+```typescript
+private static getStackImports(manifest: ArchitectureManifest): string {
+  const { proposedStack } = manifest;
+  const imports: string[] = [];
+  
+  // State
+  switch (proposedStack.stateManagement.library) {
+    case 'zustand':
+      imports.push("import { create } from 'zustand';");
+      imports.push("import { useXxxStore } from '@/stores/xxxStore';");
+      break;
+    case 'redux-toolkit':
+      imports.push("import { useSelector, useDispatch } from 'react-redux';");
+      imports.push("import type { RootState, AppDispatch } from '@/store';");
+      break;
+  }
+  
+  // Fetching
+  switch (proposedStack.dataFetching.library) {
+    case 'tanstack-query':
+      imports.push("import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';");
+      break;
+    case 'swr':
+      imports.push("import useSWR from 'swr';");
+      break;
+  }
+  
+  // Routing
+  switch (proposedStack.routing.library) {
+    case 'react-router-v6':
+    case 'react-router-v7':
+      imports.push("import { useNavigate, useParams, useLocation } from 'react-router-dom';");
+      break;
+  }
+  
+  // Forms
+  switch (proposedStack.forms.library) {
+    case 'react-hook-form':
+      imports.push("import { useForm } from 'react-hook-form';");
+      imports.push("import { zodResolver } from '@hookform/resolvers/zod';");
+      break;
+  }
+  
+  return `\`\`\`typescript\n${imports.join('\n')}\n\`\`\``;
+}
+```
+
+---
+
+## TEMPLATES POR TECNOLOGÍA
+
+### Template JSP → React
+
+```markdown
+# 🧬 JSP to React Migration
+
+## Contexto
+- Archivo JSP: {fileName}
+- Output: React TypeScript Component
+
+## Código JSP Original
+```jsp
+{legacyCode}
+```
+
+## Mapeo JSP → React
+| JSP | React |
+|-----|-------|
+| `<c:if test="${...}">` | `{condition && <.../>}` |
+| `<c:forEach items="${...}">` | `{items.map(item => ...)}` |
+| `<c:set var="..." value="...">` | `const [var, setVar] = useState(...)` |
+| `${requestScope.data}` | Props o state |
+| `<form action="..." method="post">` | `<form onSubmit={handleSubmit}>` |
+
+## Requisitos
+1. Extraer lógica Java a hooks/services
+2. Convertir JSTL a JSX
+3. Manejar formularios con React Hook Form
+4. TypeScript estricto
+```
+
+### Template PHP → React
+
+```markdown
+# 🧬 PHP to React Migration
+
+## Contexto
+- Archivo PHP: {fileName}
+- Output: React TypeScript Component + API calls
+
+## Código PHP Original
+```php
+{legacyCode}
+```
+
+## Mapeo PHP → React
+| PHP | React |
+|-----|-------|
+| `<?php echo $var ?>` | `{var}` |
+| `<?php if (...): ?>` | `{condition && <.../>}` |
+| `<?php foreach ($items as $item): ?>` | `{items.map(item => ...)}` |
+| `$_GET['param']` | `useSearchParams()` |
+| `$_POST['data']` | Form state + fetch POST |
+| `mysql_query(...)` | `useQuery({ queryFn: fetchData })` |
+
+## Requisitos
+1. Separar lógica de servidor (API) y cliente (React)
+2. Reemplazar llamadas MySQL por fetch a API
+3. Eliminar funciones inseguras (eval, mysql_*)
+```
+
+### Template jQuery → React
+
+```markdown
+# 🧬 jQuery to React Migration
+
+## Contexto
+- Archivo JS: {fileName}
+- Output: React TypeScript Component
+
+## Código jQuery Original
+```javascript
+{legacyCode}
+```
+
+## Mapeo jQuery → React
+| jQuery | React |
+|--------|-------|
+| `$('#element')` | `useRef()` |
+| `$('.class').hide()` | State + conditional rendering |
+| `$(document).ready()` | `useEffect(..., [])` |
+| `$('#btn').click(fn)` | `onClick={fn}` |
+| `$.ajax({ url, success })` | `useQuery()` o `fetch` |
+| `$('#input').val()` | Controlled input con `useState` |
+| `$('#el').append(html)` | Array state + map |
+
+## Requisitos
+1. Eliminar TODA manipulación directa del DOM
+2. Convertir a componentes controlados
+3. Reemplazar jQuery UI con componentes modernos
+```
+
+---
+
+## EJEMPLO DE PROMPT COMPLETO
+
+```markdown
+# 🧬 OSMOSIS - Legacy Code Migration
+
+## CONTEXTO
+- Archivo: UserDashboard.jsx
+- Tecnología origen: react-legacy
+- Framework destino: react
+
+## CÓDIGO LEGACY
+```jsx
+import { connect } from 'react-redux';
+import { withRouter } from 'react-router-dom';
+
+class UserDashboard extends Component {
+  componentDidMount() {
+    axios.get('/api/users').then(r => this.setState({ users: r.data }));
+  }
+  
+  render() {
+    return <div style={{ padding: 20 }}>{/* ... */}</div>;
+  }
+}
+
+export default withRouter(connect(mapStateToProps)(UserDashboard));
+```
+
+## 🎯 STACK TECNOLÓGICO REQUERIDO
+
+| Categoría | Librería |
+|-----------|----------|
+| State | **zustand** |
+| Fetching | **tanstack-query** |
+| Routing | **react-router-v6** |
+| Styling | **tailwind** |
+
+## 📋 REGLAS DE MIGRACIÓN
+
+### State Management
+1. ❌ `connect(mapStateToProps)` → ✅ `useStore()`
+2. ❌ `this.props.dispatch` → ✅ Actions de Zustand
+
+### Data Fetching  
+1. ❌ `componentDidMount + axios` → ✅ `useQuery()`
+
+### Routing
+1. ❌ `withRouter` → ✅ `useNavigate()`
+
+### Components
+1. ❌ `class extends Component` → ✅ `function Component()`
+
+### Styling
+1. ❌ `style={{ padding: 20 }}` → ✅ `className="p-5"`
+
+## 🔍 COMPONENTES EXISTENTES
+[Lista de componentes similares del Knowledge Graph]
+
+## ✅ REQUISITOS
+1. TypeScript estricto
+2. Functional components
+3. Sin class components
+4. Sin connect/withRouter
+5. TanStack Query para fetching
+6. Tailwind para estilos
+
+## 📤 OUTPUT
+```tsx
+// Tu código aquí
+```
+```

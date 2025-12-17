@@ -193,3 +193,4 @@ Cada parser es ~200 líneas de código con AST parsing.
 **Current Version:** 1.0.0  
 **Status:** ✅ Production Ready (con parsers V1 experimentales)
 
+

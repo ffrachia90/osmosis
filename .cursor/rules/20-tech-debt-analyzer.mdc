@@ -1,0 +1,442 @@
+---
+description: DEBT: Sistema de Análisis de Deuda Técnica
+globs: src/core/analysis/*
+alwaysApply: true
+---
+# TECH DEBT ANALYZER - Análisis de Deuda Técnica
+
+## UBICACIÓN
+
+`src/core/analysis/TechDebtAnalyzer.ts`
+
+---
+
+## CONCEPTO
+
+TechDebtAnalyzer calcula la deuda técnica de un proyecto usando **7 heurísticas** basadas en métricas de código reales.
+
+---
+
+## API
+
+```typescript
+interface TechDebtResult {
+  totalScore: number;           // 0-100 (más alto = más deuda)
+  refactorHours: number;        // Horas estimadas de refactor
+  filesAnalyzed: number;
+  toxicFiles: ToxicFile[];      // Archivos con más deuda
+  recommendations: string[];
+  breakdown: DebtBreakdown;     // Detalle por heurística
+}
+
+interface ToxicFile {
+  file: string;
+  score: number;
+  issues: string[];
+}
+
+interface DebtBreakdown {
+  complexity: number;           // Complejidad ciclomática
+  codeSmells: number;           // Code smells detectados
+  duplication: number;          // Código duplicado
+  coupling: number;             // Acoplamiento entre módulos
+  coverage: number;             // (Estimado) Cobertura de tests
+  documentation: number;        // Falta de documentación
+  outdatedDeps: number;         // Dependencias obsoletas
+}
+
+class TechDebtAnalyzer {
+  async analyze(projectDir: string): Promise<TechDebtResult>;
+}
+```
+
+---
+
+## 7 HEURÍSTICAS DE DEUDA
+
+### 1. Complejidad Ciclomática
+
+```typescript
+// Mide la complejidad de control de flujo
+// Cada if, for, while, switch, &&, || suma 1
+
+function calculateComplexity(code: string): number {
+  let complexity = 1; // Base
+  
+  const patterns = [
+    /\bif\s*\(/g,           // if statements
+    /\belse\s+if\s*\(/g,    // else if
+    /\bfor\s*\(/g,          // for loops
+    /\bwhile\s*\(/g,        // while loops
+    /\bswitch\s*\(/g,       // switch
+    /\bcase\s+/g,           // case clauses
+    /\bcatch\s*\(/g,        // catch blocks
+    /\&\&/g,                // logical AND
+    /\|\|/g,                // logical OR
+    /\?\s*[^:]+\s*:/g       // ternary
+  ];
+  
+  for (const pattern of patterns) {
+    const matches = code.match(pattern);
+    if (matches) complexity += matches.length;
+  }
+  
+  return complexity;
+}
+```
+
+**Scoring**:
+- 1-10: ✅ Bajo (0 puntos de deuda)
+- 11-20: ⚠️ Moderado (5 puntos)
+- 21-40: 🔴 Alto (15 puntos)
+- >40: 💀 Crítico (25 puntos)
+
+---
+
+### 2. Code Smells
+
+```typescript
+// Detecta patrones problemáticos
+
+const codeSmells = {
+  godClass: /class\s+\w+[^{]*\{[\s\S]{2000,}\}/g,           // >2000 chars
+  longMethod: /function\s+\w+[^{]*\{[\s\S]{500,}\}/g,       // >500 chars
+  deepNesting: /\{[^{}]*\{[^{}]*\{[^{}]*\{[^{}]*\{/g,       // >4 niveles
+  magicNumbers: /[^a-zA-Z_$](-?\d{2,})[^a-zA-Z_$\d]/g,      // números > 9
+  longParameterList: /\([^)]{100,}\)/g,                      // >100 chars en params
+  duplicateCode: /similar blocks detected/,                   // Bloques similares
+  featureEnvy: /this\.\w+\.\w+\.\w+/g,                       // Cadenas largas
+  dataClumps: /(\w+),\s*(\1Type),\s*(\1Config)/g,            // Datos agrupados
+};
+```
+
+**Scoring**: 2 puntos por cada smell detectado
+
+---
+
+### 3. Duplicación de Código
+
+```typescript
+// Detecta bloques de código similares
+// Usando hashing de tokens
+
+function detectDuplication(files: Map<string, string>): number {
+  const hashes = new Map<string, string[]>();
+  
+  for (const [file, content] of files) {
+    // Dividir en bloques de ~50 líneas
+    const blocks = splitIntoBlocks(content, 50);
+    
+    for (const block of blocks) {
+      const hash = hashBlock(normalizeCode(block));
+      const existing = hashes.get(hash) || [];
+      existing.push(file);
+      hashes.set(hash, existing);
+    }
+  }
+  
+  // Contar hashes con múltiples archivos
+  let duplicatedBlocks = 0;
+  for (const files of hashes.values()) {
+    if (files.length > 1) duplicatedBlocks++;
+  }
+  
+  return duplicatedBlocks;
+}
+```
+
+**Scoring**:
+- 0-5%: ✅ Aceptable (0 puntos)
+- 5-15%: ⚠️ Moderado (10 puntos)
+- >15%: 🔴 Alto (20 puntos)
+
+---
+
+### 4. Acoplamiento
+
+```typescript
+// Mide dependencias entre módulos
+
+function analyzeCoupling(files: Map<string, string>): number {
+  const dependencies = new Map<string, Set<string>>();
+  
+  for (const [file, content] of files) {
+    const imports = extractImports(content);
+    dependencies.set(file, new Set(imports));
+  }
+  
+  // Calcular métricas
+  const afferentCoupling = calculateAfferent(dependencies);   // ¿Quién me usa?
+  const efferentCoupling = calculateEfferent(dependencies);    // ¿A quién uso?
+  
+  // Instability = Ce / (Ca + Ce)
+  const instability = efferentCoupling / (afferentCoupling + efferentCoupling);
+  
+  return instability;
+}
+```
+
+**Scoring**:
+- <0.3: ✅ Estable (0 puntos)
+- 0.3-0.7: ⚠️ Moderado (5 puntos)
+- >0.7: 🔴 Inestable (15 puntos)
+
+---
+
+### 5. Cobertura de Tests (Estimada)
+
+```typescript
+// Estima cobertura basado en presencia de tests
+
+function estimateCoverage(projectDir: string): number {
+  const srcFiles = glob.sync('**/*.{ts,tsx,js,jsx}', { cwd: projectDir });
+  const testFiles = glob.sync('**/*.{test,spec}.{ts,tsx,js,jsx}', { cwd: projectDir });
+  
+  // Ratio simple
+  const coverage = testFiles.length / srcFiles.length * 100;
+  
+  // Ajustar por presencia de testing framework
+  const hasJest = existsSync(join(projectDir, 'jest.config.js'));
+  const hasVitest = existsSync(join(projectDir, 'vitest.config.ts'));
+  
+  if (!hasJest && !hasVitest) {
+    return 0; // Sin framework = 0 coverage
+  }
+  
+  return Math.min(coverage * 2, 100); // Ajuste heurístico
+}
+```
+
+**Scoring**:
+- >80%: ✅ Excelente (0 puntos)
+- 50-80%: ⚠️ Aceptable (5 puntos)
+- 20-50%: 🔴 Bajo (15 puntos)
+- <20%: 💀 Crítico (25 puntos)
+
+---
+
+### 6. Documentación
+
+```typescript
+// Verifica presencia de documentación
+
+function analyzeDocumentation(files: Map<string, string>): number {
+  let documented = 0;
+  let total = 0;
+  
+  for (const [file, content] of files) {
+    const functions = extractFunctions(content);
+    total += functions.length;
+    
+    for (const fn of functions) {
+      // Buscar JSDoc antes de la función
+      if (/\/\*\*[\s\S]*?\*\/\s*function/.test(fn) ||
+          /\/\*\*[\s\S]*?\*\/\s*(export\s+)?(const|let)\s+\w+\s*=/.test(fn)) {
+        documented++;
+      }
+    }
+  }
+  
+  return total > 0 ? (documented / total) * 100 : 0;
+}
+```
+
+**Scoring**:
+- >50%: ✅ Bien documentado (0 puntos)
+- 20-50%: ⚠️ Parcial (10 puntos)
+- <20%: 🔴 Sin documentar (20 puntos)
+
+---
+
+### 7. Dependencias Obsoletas
+
+```typescript
+// Detecta dependencias desactualizadas o inseguras
+
+async function analyzeOutdatedDeps(projectDir: string): Promise<number> {
+  const packageJson = readJson(join(projectDir, 'package.json'));
+  const deps = { ...packageJson.dependencies, ...packageJson.devDependencies };
+  
+  let outdated = 0;
+  
+  // Dependencias conocidas como obsoletas
+  const deprecated = [
+    'moment',           // Usar date-fns o dayjs
+    'request',          // Usar fetch o axios
+    'enzyme',           // Usar @testing-library
+    'lodash',           // Usar ES6+ nativo
+    'redux-thunk',      // Usar RTK o Zustand
+    'react-router-dom@5', // Usar v6+
+    'prop-types',       // Usar TypeScript
+    'create-react-class' // Muy obsoleto
+  ];
+  
+  for (const dep of deprecated) {
+    const name = dep.split('@')[0];
+    if (deps[name]) outdated++;
+  }
+  
+  return outdated;
+}
+```
+
+**Scoring**: 3 puntos por cada dependencia obsoleta
+
+---
+
+## CÁLCULO DEL SCORE TOTAL
+
+```typescript
+function calculateTotalScore(breakdown: DebtBreakdown): number {
+  const weights = {
+    complexity: 1.0,
+    codeSmells: 1.0,
+    duplication: 0.8,
+    coupling: 0.6,
+    coverage: 1.2,    // Mayor peso
+    documentation: 0.5,
+    outdatedDeps: 0.4
+  };
+  
+  let total = 0;
+  for (const [key, value] of Object.entries(breakdown)) {
+    total += value * weights[key];
+  }
+  
+  // Normalizar a 0-100
+  return Math.min(100, Math.round(total));
+}
+```
+
+---
+
+## ESTIMACIÓN DE HORAS
+
+```typescript
+function estimateRefactorHours(result: TechDebtResult): number {
+  const baseHours = result.filesAnalyzed * 0.5; // 30 min por archivo base
+  
+  // Ajustes por score
+  if (result.totalScore > 80) {
+    return baseHours * 3;  // Crítico: 3x
+  } else if (result.totalScore > 60) {
+    return baseHours * 2;  // Alto: 2x
+  } else if (result.totalScore > 40) {
+    return baseHours * 1.5; // Moderado: 1.5x
+  }
+  
+  return baseHours;
+}
+```
+
+---
+
+## IDENTIFICACIÓN DE ARCHIVOS TÓXICOS
+
+```typescript
+function identifyToxicFiles(files: Map<string, string>): ToxicFile[] {
+  const toxic: ToxicFile[] = [];
+  
+  for (const [file, content] of files) {
+    const issues: string[] = [];
+    let score = 0;
+    
+    // God class
+    if (content.length > 2000) {
+      issues.push('God class (>2000 chars)');
+      score += 20;
+    }
+    
+    // Deep nesting
+    const nesting = countNesting(content);
+    if (nesting > 4) {
+      issues.push(`Deep nesting (${nesting} levels)`);
+      score += 15;
+    }
+    
+    // High complexity
+    const complexity = calculateComplexity(content);
+    if (complexity > 20) {
+      issues.push(`High complexity (${complexity})`);
+      score += 15;
+    }
+    
+    // Magic numbers
+    const magicNumbers = countMagicNumbers(content);
+    if (magicNumbers > 10) {
+      issues.push(`Magic numbers (${magicNumbers})`);
+      score += 10;
+    }
+    
+    if (score > 30) {
+      toxic.push({ file, score, issues });
+    }
+  }
+  
+  // Ordenar por score descendente
+  return toxic.sort((a, b) => b.score - a.score);
+}
+```
+
+---
+
+## OUTPUT EJEMPLO
+
+```
+⚡ ESFUERZO DE DEUDA TÉCNICA:
+────────────────────────────────────────────────────────
+📊 Score Total: 78/100 (Alto)
+
+📈 Breakdown:
+   • Complejidad: 25 pts (crítica)
+   • Code Smells: 18 pts
+   • Duplicación: 12 pts
+   • Acoplamiento: 8 pts
+   • Cobertura: 15 pts (sin tests)
+   • Documentación: 0 pts
+   • Deps Obsoletas: 0 pts
+
+⏱️ Estimación:
+   • Horas de Refactor: 1200h
+   • Sprints Estimados: ~15 sprints (80h/sprint)
+   • Costo Estimado: $120,000 (@$100/h)
+
+🔥 TOP 5 ARCHIVOS TÓXICOS:
+   1. dashboard.js (95/100)
+      └─ God class, Deep nesting, High complexity
+   2. utils.js (87/100)
+      └─ Magic numbers, No types
+   3. api.js (82/100)
+      └─ Callback hell, No error handling
+   4. forms.js (78/100)
+      └─ Duplication, Long methods
+   5. state.js (75/100)
+      └─ Global mutations, Side effects
+
+💡 RECOMENDACIONES:
+   1. Priorizar archivos tóxicos primero
+   2. Agregar tests antes de refactorizar
+   3. Dividir god classes en módulos
+   4. Extraer funciones de métodos largos
+   5. Reemplazar magic numbers con constantes
+```
+
+---
+
+## USO EN CLI
+
+```bash
+$ osmosis analyze --dir ./my-project
+
+📈 RESUMEN DEL ANÁLISIS:
+────────────────────────────────────────────────────────
+📁 Proyecto: /Users/me/my-project
+🔧 Tecnologías: jQuery, React Legacy
+📄 Total de archivos: 500
+
+⚡ ESFUERZO DE DEUDA TÉCNICA:
+   Puntaje de Salud: 22/100
+   Horas de Refactor: 1200h
+   Sprints Estimados: ~15 sprints
+   Archivos Críticos: 45
+```

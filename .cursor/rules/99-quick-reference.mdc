@@ -1,0 +1,199 @@
+---
+description: QUICK: Referencia Rápida para el Agente
+globs: *
+alwaysApply: true
+---
+# 🚀 OSMOSIS - QUICK REFERENCE PARA EL AGENTE
+
+## ¿QUÉ ES OSMOSIS?
+
+Herramienta para modernizar código legacy → moderno usando Claude 3.5 Sonnet + RAG.
+
+**Input**: JSP, PHP, jQuery, ASP.NET, React antiguo
+**Output**: React 18+ con TypeScript, Hooks, Zustand, TanStack Query, Tailwind
+
+---
+
+## COMANDOS PRINCIPALES
+
+```bash
+# Analizar proyecto legacy
+osmosis analyze --dir ./proyecto
+
+# Generar plan arquitectónico (React moderno)
+osmosis plan --dir ./proyecto-react
+
+# Migrar legacy a moderno
+osmosis migrate --source ./legacy --from jsp --to react
+
+# Refactorizar React con stack coherente
+osmosis refactor --source ./src --framework react --integral --apply-config
+```
+
+---
+
+## ARCHIVOS IMPORTANTES
+
+| Archivo | Propósito |
+|---------|-----------|
+| `src/cli.ts` | Punto de entrada CLI |
+| `src/mcp/server.ts` | MCP Server v2.0 |
+| `src/core/architecture/` | Sistema integral (scan, manifest, config) |
+| `src/core/llm/LLMService.ts` | Claude 3.5 Sonnet |
+| `src/core/rag/` | Knowledge Graph + Embeddings |
+| `src/core/safeguard/validator.ts` | CodeSafeGuard validation |
+| `.osmosis/architecture-manifest.json` | Manifiesto arquitectónico |
+
+---
+
+## MCP TOOLS (Cursor)
+
+| Tool | Descripción |
+|------|-------------|
+| `plan_architecture` | Genera plan de modernización |
+| `refactor_file_integral` | Refactoriza con manifiesto |
+| `generate_config` | Genera tsconfig, eslint, etc. |
+| `migrate_file` | Migra un archivo legacy |
+| `analyze_project` | Análisis completo |
+| `validate_code` | Valida con CodeSafeGuard |
+
+---
+
+## STACK MODERNO (DEFAULT)
+
+| Categoría | Librería |
+|-----------|----------|
+| State | Zustand |
+| Data Fetching | TanStack Query v5 |
+| Routing | React Router v6 |
+| Styling | Tailwind CSS |
+| Forms | React Hook Form + Zod |
+| Testing | Vitest |
+
+---
+
+## REGLAS CRÍTICAS DEL CODESAFEGUARD
+
+**ERRORES (Bloquean)**:
+- ❌ Class Components → Usar Functional + Hooks
+- ❌ connect(mapStateToProps) → Usar hooks (useSelector/useStore)
+- ❌ withRouter HOC → Usar useNavigate
+- ❌ dangerouslySetInnerHTML sin DOMPurify → XSS risk
+- ❌ eval() → Security risk
+
+**WARNINGS (Reportan)**:
+- ⚠️ Inline functions en JSX → useCallback
+- ⚠️ map sin key
+- ⚠️ img sin alt
+- ⚠️ button con icono sin aria-label
+
+---
+
+## TRANSFORMACIONES PRINCIPALES
+
+```typescript
+// State: Redux connect → Zustand
+// ANTES
+export default connect(mapState)(Component);
+// DESPUÉS
+const data = useAuthStore(state => state.user);
+
+// Fetching: useEffect+axios → TanStack Query
+// ANTES
+useEffect(() => { axios.get(...).then(setData) }, []);
+// DESPUÉS
+const { data } = useQuery({ queryKey: ['x'], queryFn: fetchX });
+
+// Routing: Switch → Routes
+// ANTES
+<Switch><Route path="/" component={Home} /></Switch>
+// DESPUÉS
+<Routes><Route path="/" element={<Home />} /></Routes>
+
+// Routing: withRouter → hooks
+// ANTES
+withRouter(Component);
+// DESPUÉS
+const navigate = useNavigate();
+
+// Styling: inline → Tailwind
+// ANTES
+style={{ padding: 20, marginTop: 8 }}
+// DESPUÉS
+className="p-5 mt-2"
+```
+
+---
+
+## VARIABLES DE ENTORNO
+
+```bash
+# OBLIGATORIA
+export ANTHROPIC_API_KEY="sk-ant-..."
+
+# OPCIONAL (mejora RAG)
+export OPENAI_API_KEY="sk-..."
+```
+
+---
+
+## FLUJO DE MODO INTEGRAL
+
+```
+1. DeepPatternScanner.scan() → Detecta patterns en código
+2. Claude → Propone stack moderno
+3. MigrationRuleSelector → Selecciona reglas
+4. ConfigGenerator → Genera tsconfig, eslint, etc.
+5. ManifestManager.save() → Guarda en .osmosis/
+6. PromptAssembler.assembleIntegral() → Prompt con reglas
+7. LLMService.generate() → Código modernizado
+8. CodeSafeGuard.validate() → Validación
+9. Auto-repair si errores (max 3)
+```
+
+---
+
+## CHECKLIST PARA REFACTORIZACIÓN
+
+- [ ] ¿Existe `.osmosis/architecture-manifest.json`? Si no, ejecutar `plan` primero
+- [ ] ¿El código usa el stack del manifiesto? (Zustand, no Redux)
+- [ ] ¿Functional components? (no class)
+- [ ] ¿TypeScript estricto? (no any)
+- [ ] ¿Hooks para state? (useState, useEffect)
+- [ ] ¿TanStack Query para fetching? (useQuery, useMutation)
+- [ ] ¿React Router v6? (useNavigate, Routes)
+- [ ] ¿Tailwind para estilos? (className, no style={{}})
+- [ ] ¿Props tipadas? (interfaces)
+- [ ] ¿Accesibilidad? (alt, aria-label)
+
+---
+
+## ERRORES COMUNES
+
+### "No architecture manifest found"
+```bash
+osmosis plan --dir ./proyecto
+```
+
+### "ANTHROPIC_API_KEY no configurada"
+```bash
+export ANTHROPIC_API_KEY="sk-ant-..."
+```
+
+### Código usa Redux en vez de Zustand
+→ El manifiesto dice Zustand. Regenerar con reglas correctas.
+
+### "Class Component detected" en validación
+→ CodeSafeGuard rechaza class components. Usar functional.
+
+---
+
+## PARA EL AGENTE: COMPORTAMIENTO ESPERADO
+
+1. **Lee primero**: Siempre revisar código antes de modificar
+2. **Stack coherente**: Si hay manifiesto, usar ESE stack
+3. **No inventar**: No crear imports/componentes que no existan
+4. **Security first**: Asumir todo input legacy es inseguro
+5. **TypeScript estricto**: Interfaces para todo, cero `any`
+6. **Accesibilidad**: alt, aria-label, roles
+7. **Validar siempre**: Pasar por CodeSafeGuard

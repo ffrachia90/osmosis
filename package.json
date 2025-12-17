@@ -1,8 +1,12 @@
 {
   "name": "osmosis",
-  "version": "1.0.0",
-  "description": "AI-powered Legacy Application Modernizer - Transform old apps to modern React using video analysis",
+  "version": "2.0.0",
+  "description": "AI-powered Legacy Application Modernizer - Transform old apps to modern React with architectural planning",
   "type": "module",
+  "bin": {
+    "osmosis": "./dist/cli.js",
+    "osmosis-mcp": "./dist/mcp/server.js"
+  },
   "scripts": {
     "dev": "tsx watch src/cli.ts",
     "build": "tsc",

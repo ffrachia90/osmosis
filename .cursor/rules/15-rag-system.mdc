@@ -1,0 +1,400 @@
+---
+description: RAG: Sistema de Knowledge Graph y Embeddings
+globs: src/core/rag/*
+alwaysApply: true
+---
+# SISTEMA RAG ENTERPRISE - Documentación Completa
+
+## CONCEPTO
+
+RAG (Retrieval-Augmented Generation) permite que el LLM entienda el CONTEXTO COMPLETO del proyecto antes de generar código.
+
+### Sin RAG (Malo)
+```
+LLM ve: "Migrar LoginForm.jsp"
+LLM genera: <LoginButton>, <LoginInput> (componentes nuevos)
+Problema: El proyecto YA tiene <Button>, <TextInput> → DUPLICACIÓN
+```
+
+### Con RAG (Bueno)
+```
+LLM ve: "Migrar LoginForm.jsp" + "Componentes existentes: Button, TextInput"
+LLM genera: Usa <Button>, <TextInput> existentes
+Resultado: Sin duplicación, coherencia con el proyecto
+```
+
+---
+
+## ARQUITECTURA DEL RAG
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ 1. INDEXACIÓN (Una vez por proyecto)                            │
+├─────────────────────────────────────────────────────────────────┤
+│ CodebaseIndexer.index(projectRoot)                              │
+│   │                                                              │
+│   ├─ glob('**/*.{js,jsx,ts,tsx}')                               │
+│   │   └─ Excluye: node_modules, dist, build, tests              │
+│   │                                                              │
+│   ├─ EntityExtractor.extractFromFile(filePath)                  │
+│   │   └─ TypeScript Compiler API → AST parsing                  │
+│   │   └─ Extrae: functions, components, hooks, interfaces       │
+│   │                                                              │
+│   └─ EmbeddingsEngine.generateCodeEmbedding(entity)             │
+│       └─ OpenAI text-embedding-3-small (384 dims)               │
+│       └─ O Gemini embedding-001                                  │
+│       └─ O TF-IDF local (fallback)                              │
+│                                                                  │
+│ Output: KnowledgeGraph con entidades + vectores                 │
+│ Persistido en: .osmosis/knowledge-graph.json                    │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 2. BÚSQUEDA SEMÁNTICA (Por cada migración)                     │
+├─────────────────────────────────────────────────────────────────┤
+│ ContextInjector.enrichPrompt(prompt, migrationContext)          │
+│   │                                                              │
+│   ├─ KnowledgeGraph.search("login form component", topK=5)      │
+│   │   └─ Genera embedding de la query                           │
+│   │   └─ Cosine similarity con todos los vectores               │
+│   │   └─ Retorna top 5 entidades más similares                  │
+│   │                                                              │
+│   └─ Inyecta en prompt:                                         │
+│       ├─ Componentes similares existentes                       │
+│       ├─ Utilidades disponibles                                 │
+│       ├─ Hooks y patterns del proyecto                          │
+│       └─ Restricciones del proyecto                             │
+│                                                                  │
+│ Output: Prompt enriquecido con contexto del proyecto            │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## COMPONENTES DETALLADOS
+
+### EntityExtractor (`src/core/rag/EntityExtractor.ts`)
+
+**Usa TypeScript Compiler API (no regex)**
+
+```typescript
+interface CodeEntity {
+  id: string;                    // Nombre único
+  type: 'function' | 'component' | 'hook' | 'constant' | 'interface';
+  filePath: string;              // Ruta del archivo
+  sourceCode: string;            // Código completo
+  docstring?: string;            // JSDoc/comentarios
+  signature?: string;            // Type signature
+  metadata: {
+    lineStart: number;
+    lineEnd: number;
+    complexity: number;          // Complejidad ciclomática
+    dependencies: string[];      // Imports usados
+  };
+}
+```
+
+**Detección de Tipos**:
+```typescript
+// Component: Función con nombre PascalCase que retorna JSX
+function Button() { return <button>...</button> }  // type: 'component'
+const Card = () => <div>...</div>                   // type: 'component'
+
+// Hook: Función que empieza con "use"
+function useAuth() { ... }                         // type: 'hook'
+const useFetch = () => { ... }                     // type: 'hook'
+
+// Function: Todo lo demás
+function calculateTax() { ... }                    // type: 'function'
+const formatDate = () => { ... }                   // type: 'function'
+
+// Interface
+interface UserProps { ... }                        // type: 'interface'
+
+// Constant: Exportación de objeto/array
+export const COLORS = { ... }                      // type: 'constant'
+```
+
+---
+
+### EmbeddingsEngine (`src/core/rag/EmbeddingsEngine.ts`)
+
+**Proveedores Soportados**:
+
+| Provider | Modelo | Dimensiones | Costo | Precisión |
+|----------|--------|-------------|-------|-----------|
+| OpenAI | text-embedding-3-small | 384 | $0.02/1M tokens | ~95% |
+| Gemini | embedding-001 | 768 | Gratis (quota) | ~90% |
+| Local | TF-IDF | Variable | Gratis | ~75% |
+
+**Configuración**:
+```typescript
+const engine = new EmbeddingsEngine({
+  provider: 'openai',                    // 'openai' | 'gemini' | 'local'
+  apiKey: process.env.OPENAI_API_KEY,
+  model: 'text-embedding-3-small'        // Solo para OpenAI
+});
+```
+
+**Generación de Embedding**:
+```typescript
+const embedding = await engine.generateCodeEmbedding({
+  sourceCode: "function calculateTax(amount, rate) { return amount * rate; }",
+  docstring: "Calcula el impuesto basado en monto y tasa",
+  signature: "(amount: number, rate: number): number"
+});
+
+// embedding = [0.123, -0.456, 0.789, ...] (384 números)
+```
+
+**Similitud Coseno**:
+```typescript
+const similarity = engine.cosineSimilarity(vec1, vec2);
+// 0.95 = Muy similar
+// 0.50 = Algo similar  
+// 0.10 = Poco similar
+```
+
+---
+
+### KnowledgeGraph (`src/core/rag/KnowledgeGraph.ts`)
+
+**Estructura**:
+```typescript
+class KnowledgeGraph {
+  private entities: Map<string, CodeEntity>;
+  private vectors: Map<string, number[]>;
+  private embeddingsEngine: EmbeddingsEngine;
+  
+  // Agregar entidad
+  async addEntity(entity: CodeEntity): Promise<void>;
+  
+  // Búsqueda semántica
+  async search(query: string, topK: number): Promise<CodeEntity[]>;
+  
+  // Buscar componentes similares
+  async findSimilarComponents(name: string, sourceCode?: string): Promise<CodeEntity[]>;
+  
+  // Contexto para migración
+  async getRelevantContext(filePath: string, legacyCode: string): Promise<{
+    components: CodeEntity[];
+    utilities: CodeEntity[];
+    patterns: CodeEntity[];
+  }>;
+  
+  // Persistencia
+  async save(projectRoot: string): Promise<void>;
+  static async load(projectRoot: string, config: EmbeddingConfig): Promise<KnowledgeGraph | null>;
+  
+  // Stats
+  getStats(): {
+    totalEntities: number;
+    totalVectors: number;
+    byType: Record<string, number>;
+    hasEmbeddings: boolean;
+  };
+}
+```
+
+**Persistencia**:
+```json
+// .osmosis/knowledge-graph.json
+{
+  "version": "1.0",
+  "entities": [
+    {
+      "id": "Button",
+      "type": "component",
+      "filePath": "src/components/Button.tsx",
+      "sourceCode": "export const Button = ({ label, onClick }) => ...",
+      "docstring": "Primary button component",
+      "signature": "({ label: string, onClick: () => void }): JSX.Element"
+    }
+  ],
+  "vectors": {
+    "Button": [0.123, -0.456, ...]
+  }
+}
+```
+
+---
+
+### CodebaseIndexer (`src/core/rag/CodebaseIndexer.ts`)
+
+**Flujo de Indexación**:
+```typescript
+const indexer = new CodebaseIndexer(projectRoot, {
+  provider: 'openai',
+  apiKey: process.env.OPENAI_API_KEY
+});
+
+const knowledgeGraph = await indexer.index();
+// 1. Busca archivos: glob('**/*.{js,jsx,ts,tsx}')
+// 2. Extrae entidades de cada archivo
+// 3. Genera embeddings en batches de 10
+// 4. Construye KnowledgeGraph
+// 5. Guarda en .osmosis/
+
+await knowledgeGraph.save(projectRoot);
+```
+
+**Optimizaciones**:
+- ✅ Procesa archivos en paralelo (batches de 10)
+- ✅ Cache de embeddings (no regenera iguales)
+- ✅ Detecta si cache está desactualizado
+- ✅ Ignora archivos grandes (>100KB)
+
+---
+
+### ContextInjector (`src/core/rag/ContextInjector.ts`)
+
+**Enriquece prompts con contexto del proyecto**:
+
+```typescript
+const injector = new ContextInjector(knowledgeGraph);
+
+const enrichedPrompt = await injector.enrichPrompt(basePrompt, {
+  fileName: "LoginForm.jsp",
+  filePath: "/legacy/login/LoginForm.jsp",
+  sourceCode: jspCode,
+  legacyLanguage: "jsp",
+  targetFramework: "react"
+});
+```
+
+**Sección Inyectada en el Prompt**:
+```markdown
+## 🔍 COMPONENTES SIMILARES EXISTENTES
+
+⚠️ **IMPORTANTE**: Los siguientes componentes ya existen en el proyecto.
+**NO crees componentes duplicados**. Reutiliza estos o extiéndelos.
+
+### 1. `Button` (src/components/Button.tsx)
+   **Descripción**: Primary button component
+   **Signature**: `({ label: string, onClick: () => void }): JSX.Element`
+
+   ```typescript
+   export const Button = ({ label, onClick }) => {
+     return <button onClick={onClick}>{label}</button>;
+   };
+   ```
+
+### 2. `TextInput` (src/components/TextInput.tsx)
+   **Descripción**: Controlled text input
+   **Signature**: `({ value: string, onChange: (v: string) => void }): JSX.Element`
+
+## ⚙️ UTILIDADES DISPONIBLES
+
+- **`validateEmail`** (`src/utils/validation.ts`)
+  Validates email format with RFC5322 compliance
+  `(email: string): boolean`
+
+- **`hashPassword`** (`src/utils/crypto.ts`)
+  Hashes password with bcrypt
+  `(password: string): Promise<string>`
+
+## 🪝 HOOKS Y PATTERNS DISPONIBLES
+
+- **`useAuth`** (`src/hooks/useAuth.ts`)
+  Authentication hook with JWT management
+  `(): { login, logout, user, isAuthenticated }`
+
+- **`useFetch`** (`src/hooks/useFetch.ts`)
+  Generic fetch hook with loading/error states
+  `<T>(url: string): { data: T, loading, error }`
+
+## ⚠️ RESTRICCIONES DEL PROYECTO
+
+1. **NO crear componentes desde cero** si existe uno similar
+2. **NO usar colores hardcodeados** - usar theme tokens
+3. **NO usar Class Components** - solo Functional + Hooks
+4. **NO usar any** - definir interfaces TypeScript
+5. **USAR los hooks existentes** antes de crear nuevos
+```
+
+---
+
+## PERFORMANCE
+
+### Indexación Inicial
+
+| Tamaño Proyecto | Archivos | Entidades | Tiempo (OpenAI) | Tiempo (Local) |
+|-----------------|----------|-----------|-----------------|----------------|
+| Pequeño | 50 | ~200 | 30s | 10s |
+| Mediano | 500 | ~2,000 | 3m | 1m |
+| Grande | 2,000 | ~10,000 | 12m | 4m |
+
+### Con Cache (Subsecuentes)
+
+| Operación | Tiempo |
+|-----------|--------|
+| Cargar KnowledgeGraph | <0.5s |
+| Búsqueda semántica | <50ms |
+| Enriquecer prompt | <100ms |
+
+---
+
+## COSTOS
+
+### OpenAI Embeddings
+- Modelo: `text-embedding-3-small`
+- Costo: $0.02 por 1M tokens
+- Proyecto típico (2,000 archivos): ~$0.50
+- **Con cache**: Solo se paga UNA vez
+
+### Gemini (Alternativa)
+- Gratis con quota
+- Necesita `GEMINI_API_KEY`
+
+### Local (Sin costo)
+- TF-IDF
+- Menos preciso (~75% vs ~95%)
+- Funciona sin API keys
+
+---
+
+## CONFIGURACIÓN
+
+### Con OpenAI (Recomendado)
+```bash
+export OPENAI_API_KEY="sk-..."
+osmosis analyze --dir ./project
+```
+
+### Con Gemini
+```bash
+export GEMINI_API_KEY="..."
+osmosis analyze --dir ./project
+```
+
+### Sin API Keys (Local)
+```bash
+# No exportar ninguna key
+osmosis analyze --dir ./project
+# Usará TF-IDF automáticamente
+```
+
+---
+
+## INVALIDAR CACHE
+
+```bash
+rm -rf .osmosis/
+osmosis analyze --dir ./project
+```
+
+---
+
+## FAQ
+
+**¿Se envía mi código a OpenAI?**
+Solo snippets para generar embeddings (vectores numéricos). Los embeddings se guardan localmente.
+
+**¿Puedo usar embeddings locales?**
+Sí, sin API key usa TF-IDF. Menos preciso pero funcional.
+
+**¿Funciona con otros lenguajes?**
+Por ahora solo JS/TS. Python y Java próximamente.
+
+**¿Cómo sé si RAG está funcionando?**
+El log dice "Enriqueciendo prompt con X componentes similares".

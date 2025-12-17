@@ -1,0 +1,480 @@
+---
+description: MCP: Todas las herramientas del MCP Server v2.0
+globs: *
+alwaysApply: true
+---
+# OSMOSIS MCP SERVER v2.0 - Referencia Completa
+
+## CONFIGURACIÓN
+
+### Archivo de Configuración
+Ubicación: `~/.cursor/mcp.json` (global) o `.cursor/mcp.json` (proyecto)
+
+```json
+{
+  "mcpServers": {
+    "osmosis": {
+      "command": "node",
+      "args": ["/absolute/path/to/osmosis/dist/mcp/server.js"],
+      "env": {
+        "ANTHROPIC_API_KEY": "sk-ant-...",
+        "OPENAI_API_KEY": "sk-..."
+      }
+    }
+  }
+}
+```
+
+### Requisitos
+- Construir proyecto: `npm run build`
+- `ANTHROPIC_API_KEY` es OBLIGATORIA
+- `OPENAI_API_KEY` es OPCIONAL (mejora RAG)
+
+---
+
+## HERRAMIENTAS DE ANÁLISIS
+
+### `analyze_project`
+**Descripción**: Análisis completo de proyecto legacy.
+**Input**:
+```json
+{ "projectPath": "/path/to/project" }
+```
+**Output**:
+```json
+{
+  "technology": "jQuery",
+  "era": "2000s",
+  "estimatedAge": 20,
+  "totalFiles": 500,
+  "techDebt": {
+    "score": 78,
+    "refactorHours": 1200,
+    "toxicFiles": 45
+  },
+  "knowledgeGraph": {
+    "entities": 1234,
+    "vectors": 1234,
+    "components": 247
+  },
+  "recommendations": [
+    "Migrar jQuery a React hooks nativos",
+    "Reemplazar jQuery UI con componentes modernos"
+  ]
+}
+```
+
+**Uso en Cursor**:
+```
+"Analiza el proyecto en /Users/me/legacy-app y dime qué tecnología usa"
+```
+
+---
+
+### `detect_technology`
+**Descripción**: Detecta tecnología legacy específica.
+**Input**:
+```json
+{ "projectPath": "/path/to/project" }
+```
+**Output**:
+```json
+{
+  "primary": "jQuery",
+  "confidence": 0.9,
+  "era": "2000s",
+  "estimatedAge": 20,
+  "allTechnologies": [
+    { "name": "jQuery", "confidence": 0.9, "complexity": "medium" },
+    { "name": "AngularJS (v1)", "confidence": 0.6, "complexity": "medium" }
+  ],
+  "indicators": [
+    "jQuery usado en 47 archivos",
+    "jQuery UI widgets en dashboard.js",
+    "jQuery AJAX calls en api.js"
+  ]
+}
+```
+
+**Uso en Cursor**:
+```
+"¿Qué tecnologías legacy usa /Users/me/old-app?"
+```
+
+---
+
+### `calculate_tech_debt`
+**Descripción**: Calcula deuda técnica y horas de refactor.
+**Input**:
+```json
+{ "projectPath": "/path/to/project" }
+```
+**Output**:
+```json
+{
+  "totalScore": 78,
+  "refactorHours": 1200,
+  "filesAnalyzed": 100,
+  "toxicFiles": [
+    { "file": "dashboard.js", "score": 95, "issues": ["God class", "Deep nesting"] },
+    { "file": "utils.js", "score": 87, "issues": ["Magic numbers", "No types"] }
+  ],
+  "recommendations": [
+    "Priorizar archivos tóxicos primero",
+    "Dividir god classes en módulos"
+  ]
+}
+```
+
+**Uso en Cursor**:
+```
+"Calcula la deuda técnica de mi proyecto. ¿Cuántas horas tomaría refactorizarlo?"
+```
+
+---
+
+## HERRAMIENTAS DE ARQUITECTURA (MODO INTEGRAL)
+
+### `plan_architecture` ⭐ PRINCIPAL
+**Descripción**: Genera plan de modernización arquitectónica completo.
+**Input**:
+```json
+{
+  "projectPath": "/path/to/react-project",
+  "force": false
+}
+```
+**Output**:
+```json
+{
+  "isNew": true,
+  "analysisTime": 45000,
+  "summary": {
+    "projectName": "mi-proyecto",
+    "legacyScore": 67,
+    "totalFiles": 234,
+    "totalComponents": 89,
+    "primaryStateLib": "redux-legacy",
+    "primaryFetchLib": "manual",
+    "primaryStyling": "inline-styles"
+  },
+  "proposedStack": {
+    "state": "zustand",
+    "stateReason": "Estado simple, no necesita Redux complejo",
+    "fetching": "tanstack-query",
+    "fetchingReason": "Centraliza caching y estados de loading",
+    "routing": "react-router-v6",
+    "styling": "tailwind",
+    "forms": "react-hook-form",
+    "testing": "vitest"
+  },
+  "migrationRulesCount": 12,
+  "configUpdates": {
+    "newDependencies": 8,
+    "packagesToRemove": 5,
+    "configFilesToGenerate": 6
+  },
+  "confidence": 85
+}
+```
+
+**Uso en Cursor**:
+```
+"Genera un plan de arquitectura para /Users/me/mi-proyecto-react"
+"Analiza mi proyecto y proponme un stack moderno"
+```
+
+---
+
+### `get_architecture_manifest`
+**Descripción**: Lee el manifiesto arquitectónico existente.
+**Input**:
+```json
+{ "projectPath": "/path/to/project" }
+```
+**Output (si existe)**:
+```json
+{
+  "exists": true,
+  "manifest": {
+    "version": "1.0.0",
+    "projectName": "mi-proyecto",
+    "analyzedAt": "2025-12-17T...",
+    "patternAnalysis": { ... },
+    "proposedStack": { ... },
+    "migrationRules": [ ... ],
+    "configUpdates": { ... }
+  }
+}
+```
+**Output (si no existe)**:
+```json
+{
+  "exists": false,
+  "message": "No architecture manifest found. Run plan_architecture first."
+}
+```
+
+**Uso en Cursor**:
+```
+"Muéstrame el manifiesto arquitectónico de mi proyecto"
+```
+
+---
+
+### `generate_config`
+**Descripción**: Genera archivos de configuración modernos.
+**Input**:
+```json
+{
+  "projectPath": "/path/to/project",
+  "apply": false
+}
+```
+**Output (dry run)**:
+```json
+{
+  "applied": false,
+  "dryRun": true,
+  "wouldCreate": ["tsconfig.json", "eslint.config.js", "tailwind.config.ts"],
+  "dependencies": {
+    "zustand": "^5.0.0",
+    "@tanstack/react-query": "^5.60.0",
+    "tailwindcss": "^3.4.0"
+  },
+  "devDependencies": {
+    "vitest": "^2.1.0",
+    "typescript": "^5.6.0"
+  },
+  "packagesToRemove": ["redux", "redux-thunk", "prop-types"],
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "test": "vitest"
+  }
+}
+```
+**Output (apply=true)**:
+```json
+{
+  "applied": true,
+  "created": ["tsconfig.json", "eslint.config.js"],
+  "updated": ["package.json"],
+  "skipped": [".prettierrc"]
+}
+```
+
+**Uso en Cursor**:
+```
+"Muéstrame qué configuración generaría para mi proyecto"
+"Aplica la configuración moderna a mi proyecto"
+```
+
+---
+
+### `get_migration_rules`
+**Descripción**: Lista reglas de migración por categoría.
+**Input**:
+```json
+{
+  "projectPath": "/path/to/project",
+  "category": "state"
+}
+```
+**Categorías válidas**: `state`, `fetching`, `routing`, `styling`, `components`, `typescript`, `security`, `all`
+
+**Output**:
+```json
+{
+  "totalRules": 3,
+  "rules": [
+    {
+      "id": "redux-connect-to-hooks",
+      "name": "Redux connect() a Hooks",
+      "category": "state",
+      "priority": 1,
+      "isCritical": true,
+      "detectPattern": "connect(mapStateToProps",
+      "transformInstruction": "Reemplazar con useSelector + useDispatch...",
+      "example": {
+        "before": "export default connect(mapState)(Component);",
+        "after": "const data = useSelector(state => state.x);"
+      }
+    }
+  ]
+}
+```
+
+**Uso en Cursor**:
+```
+"Muéstrame las reglas de migración de estado"
+"¿Qué reglas de routing aplican a mi proyecto?"
+```
+
+---
+
+## HERRAMIENTAS DE MIGRACIÓN
+
+### `migrate_file`
+**Descripción**: Migra un archivo legacy a moderno.
+**Input**:
+```json
+{
+  "filePath": "/path/to/file.jsp",
+  "sourceFramework": "jsp",
+  "targetFramework": "react"
+}
+```
+**sourceFramework válidos**: `jsp`, `php`, `jquery`, `asp`, `coldfusion`, `perl`, `vb`, `react-legacy`
+**targetFramework válidos**: `react`, `angular`, `vue`
+
+**Output**:
+```json
+{
+  "migratedCode": "import React from 'react';\n\nexport const LoginForm: React.FC = () => {...}",
+  "validation": {
+    "isValid": true,
+    "errors": [],
+    "warnings": ["Inline arrow functions in JSX"]
+  }
+}
+```
+
+**Uso en Cursor**:
+```
+"Migra el archivo legacy/login.jsp a React"
+"Convierte este archivo PHP a React"
+```
+
+---
+
+### `refactor_file_integral` ⭐ PRINCIPAL
+**Descripción**: Refactoriza archivo React usando el manifiesto arquitectónico.
+**Input**:
+```json
+{
+  "filePath": "/path/to/Component.tsx",
+  "projectPath": "/path/to/project"
+}
+```
+**Output**:
+```json
+{
+  "refactoredCode": "...",
+  "appliedStack": {
+    "state": "zustand",
+    "fetching": "tanstack-query",
+    "routing": "react-router-v6",
+    "styling": "tailwind"
+  },
+  "rulesApplied": 12,
+  "validation": {
+    "isValid": true,
+    "errors": [],
+    "warnings": []
+  }
+}
+```
+
+**Uso en Cursor**:
+```
+"Refactoriza src/components/Dashboard.tsx usando el manifiesto"
+"Moderniza este archivo aplicando todas las reglas del proyecto"
+```
+
+---
+
+### `validate_code`
+**Descripción**: Valida código con CodeSafeGuard.
+**Input**:
+```json
+{
+  "code": "class MyComponent extends React.Component {...}",
+  "framework": "react"
+}
+```
+**Output**:
+```json
+{
+  "isValid": false,
+  "errors": [
+    "Class Component detected (use Functional Component + Hooks)"
+  ],
+  "warnings": [
+    "Inline arrow functions in JSX (consider useCallback)"
+  ]
+}
+```
+
+**Uso en Cursor**:
+```
+"Valida este código React: [código]"
+```
+
+---
+
+## FLUJO TÍPICO EN CURSOR
+
+### Modernización Completa de Proyecto React
+
+```
+1. Usuario: "Genera un plan de arquitectura para /Users/me/mi-proyecto"
+   → MCP: plan_architecture
+   → Resultado: Stack propuesto (Zustand, TanStack Query, etc.)
+
+2. Usuario: "Aplica la configuración"
+   → MCP: generate_config (apply=true)
+   → Resultado: tsconfig.json, eslint.config.js, package.json actualizado
+
+3. Usuario: "Ahora ejecuto npm install en mi terminal"
+   → (Usuario ejecuta manualmente)
+
+4. Usuario: "Refactoriza src/components/UserDashboard.tsx"
+   → MCP: refactor_file_integral
+   → Resultado: Código modernizado con Zustand + useQuery + Tailwind
+
+5. Usuario: "Refactoriza src/components/LoginForm.tsx"
+   → MCP: refactor_file_integral
+   → Resultado: Mismo stack, consistencia garantizada
+```
+
+### Migración de Proyecto Legacy
+
+```
+1. Usuario: "Analiza /Users/me/legacy-jsp-app"
+   → MCP: analyze_project
+   → Resultado: JSP detectado, 500 archivos, 1200h de refactor
+
+2. Usuario: "Migra el archivo login.jsp a React"
+   → MCP: migrate_file
+   → Resultado: LoginForm.tsx funcional
+
+3. Usuario: "Valida el código generado"
+   → MCP: validate_code
+   → Resultado: isValid: true
+```
+
+---
+
+## TROUBLESHOOTING
+
+### "No architecture manifest found"
+```
+Ejecutar primero: plan_architecture
+```
+
+### "ANTHROPIC_API_KEY not configured"
+```
+Agregar en mcp.json:
+"env": { "ANTHROPIC_API_KEY": "sk-ant-..." }
+```
+
+### "Module not found"
+```
+Ejecutar: npm run build
+```
+
+### MCP no aparece en Cursor
+1. Verificar ruta en mcp.json
+2. Reiniciar Cursor completamente
+3. Verificar que `dist/mcp/server.js` existe

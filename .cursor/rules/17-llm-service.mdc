@@ -1,0 +1,357 @@
+---
+description: LLM: Integración con Claude 3.5 Sonnet
+globs: src/core/llm/*
+alwaysApply: true
+---
+# LLMSERVICE - Integración con Claude 3.5 Sonnet
+
+## UBICACIÓN
+
+`src/core/llm/LLMService.ts`
+
+---
+
+## CONFIGURACIÓN
+
+### Constructor
+```typescript
+const llm = new LLMService({
+  apiKey: process.env.ANTHROPIC_API_KEY,  // OBLIGATORIA
+  model: 'claude-3-5-sonnet-20241022',    // Default
+  maxTokens: 8000,                         // Default
+  temperature: 0.7,                        // Default
+  baseURL: 'https://api.anthropic.com'    // Opcional: para proxy
+});
+```
+
+### Variables de Entorno
+```bash
+# OBLIGATORIA - Sin esto Osmosis no funciona
+export ANTHROPIC_API_KEY="sk-ant-api03-..."
+
+# OPCIONAL - Para empresas con proxy corporativo
+export ANTHROPIC_BASE_URL="https://llm-proxy.company.com"
+```
+
+---
+
+## MÉTODOS PRINCIPALES
+
+### 1. `generate(prompt)` - Sin Streaming
+
+```typescript
+const code = await llm.generate(prompt);
+```
+
+- Más rápido para batch processing
+- Sin feedback visual
+- Retorna string completo
+
+---
+
+### 2. `generateWithStreaming(prompt, callbacks)` - Con Streaming
+
+```typescript
+const code = await llm.generateWithStreaming(prompt, {
+  onStart: () => {
+    console.log('🤖 Generando...');
+  },
+  onToken: (token: string) => {
+    process.stdout.write(token); // Streaming en tiempo real
+  },
+  onComplete: (fullText: string) => {
+    console.log('\n✅ Generación completa');
+  },
+  onError: (error: Error) => {
+    console.error('❌ Error:', error.message);
+  }
+});
+```
+
+**Output en Terminal**:
+```
+🤖 Generando...
+import React from 'react';
+
+export const LoginForm: React.FC = () => {
+  const [email, setEmail] = useState('');
+  ...
+✅ Generación completa
+```
+
+---
+
+### 3. `repair(code, errors, framework, attempt)` - Auto-Reparación
+
+```typescript
+const repairedCode = await llm.repair(
+  originalCode,
+  [
+    'Class Component detected',
+    'dangerouslySetInnerHTML without sanitization',
+    'Missing alt attribute'
+  ],
+  'react',
+  attempt: 1  // 1, 2, o 3
+);
+```
+
+**Prompt Generado Automáticamente**:
+```markdown
+# 🔧 CODE REPAIR - Attempt 1/3
+
+## ❌ Validation Errors Detected
+1. Class Component detected
+2. dangerouslySetInnerHTML without sanitization
+3. Missing alt attribute
+
+## 🐛 Problematic Code
+```tsx
+class LoginForm extends React.Component { ... }
+```
+
+## ✅ Your Task
+1. Fix ALL errors listed above
+2. Maintain the original functionality
+3. Keep the same component structure
+4. Use modern best practices
+5. Return ONLY the fixed code
+
+## 🎯 Common Fixes
+- Class Components → Functional Components + Hooks
+- dangerouslySetInnerHTML → Use DOMPurify
+- Missing alt → Add descriptive alt text
+```
+
+---
+
+### 4. `healthCheck()` - Verificar Conexión
+
+```typescript
+const isHealthy = await llm.healthCheck();
+
+if (!isHealthy) {
+  console.error('❌ No se pudo conectar con Claude');
+  process.exit(1);
+}
+```
+
+---
+
+## FLUJO DE MIGRACIÓN CON AUTO-REPARACIÓN
+
+```
+┌─────────────────────────────────────────────┐
+│ 1. Generar Código (Primera Vez)            │
+├─────────────────────────────────────────────┤
+│ PromptAssembler.assemble()                  │
+│   ↓                                          │
+│ ContextInjector.enrichPrompt() (RAG)        │
+│   ↓                                          │
+│ LLMService.generateWithStreaming()          │
+│   ↓                                          │
+│ Código Generado                              │
+└─────────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────────┐
+│ 2. Validación con CodeSafeGuard             │
+├─────────────────────────────────────────────┤
+│ CodeSafeGuard.validate(code)                │
+│   ↓                                          │
+│ ✅ Valid?  → Guardar y continuar            │
+│ ❌ Invalid? → Ir a Auto-Reparación          │
+└─────────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────────┐
+│ 3. Auto-Reparación (Max 3 Intentos)        │
+├─────────────────────────────────────────────┤
+│ Loop while attempts < 3:                    │
+│   LLMService.repair(code, errors, framework)│
+│   CodeSafeGuard.validate(repairedCode)      │
+│   if valid → break                          │
+│                                              │
+│ Si falla 3 veces → Fallback (fixes known)   │
+└─────────────────────────────────────────────┘
+```
+
+---
+
+## CONFIGURACIÓN AVANZADA
+
+### Temperature
+
+Controla la creatividad del LLM:
+
+| Valor | Uso | Comportamiento |
+|-------|-----|----------------|
+| 0.3 | Reparaciones | Determinista, evita nuevos errores |
+| 0.7 | Default | Balanceado |
+| 1.0 | Nuevas features | Más creativo |
+
+```typescript
+// Para reparaciones: más determinista
+const llmRepair = new LLMService({ temperature: 0.3 });
+
+// Para generación inicial: balanceado
+const llmGenerate = new LLMService({ temperature: 0.7 });
+```
+
+### Max Tokens
+
+Controla el tamaño máximo de respuesta:
+
+| Valor | Uso | Costo Relativo |
+|-------|-----|----------------|
+| 4000 | Archivos pequeños | Bajo |
+| 8000 | Default | Medio |
+| 16000 | Archivos grandes | Alto |
+
+```typescript
+// Archivos grandes
+const llm = new LLMService({ maxTokens: 16000 });
+```
+
+---
+
+## COSTOS
+
+### Claude 3.5 Sonnet (2025)
+
+| Métrica | Costo |
+|---------|-------|
+| Input (Prompt) | $3.00 / 1M tokens |
+| Output (Código) | $15.00 / 1M tokens |
+
+### Estimación por Archivo
+
+| Tamaño | Tokens | Costo |
+|--------|--------|-------|
+| Pequeño (<100 líneas) | 500 + 1,000 | ~$0.02 |
+| Mediano (100-300 líneas) | 1,500 + 3,000 | ~$0.05 |
+| Grande (>300 líneas) | 3,000 + 6,000 | ~$0.10 |
+
+### Proyecto Típico (500 archivos)
+
+| Escenario | Costo Total |
+|-----------|-------------|
+| Sin auto-repair | ~$25 USD |
+| Con auto-repair (20%) | ~$30 USD |
+| RAG activo | -15% (reuso) |
+
+---
+
+## PROXY EMPRESARIAL
+
+Para empresas que requieren proxy intermedio:
+
+```bash
+export ANTHROPIC_API_KEY="tu-key-empresarial"
+export ANTHROPIC_BASE_URL="https://llm-proxy.company.com"
+```
+
+El proxy puede:
+- ✅ Auditar todas las requests
+- ✅ Sanitizar prompts (eliminar datos sensibles)
+- ✅ Aplicar rate limiting
+- ✅ Cachear respuestas (ahorro de costos)
+
+---
+
+## AIR-GAPPED DEPLOYMENT
+
+Si NO se permiten llamadas externas:
+
+**Opción A: Self-Hosted LLM (Próximamente)**
+```bash
+export LLM_PROVIDER="local"
+export LLM_MODEL_PATH="/models/codellama-13b"
+```
+
+**Opción B: Claude Enterprise On-Premise**
+```bash
+export ANTHROPIC_BASE_URL="https://claude.internal.company.com"
+```
+
+---
+
+## MANEJO DE ERRORES
+
+### "ANTHROPIC_API_KEY no configurada"
+```bash
+export ANTHROPIC_API_KEY="sk-ant-api03-..."
+```
+
+### "Rate limit exceeded (429)"
+- Esperar 60 segundos y reintentar
+- Reducir concurrencia
+- Upgradar plan de Anthropic
+
+### "Request timeout"
+- Verificar conexión a internet
+- Verificar proxy empresarial
+- Reducir maxTokens
+
+### "LLM service health check failed"
+```typescript
+const isHealthy = await llm.healthCheck();
+if (!isHealthy) {
+  // Verificar API key
+  // Verificar ANTHROPIC_BASE_URL si usa proxy
+  // Verificar conexión
+}
+```
+
+---
+
+## EJEMPLO DE USO COMPLETO
+
+```typescript
+import { LLMService } from './core/llm/LLMService';
+import { CodeSafeGuard } from './core/safeguard/validator';
+
+async function migrateFile(legacyCode: string) {
+  const llm = new LLMService({
+    apiKey: process.env.ANTHROPIC_API_KEY!,
+    maxTokens: 8000,
+    temperature: 0.7
+  });
+  
+  // Health check
+  if (!await llm.healthCheck()) {
+    throw new Error('No se pudo conectar con Claude');
+  }
+  
+  // Generar código
+  const prompt = buildPrompt(legacyCode);
+  let generatedCode = await llm.generateWithStreaming(prompt, {
+    onStart: () => console.log('🤖 Generando...'),
+    onToken: (t) => process.stdout.write(t),
+    onComplete: () => console.log('\n✅ Listo')
+  });
+  
+  // Validar
+  let result = CodeSafeGuard.validate(generatedCode, 'react');
+  let attempts = 0;
+  
+  // Auto-repair si es necesario
+  while (!result.isValid && attempts < 3) {
+    attempts++;
+    console.log(`🔧 Reparando (intento ${attempts}/3)...`);
+    
+    generatedCode = await llm.repair(
+      generatedCode, 
+      result.errors, 
+      'react', 
+      attempts
+    );
+    
+    result = CodeSafeGuard.validate(generatedCode, 'react');
+  }
+  
+  if (!result.isValid) {
+    throw new Error(`No se pudo reparar después de 3 intentos: ${result.errors.join(', ')}`);
+  }
+  
+  return generatedCode;
+}
+```

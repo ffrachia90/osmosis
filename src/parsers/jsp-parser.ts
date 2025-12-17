@@ -84,7 +84,7 @@ export class JSPParser {
    * Parsea proyecto JSP completo
    */
   async parseProject(): Promise<JSPProject> {
-    console.log('📖 Parseando proyecto JSP...')
+    console.error('📖 Parseando proyecto JSP...')
 
     // 1. Encontrar todos los archivos JSP
     const jspFiles = await glob('**/*.jsp', {
@@ -93,7 +93,7 @@ export class JSPParser {
       absolute: true
     })
 
-    console.log(`   Encontrados ${jspFiles.length} archivos JSP`)
+    console.error(`   Encontrados ${jspFiles.length} archivos JSP`)
 
     // 2. Parsear cada archivo
     const parsedFiles: ParsedJSP[] = []
@@ -115,10 +115,10 @@ export class JSPParser {
     // 5. Extraer dependencias
     const dependencies = await this.extractDependencies()
 
-    console.log('✅ Proyecto parseado completamente')
-    console.log(`   - ${parsedFiles.length} archivos`)
-    console.log(`   - ${routes.length} rutas`)
-    console.log(`   - ${sharedComponents.length} componentes compartidos`)
+    console.error('✅ Proyecto parseado completamente')
+    console.error(`   - ${parsedFiles.length} archivos`)
+    console.error(`   - ${routes.length} rutas`)
+    console.error(`   - ${sharedComponents.length} componentes compartidos`)
 
     return {
       files: parsedFiles,

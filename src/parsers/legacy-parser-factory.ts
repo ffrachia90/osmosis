@@ -106,10 +106,10 @@ export class LegacyParserFactory {
    * Detecta automáticamente la tecnología y parsea el codebase
    */
   async parse(projectPath: string): Promise<LegacyCodebase> {
-    console.log('🔍 Detectando tecnología legacy...')
+    console.error('🔍 Detectando tecnología legacy...')
 
     const technology = await this.detectTechnology(projectPath)
-    console.log(`✅ Detectado: ${technology}`)
+    console.error(`✅ Detectado: ${technology}`)
 
     const parser = this.getParser(technology)
     return await parser.parse(projectPath)

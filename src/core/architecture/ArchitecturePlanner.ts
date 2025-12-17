@@ -87,7 +87,7 @@ export class ArchitecturePlanner {
     
     // 1. Verificar si existe manifiesto previo
     if (!options.force && ManifestManager.exists(projectRoot)) {
-      console.log('📋 Cargando manifiesto existente...');
+      console.error('📋 Cargando manifiesto existente...');
       const existing = await ManifestManager.load(projectRoot);
       if (existing) {
         return {
@@ -98,15 +98,15 @@ export class ArchitecturePlanner {
       }
     }
     
-    console.log('🏗️  Iniciando planificación arquitectónica integral...\n');
+    console.error('🏗️  Iniciando planificación arquitectónica integral...\n');
     
     // 2. Escaneo profundo de patrones
-    console.log('📊 Fase 1: Escaneo profundo del código fuente...');
+    console.error('📊 Fase 1: Escaneo profundo del código fuente...');
     const patternAnalysis = await this.scanner.scan(projectRoot);
     this.printPatternSummary(patternAnalysis);
     
     // 3. Generar propuesta de stack con LLM
-    console.log('\n🤖 Fase 2: Consultando Arquitecto AI para propuesta de stack...');
+    console.error('\n🤖 Fase 2: Consultando Arquitecto AI para propuesta de stack...');
     const proposedStack = await this.generateStackProposal(
       patternAnalysis,
       options.stackPreferences
@@ -114,20 +114,20 @@ export class ArchitecturePlanner {
     this.printProposedStack(proposedStack);
     
     // 4. Seleccionar reglas de migración aplicables
-    console.log('\n📝 Fase 3: Seleccionando reglas de migración...');
+    console.error('\n📝 Fase 3: Seleccionando reglas de migración...');
     const migrationRules = MigrationRuleSelector.selectRules(patternAnalysis, proposedStack);
-    console.log(`   ${migrationRules.length} reglas seleccionadas`);
+    console.error(`   ${migrationRules.length} reglas seleccionadas`);
     
     // 5. Generar custom rules con LLM si hay patrones no cubiertos
     const customRules = await this.generateCustomRules(patternAnalysis, proposedStack);
     const allRules = [...migrationRules, ...customRules];
     
     // 6. Generar configuración
-    console.log('\n⚙️  Fase 4: Generando configuración moderna...');
+    console.error('\n⚙️  Fase 4: Generando configuración moderna...');
     const configUpdates = ConfigGenerator.generate(patternAnalysis, proposedStack, projectRoot);
-    console.log(`   ${configUpdates.configFiles.length} archivos de config`);
-    console.log(`   ${Object.keys(configUpdates.dependencies).length} dependencias nuevas`);
-    console.log(`   ${configUpdates.removePackages.length} paquetes a eliminar`);
+    console.error(`   ${configUpdates.configFiles.length} archivos de config`);
+    console.error(`   ${Object.keys(configUpdates.dependencies).length} dependencias nuevas`);
+    console.error(`   ${configUpdates.removePackages.length} paquetes a eliminar`);
     
     // 7. Construir manifiesto
     const projectName = this.getProjectName(projectRoot);
@@ -161,7 +161,7 @@ export class ArchitecturePlanner {
    * Método legacy para compatibilidad
    */
   async plan(projectRoot: string): Promise<ArchitectureState> {
-    console.log('🏗️  Analizando arquitectura actual...');
+    console.error('🏗️  Analizando arquitectura actual...');
     
     // 1. Leer dependencies del package.json
     const packageJson = this.readPackageJson(projectRoot);
@@ -174,7 +174,7 @@ export class ArchitecturePlanner {
     const currentStack = this.detectStack(dependencies);
     
     // 3. Consultar al LLM para definir la mejor estrategia de modernización
-    console.log('🤖 Consultando al Arquitecto AI para definir el Stack Moderno...');
+    console.error('🤖 Consultando al Arquitecto AI para definir el Stack Moderno...');
     const plan = await this.generateMigrationPlan(currentStack);
     
     return {
@@ -232,10 +232,13 @@ Considera:
 
 ## Tu Salida (JSON Only)
 
+IMPORTANTE: Para state management, SIEMPRE usa "redux-toolkit". No uses Zustand, Jotai ni otras alternativas.
+RTK es el estándar empresarial y ofrece: createSlice, createAsyncThunk, RTK Query, DevTools, y compatibilidad con Redux existente.
+
 Responde SOLO con un JSON válido con este formato exacto:
 {
   "stateManagement": {
-    "library": "zustand" | "redux-toolkit" | "jotai" | "none",
+    "library": "redux-toolkit",
     "reasoning": "Explicación breve de por qué elegiste esta librería"
   },
   "dataFetching": {
@@ -284,8 +287,8 @@ Responde SOLO con un JSON válido con este formato exacto:
   private getDefaultStack(analysis: DeepPatternAnalysis): ProposedStack {
     return {
       stateManagement: {
-        library: analysis.summary.primaryStateLib.includes('redux') ? 'redux-toolkit' : 'zustand',
-        reasoning: 'Default basado en análisis'
+        library: 'redux-toolkit',
+        reasoning: 'Redux Toolkit es el estándar empresarial para state management'
       },
       dataFetching: {
         library: 'tanstack-query',
@@ -384,7 +387,7 @@ Responde con un array JSON de reglas con este formato:
       const jsonStr = response.replace(/```json/g, '').replace(/```/g, '').trim();
       return JSON.parse(jsonStr);
     } catch (e) {
-      console.warn('No se pudieron generar reglas personalizadas');
+      console.error('No se pudieron generar reglas personalizadas');
       return [];
     }
   }
@@ -398,7 +401,7 @@ Responde con un array JSON de reglas con este formato:
       const content = fs.readFileSync(path.join(root, 'package.json'), 'utf-8');
       return JSON.parse(content);
     } catch (e) {
-      console.warn('⚠️ No se encontró package.json. Se inferirá stack por código.');
+      console.error('⚠️ No se encontró package.json. Se inferirá stack por código.');
       return { dependencies: {}, devDependencies: {} };
     }
   }
@@ -495,38 +498,38 @@ Responde SOLO con un JSON válido con este formato:
   }
   
   private printPatternSummary(analysis: DeepPatternAnalysis): void {
-    console.log('\n   📈 RESUMEN DE PATRONES DETECTADOS:');
-    console.log('   ─'.repeat(30));
-    console.log(`   📁 Total archivos: ${analysis.summary.totalFiles}`);
-    console.log(`   🧩 Total componentes: ${analysis.summary.totalComponents}`);
-    console.log(`   📊 Legacy Score: ${analysis.summary.legacyScore}/100`);
-    console.log(`   🗃️  State Principal: ${analysis.summary.primaryStateLib}`);
-    console.log(`   🔄 Fetching Principal: ${analysis.summary.primaryFetchLib}`);
-    console.log(`   🎨 Styling Principal: ${analysis.summary.primaryStyling}`);
+    console.error('\n   📈 RESUMEN DE PATRONES DETECTADOS:');
+    console.error('   ─'.repeat(30));
+    console.error(`   📁 Total archivos: ${analysis.summary.totalFiles}`);
+    console.error(`   🧩 Total componentes: ${analysis.summary.totalComponents}`);
+    console.error(`   📊 Legacy Score: ${analysis.summary.legacyScore}/100`);
+    console.error(`   🗃️  State Principal: ${analysis.summary.primaryStateLib}`);
+    console.error(`   🔄 Fetching Principal: ${analysis.summary.primaryFetchLib}`);
+    console.error(`   🎨 Styling Principal: ${analysis.summary.primaryStyling}`);
     
     if (analysis.components.classComponents > 0) {
-      console.log(`   ⚠️  Class Components: ${analysis.components.classComponents}`);
+      console.error(`   ⚠️  Class Components: ${analysis.components.classComponents}`);
     }
     if (analysis.stateManagement.redux.connect > 0) {
-      console.log(`   ⚠️  Redux connect(): ${analysis.stateManagement.redux.connect}`);
+      console.error(`   ⚠️  Redux connect(): ${analysis.stateManagement.redux.connect}`);
     }
     if (analysis.routing.legacy.switch > 0) {
-      console.log(`   ⚠️  React Router v5 <Switch>: ${analysis.routing.legacy.switch}`);
+      console.error(`   ⚠️  React Router v5 <Switch>: ${analysis.routing.legacy.switch}`);
     }
   }
   
   private printProposedStack(stack: ProposedStack): void {
-    console.log('\n   🚀 STACK MODERNO PROPUESTO:');
-    console.log('   ─'.repeat(30));
-    console.log(`   🗃️  State: ${stack.stateManagement.library}`);
-    console.log(`      └─ ${stack.stateManagement.reasoning}`);
-    console.log(`   🔄 Fetching: ${stack.dataFetching.library}`);
-    console.log(`      └─ ${stack.dataFetching.reasoning}`);
-    console.log(`   🧭 Routing: ${stack.routing.library}`);
-    console.log(`      └─ ${stack.routing.reasoning}`);
-    console.log(`   🎨 Styling: ${stack.styling.library}`);
-    console.log(`      └─ ${stack.styling.reasoning}`);
-    console.log(`   📝 Forms: ${stack.forms.library}`);
-    console.log(`   🧪 Testing: ${stack.testing.library}`);
+    console.error('\n   🚀 STACK MODERNO PROPUESTO:');
+    console.error('   ─'.repeat(30));
+    console.error(`   🗃️  State: ${stack.stateManagement.library}`);
+    console.error(`      └─ ${stack.stateManagement.reasoning}`);
+    console.error(`   🔄 Fetching: ${stack.dataFetching.library}`);
+    console.error(`      └─ ${stack.dataFetching.reasoning}`);
+    console.error(`   🧭 Routing: ${stack.routing.library}`);
+    console.error(`      └─ ${stack.routing.reasoning}`);
+    console.error(`   🎨 Styling: ${stack.styling.library}`);
+    console.error(`      └─ ${stack.styling.reasoning}`);
+    console.error(`   📝 Forms: ${stack.forms.library}`);
+    console.error(`   🧪 Testing: ${stack.testing.library}`);
   }
 }

@@ -158,7 +158,7 @@ export class KnowledgeGraph {
     const embeddingsCachePath = path.join(cacheDir, 'embeddings-cache.json');
     this.embeddingsEngine.saveCache(embeddingsCachePath);
     
-    console.log(`✅ Knowledge Graph guardado en ${graphPath}`);
+    console.error(`✅ Knowledge Graph guardado en ${graphPath}`);
   }
   
   /**
@@ -188,11 +188,11 @@ export class KnowledgeGraph {
         graph.embeddingsEngine.loadCache(embeddingsCachePath);
       }
       
-      console.log(`✅ Knowledge Graph cargado desde cache (${graph.entities.size} entidades)`);
+      console.error(`✅ Knowledge Graph cargado desde cache (${graph.entities.size} entidades)`);
       return graph;
       
     } catch (error) {
-      console.warn(`⚠️  Error loading cache: ${error}`);
+      console.error(`⚠️  Error loading cache: ${error}`);
       return null;
     }
   }

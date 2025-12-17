@@ -60,28 +60,28 @@ export class VideoAnalyzer {
     videoPath: string,
     options: ExtractOptions = {}
   ): Promise<VideoAnalysisResult> {
-    console.log(`🎬 Analizando video: ${videoPath}`)
+    console.error(`🎬 Analizando video: ${videoPath}`)
 
     // 1. Crear directorio de output
     const outputDir = options.outputDir || path.join(this.tmpDir, `analysis-${Date.now()}`)
     await fs.mkdir(outputDir, { recursive: true })
 
     // 2. Extraer metadata
-    console.log('📊 Extrayendo metadata...')
+    console.error('📊 Extrayendo metadata...')
     const metadata = await this.extractMetadata(videoPath)
 
     // 3. Extraer frames
-    console.log('🎞️  Extrayendo frames...')
+    console.error('🎞️  Extrayendo frames...')
     const frames = await this.extractFrames(videoPath, outputDir, {
       ...options,
       metadata
     })
 
     // 4. Detectar key frames (frames con cambios significativos)
-    console.log('🔍 Detectando key frames...')
+    console.error('🔍 Detectando key frames...')
     const keyFrames = await this.detectKeyFrames(frames)
 
-    console.log(`✅ Análisis completo: ${frames.length} frames, ${keyFrames.length} key frames`)
+    console.error(`✅ Análisis completo: ${frames.length} frames, ${keyFrames.length} key frames`)
 
     return {
       metadata,
@@ -289,7 +289,7 @@ export class VideoAnalyzer {
   async cleanup(analysisResult: VideoAnalysisResult): Promise<void> {
     try {
       await fs.rm(analysisResult.outputDir, { recursive: true, force: true })
-      console.log('🗑️  Archivos temporales limpiados')
+      console.error('🗑️  Archivos temporales limpiados')
     } catch (error) {
       console.warn('⚠️  Error limpiando archivos temporales:', error)
     }

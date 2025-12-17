@@ -45,7 +45,7 @@ export class MicroFrontendAnalyzer {
    * Analiza la estructura del proyecto React y propone arquitectura de MFEs
    */
   async analyze(projectPath: string): Promise<MicroFrontendArchitecture> {
-    console.log('🔍 Analizando estructura del proyecto para Micro Frontends...');
+    console.error('🔍 Analizando estructura del proyecto para Micro Frontends...');
 
     // 1. Analizar rutas
     const routes = await this.analyzeRoutes(projectPath);

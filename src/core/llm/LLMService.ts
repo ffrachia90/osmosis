@@ -28,7 +28,7 @@ export class LLMService {
     // Configuración por defecto con soporte para variables de entorno
     this.config = {
       apiKey: config.apiKey || process.env.ANTHROPIC_API_KEY || '',
-      model: config.model || 'claude-3-5-sonnet-20241022',
+      model: config.model || process.env.LLM_MODEL || 'claude-3-5-sonnet-20241022',
       maxTokens: config.maxTokens || 8000,
       temperature: config.temperature || 0.7,
       baseURL: config.baseURL || process.env.ANTHROPIC_BASE_URL || 'https://api.anthropic.com'

@@ -630,6 +630,57 @@ async function validateCode(code: string, framework: string) {
   };
 }
 
+/**
+ * Extracts code from LLM response that may include markdown code blocks and explanations
+ */
+function extractCodeFromResponse(response: string): string {
+  // Most reliable approach: split on ``` and find the code content
+  const parts = response.split('```');
+  
+  // Format is: [text before, "language\ncode", text after, ...]
+  // We want the parts at odd indices (1, 3, 5, ...) that contain the actual code
+  const codeBlocks: string[] = [];
+  
+  for (let i = 1; i < parts.length; i += 2) {
+    let content = parts[i];
+    
+    // Remove language specifier if present (first line like "typescript" or "tsx")
+    const firstNewline = content.indexOf('\n');
+    if (firstNewline !== -1) {
+      const firstLine = content.substring(0, firstNewline).trim().toLowerCase();
+      if (['typescript', 'tsx', 'jsx', 'javascript', 'ts', 'js', ''].includes(firstLine)) {
+        content = content.substring(firstNewline + 1);
+      }
+    }
+    
+    content = content.trim();
+    if (content.length > 0) {
+      codeBlocks.push(content);
+    }
+  }
+  
+  // Return the largest code block (usually the main code)
+  if (codeBlocks.length > 0) {
+    return codeBlocks.reduce((a, b) => a.length > b.length ? a : b);
+  }
+  
+  // If no code blocks found, check if response starts with code directly
+  const trimmed = response.trim();
+  if (trimmed.startsWith('import ') || 
+      trimmed.startsWith('export ') || 
+      trimmed.startsWith('const ') ||
+      trimmed.startsWith('//') ||
+      trimmed.startsWith('/**') ||
+      trimmed.startsWith('type ') ||
+      trimmed.startsWith('interface ') ||
+      trimmed.startsWith('enum ')) {
+    return trimmed;
+  }
+  
+  // Last resort: return as-is
+  return response;
+}
+
 async function migrateFile(filePath: string, sourceFramework: string, targetFramework: string) {
   if (!fs.existsSync(filePath)) {
     throw new Error(`File not found: ${filePath}`);
@@ -673,7 +724,8 @@ async function migrateFile(filePath: string, sourceFramework: string, targetFram
   });
   
   // Generate code
-  const migratedCode = await llm.generate(prompt);
+  const rawResponse = await llm.generate(prompt);
+  const migratedCode = extractCodeFromResponse(rawResponse);
   
   // Validate
   const validation = CodeSafeGuard.validate(migratedCode, targetFramework as 'react' | 'angular' | 'vue');
@@ -745,7 +797,8 @@ async function refactorFileIntegral(filePath: string, projectPath: string) {
   });
   
   // Generate code
-  const refactoredCode = await llm.generate(prompt);
+  const rawRefactorResponse = await llm.generate(prompt);
+  const refactoredCode = extractCodeFromResponse(rawRefactorResponse);
   
   // Validate
   const validation = CodeSafeGuard.validate(refactoredCode, 'react');

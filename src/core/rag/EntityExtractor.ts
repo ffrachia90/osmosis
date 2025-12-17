@@ -64,7 +64,7 @@ export class EntityExtractor {
       visit(sourceFile);
       
     } catch (error) {
-      console.warn(`⚠️  Error extracting from ${filePath}: ${error}`);
+      console.error(`⚠️  Error extracting from ${filePath}: ${error}`);
     }
     
     return entities;

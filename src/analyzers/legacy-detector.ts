@@ -60,7 +60,7 @@ export class LegacyDetector {
    * Analiza el contenido de archivos para detectar patterns específicos
    */
   async detectFromCodebase(projectDir: string): Promise<LegacyDetectionResult> {
-    console.log('🔍 Analizando codebase para detectar tecnologías...');
+    console.error('🔍 Analizando codebase para detectar tecnologías...');
     
     const fs = await import('fs');
     const path = await import('path');
@@ -162,7 +162,7 @@ export class LegacyDetector {
     // Generar recomendaciones
     const recommendations = this.generateRecommendations(technologies);
     
-    console.log(`✅ Detectado: ${primary?.name || 'Moderno'} (${technologies.length} tecnologías legacy)`);
+    console.error(`✅ Detectado: ${primary?.name || 'Moderno'} (${technologies.length} tecnologías legacy)`);
     
     return {
       technologies,

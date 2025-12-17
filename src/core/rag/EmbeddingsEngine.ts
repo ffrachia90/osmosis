@@ -4,6 +4,7 @@
  */
 
 import { createHash } from 'crypto';
+import fs from 'fs';
 
 export type EmbeddingProvider = 'openai' | 'gemini' | 'local';
 
@@ -86,7 +87,7 @@ export class EmbeddingsEngine {
       return data.data[0].embedding;
       
     } catch (error) {
-      console.warn(`⚠️  OpenAI embedding failed: ${error}`);
+      console.error(`⚠️  OpenAI embedding failed: ${error}`);
       // Fallback a local
       return this.generateLocalEmbedding(text);
     }
@@ -116,7 +117,7 @@ export class EmbeddingsEngine {
       return data.embedding.values;
       
     } catch (error) {
-      console.warn(`⚠️  Gemini embedding failed: ${error}`);
+      console.error(`⚠️  Gemini embedding failed: ${error}`);
       // Fallback a local
       return this.generateLocalEmbedding(text);
     }
@@ -241,7 +242,6 @@ export class EmbeddingsEngine {
    * Guarda embeddings cache en disco
    */
   saveCache(filePath: string): void {
-    const fs = require('fs');
     const cacheData = Array.from(this.cache.entries());
     fs.writeFileSync(filePath, JSON.stringify(cacheData));
   }
@@ -250,14 +250,13 @@ export class EmbeddingsEngine {
    * Carga embeddings cache desde disco
    */
   loadCache(filePath: string): void {
-    const fs = require('fs');
     try {
       const data = fs.readFileSync(filePath, 'utf-8');
       const cacheData = JSON.parse(data);
       this.cache = new Map(cacheData);
-      console.log(`✅ Loaded ${this.cache.size} cached embeddings`);
+      console.error(`✅ Loaded ${this.cache.size} cached embeddings`);
     } catch (error) {
-      console.log('No cache found, starting fresh');
+      console.error('No cache found, starting fresh');
     }
   }
 }

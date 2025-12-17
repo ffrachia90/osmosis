@@ -182,18 +182,18 @@ export class AuditLogger {
     const emoji = this.getEmoji(entry.type);
     const timestamp = new Date(entry.timestamp).toLocaleTimeString();
     
-    console.log(`${emoji} [${timestamp}] ${entry.type}`);
+    console.error(`${emoji} [${timestamp}] ${entry.type}`);
     
     if (entry.files && entry.files.length > 0) {
-      console.log(`   Files: ${entry.files.map(f => path.basename(f)).join(', ')}`);
+      console.error(`   Files: ${entry.files.map(f => path.basename(f)).join(', ')}`);
     }
     
     if (entry.backupId) {
-      console.log(`   Backup: ${entry.backupId}`);
+      console.error(`   Backup: ${entry.backupId}`);
     }
     
     if (entry.error) {
-      console.log(`   Error: ${entry.error}`);
+      console.error(`   Error: ${entry.error}`);
     }
   }
   

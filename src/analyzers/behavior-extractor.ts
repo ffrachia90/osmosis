@@ -54,31 +54,31 @@ export class BehaviorExtractor {
    * Analiza comportamiento desde frames del video
    */
   async extract(videoAnalysis: VideoAnalysisResult): Promise<BehaviorAnalysisResult> {
-    console.log('🧠 Extrayendo comportamiento del video...')
+    console.error('🧠 Extrayendo comportamiento del video...')
 
     // 1. Detectar cambios de estado entre key frames
-    console.log('🔍 Detectando cambios de estado...')
+    console.error('🔍 Detectando cambios de estado...')
     const stateChanges = await this.detectStateChanges(videoAnalysis.keyFrames)
 
     // 2. Inferir acciones de usuario desde cambios
-    console.log('🖱️  Infiriendo acciones de usuario...')
+    console.error('🖱️  Infiriendo acciones de usuario...')
     const userActions = this.inferUserActions(stateChanges)
 
     // 3. Detectar elementos UI comunes
-    console.log('🎨 Detectando elementos UI...')
+    console.error('🎨 Detectando elementos UI...')
     const uiElements = await this.detectUIElements(videoAnalysis.keyFrames)
 
     // 4. Construir flujos de usuario
-    console.log('🗺️  Construyendo flujos de usuario...')
+    console.error('🗺️  Construyendo flujos de usuario...')
     const flows = this.buildUserFlows(userActions, stateChanges)
 
     // 5. Generar resumen
     const summary = this.generateSummary(userActions, stateChanges, flows)
 
-    console.log('✅ Extracción de comportamiento completa')
-    console.log(`   - ${userActions.length} acciones detectadas`)
-    console.log(`   - ${stateChanges.length} cambios de estado`)
-    console.log(`   - ${flows.length} flujos identificados`)
+    console.error('✅ Extracción de comportamiento completa')
+    console.error(`   - ${userActions.length} acciones detectadas`)
+    console.error(`   - ${stateChanges.length} cambios de estado`)
+    console.error(`   - ${flows.length} flujos identificados`)
 
     return {
       userActions,

@@ -48,7 +48,13 @@ export const SOURCE_MODULES: Record<string, string> = {
   - \`componentDidMount\` -> \`useEffect(() => { ... }, [])\`
   - \`componentDidUpdate\` -> \`useEffect(() => { ... }, [deps])\`
   - \`componentWillUnmount\` -> \`useEffect(() => { return () => { ... } }, [])\`
-- **HOCs:** Identify Higher Order Components like \`withRouter\` or \`connect\`. Replace them with their hook equivalents (\`useLocation\`, \`useSelector\`).
+- **Redux Migration:**
+  - \`connect(mapStateToProps, mapDispatchToProps)\` -> \`useSelector\` + \`useDispatch\`
+  - Traditional reducers -> \`createSlice\` from @reduxjs/toolkit
+  - Redux-saga -> \`createAsyncThunk\` or RTK Query
+  - Action types + action creators -> slice.actions (auto-generated)
+  - NEVER use Zustand, use Redux Toolkit exclusively
+- **HOCs:** Replace \`withRouter\` -> \`useNavigate/useParams/useLocation\`, \`connect\` -> \`useSelector/useDispatch\`.
 - **Refs:** Change \`createRef()\` to \`useRef()\`.
 - **Typing:** If PropTypes exist, extract them into a TypeScript \`interface Props\`.
   `
@@ -57,9 +63,16 @@ export const SOURCE_MODULES: Record<string, string> = {
 export const TARGET_MODULES: Record<string, string> = {
   react: `
 - **Paradigm:** Functional Components + Hooks ONLY. No Class components.
-- **State:** Use \`useState\` for local UI state. Use \`React Query\` (or equivalent provided in context) for server state.
+- **State Management:** 
+  - Use Redux Toolkit (RTK) with \`createSlice\` for global state
+  - Use \`useSelector\` and \`useDispatch\` hooks (NEVER connect HOC)
+  - Use \`createAsyncThunk\` for async actions
+  - Use RTK Query (\`createApi\`) for data fetching when possible
+  - Use \`useState\` ONLY for local UI state (form inputs, toggles)
+- **DO NOT USE:** Zustand, Jotai, Recoil, MobX, or any other state library
 - **Performance:** Memoize expensive calculations (\`useMemo\`) and callback handlers (\`useCallback\`) if passing to children.
 - **Naming:** PascalCase for components, camelCase for props.
+- **Slice Pattern:** Each feature should have its own slice file in \`/slices\` folder
   `,
   angular: `
 - **Paradigm:** Use Standalone Components (no NgModules unless specified). use Signals \`computed()\` for derived state.

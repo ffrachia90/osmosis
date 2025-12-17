@@ -91,7 +91,7 @@ export class PathResolver {
         }
       });
       
-      console.log(`✅ Detectados ${this.aliases.size} aliases desde tsconfig.json`);
+      console.error(`✅ Detectados ${this.aliases.size} aliases desde tsconfig.json`);
       
     } catch (error) {
       // No tsconfig.json, usar defaults

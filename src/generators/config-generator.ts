@@ -171,6 +171,11 @@ export class ConfigGenerator {
       configFiles.push(this.generateQueryClientSetup());
     }
     
+    // 8. Redux Toolkit Store setup
+    if (proposedStack.stateManagement.library === 'redux-toolkit') {
+      configFiles.push(this.generateRTKStoreSetup());
+    }
+    
     return {
       dependencies,
       devDependencies,
@@ -236,9 +241,12 @@ export class ConfigGenerator {
     stack: ProposedStack,
     toRemove: string[]
   ): void {
-    // Si migramos de Redux legacy a algo moderno
-    if (analysis.summary.primaryStateLib === 'redux-legacy' &&
-        stack.stateManagement.library !== 'redux-toolkit') {
+    // Si usamos RTK, mantener react-redux pero eliminar redux-saga y redux-thunk
+    if (stack.stateManagement.library === 'redux-toolkit') {
+      // Solo eliminar middleware legacy, NO react-redux
+      toRemove.push('redux-saga', 'redux-thunk');
+    } else if (analysis.summary.primaryStateLib === 'redux-legacy') {
+      // Si no usamos RTK, eliminar todo el ecosistema Redux
       toRemove.push('redux', 'redux-thunk', 'redux-saga', 'react-redux');
     }
     
@@ -556,6 +564,87 @@ export const queryClient = new QueryClient({
     
     return {
       path: 'src/lib/query-client.ts',
+      content,
+      overwrite: false
+    };
+  }
+  
+  private static generateRTKStoreSetup(): ConfigFile {
+    const content = `/**
+ * Redux Toolkit Store Setup
+ * Configuración centralizada del Redux Store con RTK
+ */
+import { configureStore, combineReducers } from '@reduxjs/toolkit';
+import { setupListeners } from '@reduxjs/toolkit/query';
+import { useDispatch, useSelector, TypedUseSelectorHook } from 'react-redux';
+
+// Importar slices aquí
+// import exampleSlice from '@/slices/example';
+
+// Combinar reducers
+const rootReducer = combineReducers({
+  // Agregar slices aquí:
+  // example: exampleSlice,
+});
+
+// Configurar store
+export const store = configureStore({
+  reducer: rootReducer,
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        // Ignorar acciones específicas si es necesario
+        ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
+      },
+    }),
+  devTools: process.env.NODE_ENV !== 'production',
+});
+
+// Habilitar refetch on focus/reconnect para RTK Query
+setupListeners(store.dispatch);
+
+// Types para TypeScript
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
+
+// Hooks tipados - USAR ESTOS en lugar de useSelector/useDispatch directamente
+export const useAppDispatch = () => useDispatch<AppDispatch>();
+export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
+
+/**
+ * Ejemplo de uso en App.tsx:
+ * 
+ * import { Provider } from 'react-redux';
+ * import { store } from './store';
+ * 
+ * function App() {
+ *   return (
+ *     <Provider store={store}>
+ *       <Router />
+ *     </Provider>
+ *   );
+ * }
+ * 
+ * Ejemplo de uso en componentes:
+ * 
+ * import { useAppSelector, useAppDispatch } from '@/store';
+ * import { increment, selectCount } from '@/slices/counter';
+ * 
+ * function Counter() {
+ *   const count = useAppSelector(selectCount);
+ *   const dispatch = useAppDispatch();
+ *   
+ *   return (
+ *     <button onClick={() => dispatch(increment())}>
+ *       Count: {count}
+ *     </button>
+ *   );
+ * }
+ */
+`;
+    
+    return {
+      path: 'src/store/index.ts',
       content,
       overwrite: false
     };

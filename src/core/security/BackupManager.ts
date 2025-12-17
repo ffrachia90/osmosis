@@ -33,7 +33,7 @@ export class BackupManager {
     const backupId = `backup-${timestamp}`;
     const backupPath = path.join(projectRoot, this.backupDir, backupId);
     
-    console.log(`📦 Creando backup: ${backupId}...`);
+    console.error(`📦 Creando backup: ${backupId}...`);
     
     // Crear directorio de backup
     await fs.mkdir(backupPath, { recursive: true });
@@ -64,9 +64,9 @@ export class BackupManager {
       JSON.stringify(metadata, null, 2)
     );
     
-    console.log(`✅ Backup creado: ${backupId}`);
-    console.log(`   Archivos: ${files.length}`);
-    console.log(`   Ubicación: ${backupPath}`);
+    console.error(`✅ Backup creado: ${backupId}`);
+    console.error(`   Archivos: ${files.length}`);
+    console.error(`   Ubicación: ${backupPath}`);
     
     return backupId;
   }
@@ -77,7 +77,7 @@ export class BackupManager {
   async rollback(backupId: string, projectRoot: string): Promise<void> {
     const backupPath = path.join(projectRoot, this.backupDir, backupId);
     
-    console.log(`⏮️  Iniciando rollback desde: ${backupId}...`);
+    console.error(`⏮️  Iniciando rollback desde: ${backupId}...`);
     
     // Verificar que el backup existe
     if (!await this.backupExists(backupId, projectRoot)) {
@@ -94,10 +94,10 @@ export class BackupManager {
       
       // Restaurar archivo
       await fs.copyFile(backupFilePath, originalFilePath);
-      console.log(`   ✅ Restaurado: ${relativeFile}`);
+      console.error(`   ✅ Restaurado: ${relativeFile}`);
     }
     
-    console.log(`✅ Rollback completado. ${metadata.files.length} archivos restaurados.`);
+    console.error(`✅ Rollback completado. ${metadata.files.length} archivos restaurados.`);
   }
   
   /**
@@ -116,10 +116,10 @@ export class BackupManager {
       backupId = await this.createBackup(files, projectRoot);
       
       // 2. MIGRACIÓN
-      console.log('\n🚀 Iniciando migración...');
+      console.error('\n🚀 Iniciando migración...');
       await migrationFn();
       
-      console.log('✅ Migración completada exitosamente\n');
+      console.error('✅ Migración completada exitosamente\n');
       
       return {
         success: true,
@@ -136,9 +136,9 @@ export class BackupManager {
       console.error(`\n❌ Migración falló: ${errorMsg}`);
       
       if (backupId) {
-        console.log('\n⏮️  Ejecutando rollback automático...');
+        console.error('\n⏮️  Ejecutando rollback automático...');
         await this.rollback(backupId, projectRoot);
-        console.log('✅ Archivos originales restaurados\n');
+        console.error('✅ Archivos originales restaurados\n');
       }
       
       return {
@@ -188,15 +188,15 @@ export class BackupManager {
     
     const toDelete = backups.slice(keepLast);
     
-    console.log(`🗑️  Limpiando ${toDelete.length} backups antiguos...`);
+    console.error(`🗑️  Limpiando ${toDelete.length} backups antiguos...`);
     
     for (const backup of toDelete) {
       const backupPath = path.join(projectRoot, this.backupDir, backup.id);
       await fs.rm(backupPath, { recursive: true, force: true });
-      console.log(`   Eliminado: ${backup.id}`);
+      console.error(`   Eliminado: ${backup.id}`);
     }
     
-    console.log('✅ Limpieza completada');
+    console.error('✅ Limpieza completada');
   }
   
   // Helpers privados

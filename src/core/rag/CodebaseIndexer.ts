@@ -34,12 +34,12 @@ export class CodebaseIndexer {
     if (!isCacheStale) {
       const cachedGraph = await KnowledgeGraph.load(this.rootDir, this.embeddingConfig);
       if (cachedGraph) {
-        console.log('✅ Usando Knowledge Graph desde caché (instantáneo)');
+        console.error('✅ Usando Knowledge Graph desde caché (instantáneo)');
         return cachedGraph;
       }
     }
     
-    console.log('📦 Caché no disponible o desactualizado, indexando desde cero...');
+    console.error('📦 Caché no disponible o desactualizado, indexando desde cero...');
     
     // Crear nuevo grafo
     const graph = new KnowledgeGraph(this.embeddingConfig, this.rootDir);
@@ -51,7 +51,7 @@ export class CodebaseIndexer {
       absolute: true
     });
     
-    console.log(`📁 Encontrados ${files.length} archivos para indexar`);
+    console.error(`📁 Encontrados ${files.length} archivos para indexar`);
     
     let totalEntities = 0;
     
@@ -71,27 +71,27 @@ export class CodebaseIndexer {
           }
           
         } catch (error) {
-          console.warn(`⚠️  Error indexing ${filePath}: ${error}`);
+          console.error(`⚠️  Error indexing ${filePath}: ${error}`);
         }
       }));
       
       // Progress indicator
       const progress = Math.min(100, ((i + batchSize) / files.length) * 100);
-      process.stdout.write(`\r⏳ Progreso: ${progress.toFixed(0)}% (${totalEntities} entidades)`);
+      process.stderr.write(`\r⏳ Progreso: ${progress.toFixed(0)}% (${totalEntities} entidades)`);
     }
     
-    console.log('\n');
+    console.error('\n');
     
     // Guardar en cache
     await graph.save(this.rootDir);
     
     const stats = graph.getStats();
-    console.log(`✅ Indexación completa:`);
-    console.log(`   📦 ${stats.totalEntities} entidades`);
-    console.log(`   🧮 ${stats.totalVectors} vectores generados`);
-    console.log(`   🎨 ${stats.byType.component || 0} componentes`);
-    console.log(`   🪝 ${stats.byType.hook || 0} hooks`);
-    console.log(`   ⚙️  ${stats.byType.function || 0} funciones`);
+    console.error(`✅ Indexación completa:`);
+    console.error(`   📦 ${stats.totalEntities} entidades`);
+    console.error(`   🧮 ${stats.totalVectors} vectores generados`);
+    console.error(`   🎨 ${stats.byType.component || 0} componentes`);
+    console.error(`   🪝 ${stats.byType.hook || 0} hooks`);
+    console.error(`   ⚙️  ${stats.byType.function || 0} funciones`);
     
     return graph;
   }
@@ -115,7 +115,7 @@ export class CodebaseIndexer {
       });
       
     } catch (error) {
-      console.warn(`⚠️  Error getting file times: ${error}`);
+      console.error(`⚠️  Error getting file times: ${error}`);
     }
     
     return times;
@@ -129,7 +129,7 @@ export class CodebaseIndexer {
     
     if (fs.existsSync(cachePath)) {
       fs.unlinkSync(cachePath);
-      console.log('✅ Cache invalidado');
+      console.error('✅ Cache invalidado');
     }
   }
 }

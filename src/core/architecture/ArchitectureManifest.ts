@@ -52,7 +52,7 @@ export interface ArchitectureManifest {
 
 export interface ProposedStack {
   stateManagement: {
-    library: 'zustand' | 'redux-toolkit' | 'jotai' | 'none';
+    library: 'redux-toolkit' | 'none';
     reasoning: string;
   };
   dataFetching: {
@@ -178,46 +178,55 @@ export function UserProfile() {
   },
   
   {
-    id: 'redux-to-zustand',
+    id: 'redux-to-rtk',
     category: 'state',
-    name: 'Redux Store a Zustand',
-    detectPattern: 'createStore() o configureStore() con estado simple',
+    name: 'Redux Legacy a Redux Toolkit (RTK)',
+    detectPattern: 'createStore() o reducer tradicional sin RTK',
     transformInstruction: `
-      Si el estado es simple (no requiere middleware complejo):
-      1. Crear store Zustand: const useStore = create((set) => ({ ... }))
-      2. Mover reducers a acciones: increment: () => set((state) => ({ count: state.count + 1 }))
-      3. Reemplazar useSelector por: const count = useStore(state => state.count)
-      4. Reemplazar dispatch por llamada directa: useStore.getState().increment()
+      Modernizar Redux legacy a Redux Toolkit:
+      1. Reemplazar createStore por configureStore de @reduxjs/toolkit
+      2. Convertir reducers tradicionales a createSlice
+      3. Usar immer (incluido en RTK) para mutaciones inmutables
+      4. Reemplazar action types + action creators por slice.actions
+      5. Mantener useSelector y useDispatch (son modernos)
+      6. Usar createAsyncThunk para acciones asíncronas
     `,
     priority: 2,
     example: {
       before: `
-// store.js
-const store = configureStore({
-  reducer: { counter: counterReducer }
-});
-
-// Component
-const count = useSelector(state => state.counter.value);
-dispatch(increment());`,
+// reducers/counter.js
+const INCREMENT = 'INCREMENT';
+const initialState = { value: 0 };
+export default function counterReducer(state = initialState, action) {
+  switch (action.type) {
+    case INCREMENT: return { ...state, value: state.value + 1 };
+    default: return state;
+  }
+}
+export const increment = () => ({ type: INCREMENT });`,
       after: `
-// store.ts
-import { create } from 'zustand';
+// slices/counter.ts
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-interface CounterStore {
-  count: number;
-  increment: () => void;
-  decrement: () => void;
+interface CounterState {
+  value: number;
 }
 
-export const useCounterStore = create<CounterStore>((set) => ({
-  count: 0,
-  increment: () => set((state) => ({ count: state.count + 1 })),
-  decrement: () => set((state) => ({ count: state.count - 1 })),
-}));
+const initialState: CounterState = { value: 0 };
 
-// Component
-const { count, increment } = useCounterStore();`
+const counterSlice = createSlice({
+  name: 'counter',
+  initialState,
+  reducers: {
+    increment: (state) => { state.value += 1; }, // Immer permite mutaciones
+    incrementByAmount: (state, action: PayloadAction<number>) => {
+      state.value += action.payload;
+    },
+  },
+});
+
+export const { increment, incrementByAmount } = counterSlice.actions;
+export default counterSlice.reducer;`
     },
     isCritical: false
   },
@@ -660,7 +669,7 @@ export class ManifestManager {
     // Guardar con formato legible
     fs.writeFileSync(filePath, JSON.stringify(manifest, null, 2), 'utf-8');
     
-    console.log(`✅ Manifiesto guardado en: ${filePath}`);
+    console.error(`✅ Manifiesto guardado en: ${filePath}`);
     return filePath;
   }
   
@@ -678,7 +687,7 @@ export class ManifestManager {
       const content = fs.readFileSync(filePath, 'utf-8');
       return JSON.parse(content) as ArchitectureManifest;
     } catch (e) {
-      console.warn(`⚠️ Error cargando manifiesto: ${e}`);
+      console.error(`⚠️ Error cargando manifiesto: ${e}`);
       return null;
     }
   }
@@ -723,10 +732,12 @@ export class MigrationRuleSelector {
       );
     }
     
-    if (proposedStack.stateManagement.library === 'zustand' && 
-        analysis.summary.primaryStateLib.includes('redux')) {
+    // Always migrate to RTK if using legacy redux patterns
+    if (analysis.summary.primaryStateLib.includes('redux') && 
+        (analysis.stateManagement.redux.connect > 0 || 
+         analysis.stateManagement.redux.thunks > 0)) {
       selectedRules.push(
-        DEFAULT_MIGRATION_RULES.find(r => r.id === 'redux-to-zustand')!
+        DEFAULT_MIGRATION_RULES.find(r => r.id === 'redux-to-rtk')!
       );
     }
     

@@ -168,11 +168,11 @@ export class DeepPatternScanner {
    * Escanea un proyecto completo y retorna análisis profundo de patrones
    */
   async scan(projectRoot: string): Promise<DeepPatternAnalysis> {
-    console.log('🔬 Iniciando escaneo profundo de patrones...');
+    console.error('🔬 Iniciando escaneo profundo de patrones...');
     
     // 1. Obtener todos los archivos JS/TS/JSX/TSX
     const files = await this.getSourceFiles(projectRoot);
-    console.log(`   📁 ${files.length} archivos encontrados`);
+    console.error(`   📁 ${files.length} archivos encontrados`);
     
     // 2. Leer contenido de todos los archivos
     await this.loadFileContents(files);
